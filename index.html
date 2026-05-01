@@ -21,23 +21,6 @@
 
     <footer id="footer-area"></footer>
 
-    <script>
-        // Hàm load các thành phần vào layout
-        async function loadComponent(id, file) {
-            try {
-                let response = await fetch(file);
-                if (response.ok) {
-                    document.getElementById(id).innerHTML = await response.text();
-                }
-            } catch (error) {
-                console.error("Lỗi khi load component: ", error);
-            }
-        }
-
-        // Tự động load các phần cơ bản
-        loadComponent('banner-area', 'banner.html');
-        loadComponent('sidebar-area', 'sidebar.html');
-        loadComponent('footer-area', 'footer.html');
-    </script>
+    <script src="js/main.js"></script>
 </body>
 </html>

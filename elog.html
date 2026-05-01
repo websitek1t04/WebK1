@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sổ đầu bài (eLog) - TS. Cao Thanh Hùng</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus {
+            border-color: #DAA520;
+        }
+        .btn-submit {
+            background-color: #8B0000;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        .btn-submit:hover {
+            background-color: #A52A2A;
+        }
+        .action-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-action-edit {
+            color: #DAA520;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0;
+            transition: color 0.3s;
+        }
+        .btn-action-edit:hover {
+            color: #A52A2A;
+        }
+        .btn-action-delete {
+            color: #8B0000;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0;
+            transition: color 0.3s;
+        }
+        .btn-action-delete:hover {
+            color: #A52A2A;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="banner-area"></div>
+
+    <div id="main-layout">
+        <aside id="sidebar-area"></aside>
+        
+        <main id="content-area">
+            <h2>2. Sổ đầu bài (eLog)</h2>
+            <p>Hệ thống theo dõi và ghi nhận chất lượng học tập, quân số của học viên.</p>
+
+            <form id="elog-form" style="background: #fdf6e9; padding: 20px; margin-bottom: 25px; border: 1px solid #DAA520; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <h3 style="margin-top: 0; color: #8B0000; border-bottom: 2px solid #DAA520; padding-bottom: 8px;">Thêm dữ liệu Sổ đầu bài</h3>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Ngày tháng năm:</label>
+                        <input type="date" id="ngay_thang" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Môn:</label>
+                        <input type="text" id="mon" placeholder="Nhập tên môn học" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Lớp:</label>
+                        <input type="text" id="lop" placeholder="Nhập tên lớp" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Quân số:</label>
+                        <input type="text" id="quan_so" placeholder="Ví dụ: 80/80" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Mã HV vắng:</label>
+                        <input type="text" id="ma_hv_vang" placeholder="Ví dụ: Không hoặc HV01">
+                    </div>
+                    <div class="form-group">
+                        <label>Mã HV phát biểu:</label>
+                        <input type="text" id="ma_hv_phat_bieu" placeholder="Ví dụ: HV01, HV05">
+                    </div>
+                    <div class="form-group">
+                        <label>Chất lượng học tập:</label>
+                        <input type="text" id="chat_luong" placeholder="Ví dụ: Tốt, Khá...">
+                    </div>
+                    <div class="form-group">
+                        <label>Lưu ý:</label>
+                        <input type="text" id="luu_y" placeholder="Nhập các lưu ý (nếu có)">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    + Thêm dữ liệu
+                </button>
+            </form>
+
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px;">
+                    <thead>
+                        <tr style="background-color: #8B0000; color: #DAA520; text-align: center;">
+                            <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">Ngày tháng năm</th>
+                            <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">Môn</th>
+                            <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">Lớp</th>
+                            <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">Quân số</th>
+                            <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">Mã HV vắng</th>
+                            <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">Mã HV phát biểu</th>
+                            <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">Chất lượng</th>
+                            <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">Lưu ý</th>
+                            <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="elog-data">
+                        </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <footer id="footer-area"></footer>
+
+    <script src="js/main.js"></script>
+    <script type="module">
+        import { supabase } from './js/supabase-client.js';
+
+        // Gán các hàm vào window để có thể gọi từ nút onclick trong HTML
+        window.editData = async function(id) {
+            const { data, error } = await supabase.from('elog').select('*').eq('id', id);
+            if (error || !data.length) return;
+            const row = data[0];
+
+            const { value: formValues } = await Swal.fire({
+                title: 'Chỉnh sửa Sổ đầu bài',
+                html:
+                    `<div style="text-align: left; margin-bottom: 10px;"><label style="font-size:13px;">Ngày tháng năm</label><input id="swal-ngay_thang" type="date" class="swal2-input" value="${row.ngay_thang}" style="margin:5px 0 15px; width:90%;"></div>` +
+                    `<div style="text-align: left; margin-bottom: 10px;"><label style="font-size:13px;">Môn</label><input id="swal-mon" class="swal2-input" value="${row.mon}" style="margin:5px 0 15px; width:90%;"></div>` +
+                    `<div style="text-align: left; margin-bottom: 10px;"><label style="font-size:13px;">Lớp</label><input id="swal-lop" class="swal2-input" value="${row.lop}" style="margin:5px 0 15px; width:90%;"></div>` +
+                    `<div style="text-align: left; margin-bottom: 10px;"><label style="font-size:13px;">Quân số</label><input id="swal-quan_so" class="swal2-input" value="${row.quan_so}" style="margin:5px 0 15px; width:90%;"></div>` +
+                    `<div style="text-align: left; margin-bottom: 10px;"><label style="font-size:13px;">Mã HV vắng</label><input id="swal-ma_hv_vang" class="swal2-input" value="${row.ma_hv_vang}" style="margin:5px 0 15px; width:90%;"></div>` +
+                    `<div style="text-align: left; margin-bottom: 10px;"><label style="font-size:13px;">Mã HV phát biểu</label><input id="swal-ma_hv_phat_bieu" class="swal2-input" value="${row.ma_hv_phat_bieu}" style="margin:5px 0 15px; width:90%;"></div>` +
+                    `<div style="text-align: left; margin-bottom: 10px;"><label style="font-size:13px;">Chất lượng</label><input id="swal-chat_luong" class="swal2-input" value="${row.chat_luong}" style="margin:5px 0 15px; width:90%;"></div>` +
+                    `<div style="text-align: left; margin-bottom: 10px;"><label style="font-size:13px;">Lưu ý</label><input id="swal-luu_y" class="swal2-input" value="${row.luu_y}" style="margin:5px 0 15px; width:90%;"></div>`,
+                focusConfirm: false,
+                confirmButtonColor: '#8B0000',
+                confirmButtonText: 'Cập nhật',
+                showCancelButton: true,
+                cancelButtonText: 'Hủy',
+                width: 550,
+                preConfirm: () => {
+                    return {
+                        ngay_thang: document.getElementById('swal-ngay_thang').value,
+                        mon: document.getElementById('swal-mon').value,
+                        lop: document.getElementById('swal-lop').value,
+                        quan_so: document.getElementById('swal-quan_so').value,
+                        ma_hv_vang: document.getElementById('swal-ma_hv_vang').value,
+                        ma_hv_phat_bieu: document.getElementById('swal-ma_hv_phat_bieu').value,
+                        chat_luong: document.getElementById('swal-chat_luong').value,
+                        luu_y: document.getElementById('swal-luu_y').value
+                    }
+                }
+            });
+
+            if (formValues) {
+                const { error } = await supabase.from('elog').update(formValues).eq('id', id);
+                if (error) {
+                    Swal.fire('Lỗi', error.message, 'error');
+                } else {
+                    Swal.fire('Thành công!', 'Đã cập nhật dữ liệu thành công!', 'success');
+                    loadData();
+                }
+            }
+        };
+
+        window.deleteData = async function(id) {
+            Swal.fire({
+                title: 'Xác nhận xóa?',
+                text: "Thao tác này sẽ xóa vĩnh viễn dữ liệu Sổ đầu bài!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#8B0000',
+                cancelButtonColor: '#ccc',
+                confirmButtonText: 'Xóa dữ liệu',
+                cancelButtonText: 'Hủy'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const { error } = await supabase.from('elog').delete().eq('id', id);
+                    if (error) {
+                        Swal.fire('Lỗi', error.message, 'error');
+                    } else {
+                        Swal.fire('Đã xóa!', 'Dữ liệu đã được xóa khỏi hệ thống.', 'success');
+                        loadData();
+                    }
+                }
+            });
+        };
+
+        // Hàm tải dữ liệu từ Supabase
+        async function loadData() {
+            const { data, error } = await supabase.from('elog').select('*').order('id', { ascending: false });
+            const tbody = document.getElementById('elog-data');
+            tbody.innerHTML = '';
+
+            if (error) {
+                console.error('Lỗi tải dữ liệu: ', error.message);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi hệ thống',
+                    text: 'Không thể tải dữ liệu từ cơ sở dữ liệu!'
+                });
+                return;
+            }
+
+            if (data && data.length > 0) {
+                data.forEach(row => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${row.ngay_thang || ''}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${row.mon || ''}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${row.lop || ''}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${row.quan_so || ''}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${row.ma_hv_vang || ''}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${row.ma_hv_phat_bieu || ''}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${row.chat_luong || ''}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${row.luu_y || ''}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd;">
+                                <div class="action-container">
+                                    <button class="btn-action-edit" onclick="editData(${row.id})" title="Chỉnh sửa"><i class="fas fa-edit"></i></button>
+                                    <button class="btn-action-delete" onclick="deleteData(${row.id})" title="Xóa"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        // Xử lý sự kiện khi thêm mới
+        document.getElementById('elog-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const newData = {
+                ngay_thang: document.getElementById('ngay_thang').value,
+                mon: document.getElementById('mon').value,
+                lop: document.getElementById('lop').value,
+                quan_so: document.getElementById('quan_so').value,
+                ma_hv_vang: document.getElementById('ma_hv_vang').value,
+                ma_hv_phat_bieu: document.getElementById('ma_hv_phat_bieu').value,
+                chat_luong: document.getElementById('chat_luong').value,
+                luu_y: document.getElementById('luu_y').value
+            };
+
+            const { error } = await supabase.from('elog').insert([newData]);
+
+            if (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Thêm thất bại',
+                    text: error.message
+                });
+            } else {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công!',
+                    text: 'Đã thêm dữ liệu sổ đầu bài thành công',
+                    confirmButtonColor: '#8B0000'
+                });
+                document.getElementById('elog-form').reset();
+                loadData();
+            }
+        });
+
+        // Tải dữ liệu khi mở trang
+        loadData();
+    </script>
+</body>
+</html>
