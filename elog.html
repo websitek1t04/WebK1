@@ -170,22 +170,49 @@
             const row = data[0];
 
             const { value: formValues } = await Swal.fire({
-                title: 'Chỉnh sửa Sổ đầu bài',
-                html:
-                    `<div style="text-align: left; margin-bottom: 10px;"><label style="font-size:13px;">Ngày tháng năm</label><input id="swal-ngay_thang" type="date" class="swal2-input" value="${row.ngay_thang}" style="margin:5px 0 15px; width:90%;"></div>` +
-                    `<div style="text-align: left; margin-bottom: 10px;"><label style="font-size:13px;">Môn</label><input id="swal-mon" class="swal2-input" value="${row.mon}" style="margin:5px 0 15px; width:90%;"></div>` +
-                    `<div style="text-align: left; margin-bottom: 10px;"><label style="font-size:13px;">Lớp</label><input id="swal-lop" class="swal2-input" value="${row.lop}" style="margin:5px 0 15px; width:90%;"></div>` +
-                    `<div style="text-align: left; margin-bottom: 10px;"><label style="font-size:13px;">Quân số</label><input id="swal-quan_so" class="swal2-input" value="${row.quan_so}" style="margin:5px 0 15px; width:90%;"></div>` +
-                    `<div style="text-align: left; margin-bottom: 10px;"><label style="font-size:13px;">Mã HV vắng</label><input id="swal-ma_hv_vang" class="swal2-input" value="${row.ma_hv_vang}" style="margin:5px 0 15px; width:90%;"></div>` +
-                    `<div style="text-align: left; margin-bottom: 10px;"><label style="font-size:13px;">Mã HV phát biểu</label><input id="swal-ma_hv_phat_bieu" class="swal2-input" value="${row.ma_hv_phat_bieu}" style="margin:5px 0 15px; width:90%;"></div>` +
-                    `<div style="text-align: left; margin-bottom: 10px;"><label style="font-size:13px;">Chất lượng</label><input id="swal-chat_luong" class="swal2-input" value="${row.chat_luong}" style="margin:5px 0 15px; width:90%;"></div>` +
-                    `<div style="text-align: left; margin-bottom: 10px;"><label style="font-size:13px;">Lưu ý</label><input id="swal-luu_y" class="swal2-input" value="${row.luu_y}" style="margin:5px 0 15px; width:90%;"></div>`,
+                title: '<span style="color: #8B0000; font-weight: 600;">Chỉnh sửa Sổ đầu bài</span>',
+                html: `
+                    <div style="text-align: left; font-family: inherit; padding: 0 10px;">
+                        <div style="margin-bottom: 12px;">
+                            <label style="font-size: 13px; font-weight: 600; color: #8B0000; display: block; margin-bottom: 4px;">Ngày tháng năm</label>
+                            <input id="swal-ngay_thang" type="date" value="${row.ngay_thang || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; outline: none;">
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="font-size: 13px; font-weight: 600; color: #8B0000; display: block; margin-bottom: 4px;">Môn</label>
+                            <input id="swal-mon" type="text" value="${row.mon || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; outline: none;">
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="font-size: 13px; font-weight: 600; color: #8B0000; display: block; margin-bottom: 4px;">Lớp</label>
+                            <input id="swal-lop" type="text" value="${row.lop || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; outline: none;">
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="font-size: 13px; font-weight: 600; color: #8B0000; display: block; margin-bottom: 4px;">Quân số</label>
+                            <input id="swal-quan_so" type="text" value="${row.quan_so || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; outline: none;">
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="font-size: 13px; font-weight: 600; color: #8B0000; display: block; margin-bottom: 4px;">Mã HV vắng</label>
+                            <input id="swal-ma_hv_vang" type="text" value="${row.ma_hv_vang || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; outline: none;">
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="font-size: 13px; font-weight: 600; color: #8B0000; display: block; margin-bottom: 4px;">Mã HV phát biểu</label>
+                            <input id="swal-ma_hv_phat_bieu" type="text" value="${row.ma_hv_phat_bieu || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; outline: none;">
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="font-size: 13px; font-weight: 600; color: #8B0000; display: block; margin-bottom: 4px;">Chất lượng</label>
+                            <input id="swal-chat_luong" type="text" value="${row.chat_luong || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; outline: none;">
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="font-size: 13px; font-weight: 600; color: #8B0000; display: block; margin-bottom: 4px;">Lưu ý</label>
+                            <input id="swal-luu_y" type="text" value="${row.luu_y || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; outline: none;">
+                        </div>
+                    </div>
+                `,
                 focusConfirm: false,
                 confirmButtonColor: '#8B0000',
                 confirmButtonText: 'Cập nhật',
                 showCancelButton: true,
                 cancelButtonText: 'Hủy',
-                width: 550,
+                width: 500,
                 preConfirm: () => {
                     return {
                         ngay_thang: document.getElementById('swal-ngay_thang').value,
