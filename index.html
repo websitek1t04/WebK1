@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Hỗ trợ Giảng dạy - TS. Cao Thanh Hùng</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div id="banner-area"></div>
+
+    <div id="main-layout">
+        <aside id="sidebar-area"></aside>
+        
+        <main id="content-area">
+            <h1>Chào mừng đến với Hệ thống Giảng dạy số</h1>
+            <p>Chọn một chức năng từ thanh điều hướng (Sidebar) để bắt đầu.</p>
+        </main>
+    </div>
+
+    <footer id="footer-area"></footer>
+
+    <script>
+        // Hàm load các thành phần vào layout
+        async function loadComponent(id, file) {
+            try {
+                let response = await fetch(file);
+                if (response.ok) {
+                    document.getElementById(id).innerHTML = await response.text();
+                }
+            } catch (error) {
+                console.error("Lỗi khi load component: ", error);
+            }
+        }
+
+        // Tự động load các phần cơ bản
+        loadComponent('banner-area', 'banner.html');
+        loadComponent('sidebar-area', 'sidebar.html');
+        loadComponent('footer-area', 'footer.html');
+    </script>
+</body>
+</html>

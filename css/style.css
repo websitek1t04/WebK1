@@ -1,0 +1,47 @@
+:root {
+    --primary-color: #8B0000; /* Đỏ đô */
+    --secondary-color: #DAA520; /* Vàng */
+    --bg-color: #f8f9fa;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: var(--bg-color);
+}
+
+header {
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+    padding: 20px;
+    text-align: center;
+}
+
+#main-layout {
+    display: flex;
+    flex: 1;
+}
+
+aside {
+    width: 250px;
+    background-color: #fff;
+    border-right: 2px solid var(--secondary-color);
+    padding: 15px;
+}
+
+main {
+    flex: 1;
+    padding: 20px;
+    background-color: #fff;
+}
+
+footer {
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+    text-align: center;
+    padding: 10px;
+    margin-top: auto;
+}
