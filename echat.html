@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>eChat Pro - Hệ thống Thảo luận Realtime</title>
+    <title>Trang Thảo Luận Online - TS. Cao Thanh Hùng</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -35,10 +35,10 @@
 
         .login-card {
             background: white; padding: 40px; border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center; width: 360px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center; width: 380px;
         }
 
-        .login-card h2 { color: var(--primary); margin-bottom: 25px; }
+        .login-card h2 { color: var(--primary); margin-bottom: 25px; font-size: 22px; }
 
         .login-card input, .login-card select {
             width: 100%; padding: 12px; margin-bottom: 15px;
@@ -74,7 +74,6 @@
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        /* Vùng tìm kiếm */
         .search-area {
             background: #fff9e6; padding: 10px 20px;
             display: flex; gap: 10px; align-items: center;
@@ -85,7 +84,6 @@
             width: 300px; outline: none;
         }
 
-        /* Bảng hiển thị chat */
         .chat-grid {
             display: grid; grid-template-columns: repeat(5, 1fr);
             gap: 12px; padding: 15px; flex-grow: 1; overflow: hidden;
@@ -147,8 +145,8 @@
         .btn-file svg { width: 14px; height: 14px; fill: none; stroke: white; stroke-width: 2; }
 
         .admin-controls { display: none; gap: 10px; }
-        #btn-clear { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
         #btn-export { background: var(--success); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
+        #btn-clear { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
 
         .inactive .box-input-area { display: none; }
         .inactive { pointer-events: none; opacity: 0.6; }
@@ -158,11 +156,11 @@
 
 <div id="login-overlay">
     <div class="login-card">
-        <h2>eChat Pro</h2>
-        <input type="text" id="inputName" placeholder="Nhập tên của bạn...">
+        <h2>TRANG THẢO LUẬN ONLINE</h2>
+        
         <div class="form-group" style="margin-bottom: 15px; text-align: left;">
-            <label for="inputChannel" style="font-size: 12px; color: #666;">Chọn Đội hoặc Vai trò:</label>
-            <select id="inputChannel">
+            <label for="inputChannel" style="font-size: 13px; font-weight: bold; color: var(--primary);">Chọn Đội hoặc Vai trò:</label>
+            <select id="inputChannel" onchange="toggleInputPlaceholder()">
                 <option value="1">Tham gia Đội 1</option>
                 <option value="2">Tham gia Đội 2</option>
                 <option value="3">Tham gia Đội 3</option>
@@ -170,7 +168,9 @@
                 <option value="5">Giảng viên / Quản trị</option>
             </select>
         </div>
-        <input type="text" id="inputInstructorName" placeholder="Nhập tên Giảng viên...">
+        
+        <input type="text" id="inputName" placeholder="Nhập tên thành viên...">
+        
         <button class="btn-start" onclick="joinChat()">BẮT ĐẦU THẢO LUẬN</button>
     </div>
 </div>
@@ -178,9 +178,9 @@
 <div id="main-chat">
     <header>
         <div style="display: flex; align-items: center; gap: 15px;">
-            <div style="font-size: 1.1rem; font-weight: bold; color: var(--primary);">eChat Pro</div>
+            <div style="font-size: 1.1rem; font-weight: bold; color: var(--primary);">TRANG THẢO LUẬN ONLINE</div>
             <div class="admin-controls" id="admin-tools">
-                <button id="btn-export" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> Xuất Excel</button>
+                <button id="btn-export" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> TẢI FILE EXCEL DỮ LIỆU THẢO LUẬN</button>
                 <button id="btn-clear" onclick="clearAllData()"><i class="fas fa-trash-alt"></i> Xóa dữ liệu</button>
             </div>
         </div>
@@ -197,16 +197,27 @@
 </div>
 
 <script>
+    // THẦY VUI LÒNG THAY BẰNG URL VÀ ANON KEY CHUẨN TỪ SUPABASE (Bắt đầu bằng eyJ...)
     const SUPABASE_URL = 'https://iatarpzwbpmvxafkuhvh.supabase.co'; 
-    const SUPABASE_KEY = 'sb_publishable_L8zkZyosiIUfXbznifDV5g_Stvlxt_O';
+    const SUPABASE_KEY = 'sb_publishable_L8zkZyosiIUfXbznifDV5g_Stvlxt_O'; // <-- KHÓA NÀY ĐANG BỊ SAI ĐỊNH DẠNG
+    
     const mySupabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let currentUser = "";
     let currentChannel = "";
-    let currentInstructor = "";
     let allMessages = [];
 
-    // Tạo sẵn 5 cột (1, 2, 3, 4: Các Đội | 5: Giảng viên)
+    // Tự động đổi chữ mờ (placeholder) dựa trên lựa chọn
+    function toggleInputPlaceholder() {
+        const chan = document.getElementById('inputChannel').value;
+        const inputName = document.getElementById('inputName');
+        if(chan == 5) {
+            inputName.placeholder = "Nhập tên Giảng viên...";
+        } else {
+            inputName.placeholder = "Nhập tên thành viên...";
+        }
+    }
+
     const root = document.getElementById('chat-container-root');
     for (let i = 1; i <= 5; i++) {
         let boxTitle = i === 5 ? "GIẢNG VIÊN" : `ĐỘI ${i}`;
@@ -232,16 +243,14 @@
     function joinChat() {
         const name = document.getElementById('inputName').value.trim();
         const chan = document.getElementById('inputChannel').value;
-        const instructor = document.getElementById('inputInstructorName').value.trim();
         
-        if (!name || !instructor) {
-            Swal.fire('Thiếu thông tin', 'Vui lòng nhập tên của bạn và tên Giảng viên!', 'warning');
+        if (!name) {
+            Swal.fire('Thiếu thông tin', 'Vui lòng nhập tên của bạn!', 'warning');
             return;
         }
 
         currentUser = name;
         currentChannel = chan;
-        currentInstructor = instructor;
 
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('main-chat').style.display = 'flex';
@@ -253,7 +262,6 @@
             document.getElementById('admin-tools').style.display = 'flex';
         }
 
-        // Kích hoạt cột của mình hoặc chỉ định vai trò
         for (let i = 1; i <= 5; i++) {
             if (i != currentChannel) {
                 document.getElementById(`box-${i}`).classList.add('inactive');
@@ -268,6 +276,11 @@
 
     async function loadOldMessages() {
         const { data, error } = await mySupabase.from('messages').select('*').order('created_at', { ascending: true });
+        if (error) {
+            console.error("Lỗi tải tin nhắn:", error);
+            Swal.fire('Lỗi kết nối', 'Vui lòng kiểm tra lại cấu hình Supabase Key.', 'error');
+            return;
+        }
         if (data) {
             allMessages = data;
             renderMessages(allMessages);
@@ -275,7 +288,6 @@
     }
 
     function renderMessages(dataArray) {
-        // Reset màn hình
         for (let i = 1; i <= 5; i++) {
             const container = document.getElementById(`msg-${i}`);
             container.innerHTML = '';
@@ -290,7 +302,7 @@
                 const timeStr = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 const isFile = msg.content.startsWith('http');
                 const contentHtml = isFile 
-                    ? `<a href="${msg.content}" target="_blank" class="file-link"><i class="fas fa-paperclip"></i> Xem tài liệu</a>` 
+                    ? `<a href="${msg.content}" target="_blank" class="file-link"><i class="fas fa-paperclip"></i> Xem tài liệu tải lên</a>` 
                     : `<span class="msg-text">${msg.content}</span>`;
 
                 div.innerHTML = `
@@ -315,7 +327,6 @@
         renderMessages(filtered);
     }
 
-    // Lắng nghe sự kiện Realtime từ Supabase
     mySupabase.channel('any')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, payload => {
             if (payload.eventType === 'INSERT') {
@@ -333,19 +344,26 @@
         const text = manualText || input.value.trim();
         if (!text) return;
 
-        await mySupabase.from('messages').insert([{
+        const { error } = await mySupabase.from('messages').insert([{
             sender_name: currentUser,
             channel_id: chanId.toString(),
-            content: text,
-            instructor_name: currentInstructor
+            content: text
         }]);
-        input.value = '';
+
+        if (error) {
+            Swal.fire('Lỗi', 'Không thể gửi tin nhắn: ' + error.message, 'error');
+        } else {
+            input.value = '';
+        }
     }
 
     async function uploadFile(chanId) {
         const fileInput = document.getElementById(`file-${chanId}`);
         const file = fileInput.files[0];
         if (!file) return;
+
+        // Báo hiệu đang tải file
+        Swal.fire({ title: 'Đang tải file...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
 
         const cleanName = file.name.replace(/\s+/g, '_');
         const fileName = `${Date.now()}_${cleanName}`;
@@ -357,6 +375,8 @@
         }
 
         const { data: urlData } = mySupabase.storage.from('CHAT-FILES').getPublicUrl(fileName);
+        
+        Swal.close(); // Đóng thông báo
         sendMsgFromBox(chanId, urlData.publicUrl);
         fileInput.value = '';
     }
@@ -364,7 +384,7 @@
     async function exportToExcel() {
         const { data } = await mySupabase.from('messages').select('*').order('created_at', { ascending: true });
         if (!data || data.length === 0) {
-            Swal.fire('Thông báo', 'Không có dữ liệu', 'info');
+            Swal.fire('Thông báo', 'Không có dữ liệu để xuất', 'info');
             return;
         }
 
@@ -381,7 +401,7 @@
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = `Bao_cao_eChat_${new Date().toLocaleDateString()}.csv`;
+        link.download = `Du_Lieu_Thao_Luan_Online_${new Date().toLocaleDateString('vi-VN')}.csv`;
         link.click();
     }
 
@@ -401,7 +421,6 @@
         });
     }
 
-    // Hỗ trợ Enter để gửi tin
     for (let i = 1; i <= 5; i++) {
         document.getElementById(`input-field-${i}`).addEventListener("keypress", (e) => {
             if (e.key === "Enter") sendMsgFromBox(i);
