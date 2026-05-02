@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eChat Pro - Hệ thống Thảo luận Realtime</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary: #8B0000;
+            --secondary: #DAA520;
+            --bg: #fdf6e9;
+            --dark-blue: #0d47a1;
+            --white: #ffffff;
+            --danger: #d93025;
+            --success: #1e8e3e;
+        }
+
+        body, html { 
+            margin: 0; padding: 0; height: 100%; 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+        }
+
+        /* Màn hình đăng nhập */
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, var(--primary), #5c0505);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000; transition: 0.5s;
+        }
+
+        .login-card {
+            background: white; padding: 40px; border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center; width: 360px;
+        }
+
+        .login-card h2 { color: var(--primary); margin-bottom: 25px; }
+
+        .login-card input, .login-card select {
+            width: 100%; padding: 12px; margin-bottom: 15px;
+            border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px;
+        }
+
+        .btn-start {
+            width: 100%; padding: 12px; background: var(--secondary);
+            color: var(--primary); border: none; border-radius: 8px; font-weight: bold;
+            cursor: pointer; font-size: 16px; box-shadow: 0 4px #b8860b;
+            transition: all 0.2s;
+        }
+
+        .btn-start:hover {
+            background-color: #c59b27;
+            transform: translateY(-2px);
+        }
+
+        /* Giao diện chính */
+        #main-chat { display: none; height: 100vh; flex-direction: column; }
+
+        header {
+            background: linear-gradient(to bottom, #ffffff, #f1f3f4); 
+            padding: 12px 25px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1), inset 0 -2px 0 rgba(0,0,0,0.05);
+            border-bottom: 1px solid #ccc; z-index: 10;
+        }
+
+        .user-info { 
+            font-weight: bold; color: var(--primary); 
+            background: white; padding: 6px 15px; border-radius: 8px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* Vùng tìm kiếm */
+        .search-area {
+            background: #fff9e6; padding: 10px 20px;
+            display: flex; gap: 10px; align-items: center;
+            border-bottom: 1px solid #ddd;
+        }
+        .search-area input {
+            padding: 6px 12px; border: 1px solid #ccc; border-radius: 4px;
+            width: 300px; outline: none;
+        }
+
+        /* Bảng hiển thị chat */
+        .chat-grid {
+            display: grid; grid-template-columns: repeat(5, 1fr);
+            gap: 12px; padding: 15px; flex-grow: 1; overflow: hidden;
+            background: #fafafa;
+        }
+
+        .chat-box {
+            background: white; border-radius: 10px; display: flex; flex-direction: column;
+            border: 2px solid rgba(0,0,0,0.1); box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            overflow: hidden; min-width: 200px;
+        }
+
+        #box-1 { border-color: #e67e22; }
+        #box-2 { border-color: #3498db; }
+        #box-3 { border-color: #2ecc71; }
+        #box-4 { border-color: #9b59b6; }
+        #box-5 { border-color: var(--primary); }
+
+        .chat-header {
+            padding: 10px; background: rgba(0,0,0,0.03); 
+            border-bottom: 1px solid rgba(0,0,0,0.08); font-weight: bold;
+            display: flex; justify-content: space-between; align-items: center; font-size: 13px;
+        }
+
+        .messages { 
+            flex-grow: 1; overflow-y: auto; padding: 12px; font-size: 13px;
+            background-image: radial-gradient(rgba(0,0,0,0.05) 1px, transparent 1px); 
+            background-size: 15px 15px;
+        }
+
+        .msg-bubble {
+            margin-bottom: 8px; padding: 8px 10px; border-radius: 8px;
+            background: var(--white); width: fit-content; max-width: 90%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #eee;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .msg-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .msg-team { font-weight: bold; color: var(--primary); font-size: 11px; margin-right: 10px; }
+        .msg-time { font-size: 9px; color: #888; }
+        .msg-text { color: #000; word-break: break-all; display: block; }
+        .file-link { display: inline-block; color: #1a73e8; text-decoration: none; font-weight: bold; margin-top: 4px; font-size: 12px; }
+
+        .box-input-area {
+            display: flex; padding: 8px; background: rgba(0,0,0,0.02); 
+            border-top: 1px solid rgba(0,0,0,0.05); gap: 4px;
+        }
+        .box-input-area input[type="text"] {
+            flex-grow: 1; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; outline: none;
+        }
+        .btn-action {
+            background: var(--primary); color: white; border: none; 
+            width: 32px; height: 32px; border-radius: 4px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 14px;
+        }
+        .btn-file { background: #5f6368; }
+        .btn-file svg { width: 14px; height: 14px; fill: none; stroke: white; stroke-width: 2; }
+
+        .admin-controls { display: none; gap: 10px; }
+        #btn-clear { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
+        #btn-export { background: var(--success); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
+
+        .inactive .box-input-area { display: none; }
+        .inactive { pointer-events: none; opacity: 0.6; }
+    </style>
+</head>
+<body>
+
+<div id="login-overlay">
+    <div class="login-card">
+        <h2>eChat Pro</h2>
+        <input type="text" id="inputName" placeholder="Nhập tên của bạn...">
+        <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+            <label for="inputChannel" style="font-size: 12px; color: #666;">Chọn Đội hoặc Vai trò:</label>
+            <select id="inputChannel">
+                <option value="1">Tham gia Đội 1</option>
+                <option value="2">Tham gia Đội 2</option>
+                <option value="3">Tham gia Đội 3</option>
+                <option value="4">Tham gia Đội 4</option>
+                <option value="5">Giảng viên / Quản trị</option>
+            </select>
+        </div>
+        <input type="text" id="inputInstructorName" placeholder="Nhập tên Giảng viên...">
+        <button class="btn-start" onclick="joinChat()">BẮT ĐẦU THẢO LUẬN</button>
+    </div>
+</div>
+
+<div id="main-chat">
+    <header>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="font-size: 1.1rem; font-weight: bold; color: var(--primary);">eChat Pro</div>
+            <div class="admin-controls" id="admin-tools">
+                <button id="btn-export" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> Xuất Excel</button>
+                <button id="btn-clear" onclick="clearAllData()"><i class="fas fa-trash-alt"></i> Xóa dữ liệu</button>
+            </div>
+        </div>
+        <div class="user-info" id="displayInfo">Đang tải...</div>
+    </header>
+
+    <div class="search-area">
+        <label style="font-size: 13px; font-weight: 600;"><i class="fas fa-search"></i> Lọc tin nhắn:</label>
+        <input type="text" id="input-search" oninput="filterMessages()" placeholder="Gõ để tìm kiếm nội dung tin nhắn...">
+    </div>
+
+    <div class="chat-grid" id="chat-container-root">
+        </div>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://iatarpzwbpmvxafkuhvh.supabase.co'; 
+    const SUPABASE_KEY = 'sb_publishable_L8zkZyosiIUfXbznifDV5g_Stvlxt_O';
+    const mySupabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let currentUser = "";
+    let currentChannel = "";
+    let currentInstructor = "";
+    let allMessages = [];
+
+    // Tạo sẵn 5 cột (1, 2, 3, 4: Các Đội | 5: Giảng viên)
+    const root = document.getElementById('chat-container-root');
+    for (let i = 1; i <= 5; i++) {
+        let boxTitle = i === 5 ? "GIẢNG VIÊN" : `ĐỘI ${i}`;
+        root.innerHTML += `
+            <div class="chat-box" id="box-${i}">
+                <div class="chat-header">
+                    <span id="title-${i}">${boxTitle}</span> 
+                    <span id="status-${i}" style="font-size:10px; color:#333"></span>
+                </div>
+                <div class="messages" id="msg-${i}"></div>
+                <div class="box-input-area">
+                    <input type="file" id="file-${i}" style="display:none" onchange="uploadFile(${i})">
+                    <button class="btn-action btn-file" onclick="document.getElementById('file-${i}').click()" title="Đính kèm tệp">
+                        <svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                    </button>
+                    <input type="text" id="input-field-${i}" placeholder="Nhập tin nhắn...">
+                    <button class="btn-action" onclick="sendMsgFromBox(${i})">➤</button>
+                </div>
+            </div>
+        `;
+    }
+
+    function joinChat() {
+        const name = document.getElementById('inputName').value.trim();
+        const chan = document.getElementById('inputChannel').value;
+        const instructor = document.getElementById('inputInstructorName').value.trim();
+        
+        if (!name || !instructor) {
+            Swal.fire('Thiếu thông tin', 'Vui lòng nhập tên của bạn và tên Giảng viên!', 'warning');
+            return;
+        }
+
+        currentUser = name;
+        currentChannel = chan;
+        currentInstructor = instructor;
+
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('main-chat').style.display = 'flex';
+        
+        const roleText = (chan == 5) ? `Giảng viên: ${currentUser}` : `Đội ${chan}: ${currentUser}`;
+        document.getElementById('displayInfo').innerText = roleText;
+
+        if (chan == 5) {
+            document.getElementById('admin-tools').style.display = 'flex';
+        }
+
+        // Kích hoạt cột của mình hoặc chỉ định vai trò
+        for (let i = 1; i <= 5; i++) {
+            if (i != currentChannel) {
+                document.getElementById(`box-${i}`).classList.add('inactive');
+            } else {
+                document.getElementById(`status-${i}`).innerText = "(Bạn)";
+                document.getElementById(`title-${i}`).innerText = (i==5?"GV: ":"ĐỘI "+i+": ") + currentUser;
+            }
+        }
+
+        loadOldMessages();
+    }
+
+    async function loadOldMessages() {
+        const { data, error } = await mySupabase.from('messages').select('*').order('created_at', { ascending: true });
+        if (data) {
+            allMessages = data;
+            renderMessages(allMessages);
+        }
+    }
+
+    function renderMessages(dataArray) {
+        // Reset màn hình
+        for (let i = 1; i <= 5; i++) {
+            const container = document.getElementById(`msg-${i}`);
+            container.innerHTML = '';
+        }
+
+        dataArray.forEach(msg => {
+            const container = document.getElementById(`msg-${msg.channel_id}`);
+            if (container) {
+                const div = document.createElement('div');
+                div.className = 'msg-bubble';
+
+                const timeStr = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const isFile = msg.content.startsWith('http');
+                const contentHtml = isFile 
+                    ? `<a href="${msg.content}" target="_blank" class="file-link"><i class="fas fa-paperclip"></i> Xem tài liệu</a>` 
+                    : `<span class="msg-text">${msg.content}</span>`;
+
+                div.innerHTML = `
+                    <div class="msg-header">
+                        <span class="msg-team">${msg.sender_name}</span>
+                        <span class="msg-time">${timeStr}</span>
+                    </div>
+                    ${contentHtml}
+                `;
+                container.appendChild(div);
+                container.scrollTop = container.scrollHeight;
+            }
+        });
+    }
+
+    function filterMessages() {
+        const keyword = document.getElementById('input-search').value.toLowerCase();
+        const filtered = allMessages.filter(msg => 
+            msg.content.toLowerCase().includes(keyword) || 
+            msg.sender_name.toLowerCase().includes(keyword)
+        );
+        renderMessages(filtered);
+    }
+
+    // Lắng nghe sự kiện Realtime từ Supabase
+    mySupabase.channel('any')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, payload => {
+            if (payload.eventType === 'INSERT') {
+                allMessages.push(payload.new);
+                renderMessages(allMessages);
+            } else if (payload.eventType === 'DELETE') {
+                allMessages = [];
+                renderMessages(allMessages);
+            }
+        })
+        .subscribe();
+
+    async function sendMsgFromBox(chanId, manualText = null) {
+        const input = document.getElementById(`input-field-${chanId}`);
+        const text = manualText || input.value.trim();
+        if (!text) return;
+
+        await mySupabase.from('messages').insert([{
+            sender_name: currentUser,
+            channel_id: chanId.toString(),
+            content: text,
+            instructor_name: currentInstructor
+        }]);
+        input.value = '';
+    }
+
+    async function uploadFile(chanId) {
+        const fileInput = document.getElementById(`file-${chanId}`);
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        const cleanName = file.name.replace(/\s+/g, '_');
+        const fileName = `${Date.now()}_${cleanName}`;
+
+        const { data, error } = await mySupabase.storage.from('CHAT-FILES').upload(fileName, file);
+        if (error) {
+            Swal.fire('Thất bại', 'Lỗi upload file: ' + error.message, 'error');
+            return;
+        }
+
+        const { data: urlData } = mySupabase.storage.from('CHAT-FILES').getPublicUrl(fileName);
+        sendMsgFromBox(chanId, urlData.publicUrl);
+        fileInput.value = '';
+    }
+
+    async function exportToExcel() {
+        const { data } = await mySupabase.from('messages').select('*').order('created_at', { ascending: true });
+        if (!data || data.length === 0) {
+            Swal.fire('Thông báo', 'Không có dữ liệu', 'info');
+            return;
+        }
+
+        let csvContent = "\uFEFFĐội 1,Đội 2,Đội 3,Đội 4,Giảng viên\n";
+        data.forEach(msg => {
+            let row = ["", "", "", "", ""];
+            let idx = parseInt(msg.channel_id) - 1;
+            if (idx >= 0 && idx < 5) {
+                row[idx] = `"${msg.sender_name}: ${msg.content.replace(/"/g, '""')}"`;
+            }
+            csvContent += row.join(",") + "\n";
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `Bao_cao_eChat_${new Date().toLocaleDateString()}.csv`;
+        link.click();
+    }
+
+    async function clearAllData() {
+        Swal.fire({
+            title: 'Xóa toàn bộ dữ liệu?',
+            text: "Dữ liệu thảo luận sẽ bị xóa sạch trên database!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: 'var(--primary)',
+            cancelButtonColor: '#ccc',
+            confirmButtonText: 'Xóa'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                await mySupabase.from('messages').delete().neq('channel_id', '0');
+            }
+        });
+    }
+
+    // Hỗ trợ Enter để gửi tin
+    for (let i = 1; i <= 5; i++) {
+        document.getElementById(`input-field-${i}`).addEventListener("keypress", (e) => {
+            if (e.key === "Enter") sendMsgFromBox(i);
+        });
+    }
+</script>
+</body>
+</html>
