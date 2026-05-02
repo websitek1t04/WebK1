@@ -135,6 +135,28 @@
                 </button>
             </form>
 
+            <div style="background: #fcf8e3; padding: 18px; margin-bottom: 20px; border: 1px solid #faebcc; border-radius: 8px;">
+                <h4 style="margin-top: 0; color: #8B0000; margin-bottom: 12px;"><i class="fas fa-search"></i> Tìm kiếm và Lọc dữ liệu</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                    <div class="form-group">
+                        <label style="font-size: 12px;">Tìm kiếm chung:</label>
+                        <input type="text" id="search-input" placeholder="Nhập từ khóa bất kỳ..." style="font-size: 13px; padding: 6px 10px;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 12px;">Lọc theo ngày:</label>
+                        <input type="date" id="filter-ngay" style="font-size: 13px; padding: 6px 10px;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 12px;">Lọc theo môn:</label>
+                        <input type="text" id="filter-mon" placeholder="Nhập tên môn..." style="font-size: 13px; padding: 6px 10px;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 12px;">Lọc theo lớp:</label>
+                        <input type="text" id="filter-lop" placeholder="Nhập tên lớp..." style="font-size: 13px; padding: 6px 10px;">
+                    </div>
+                </div>
+            </div>
+
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px;">
                     <thead>
@@ -162,6 +184,8 @@
     <script src="js/main.js"></script>
     <script type="module">
         import { supabase } from './js/supabase-client.js';
+
+        let allElogData = []; // Mảng lưu trữ toàn bộ dữ liệu
 
         // Gán các hàm vào window để có thể gọi từ nút onclick trong HTML
         window.editData = async function(id) {
@@ -261,24 +285,13 @@
             });
         };
 
-        // Hàm tải dữ liệu từ Supabase
-        async function loadData() {
-            const { data, error } = await supabase.from('elog').select('*').order('id', { ascending: false });
+        // Hàm hiển thị dữ liệu ra bảng
+        function displayData(dataArray) {
             const tbody = document.getElementById('elog-data');
             tbody.innerHTML = '';
 
-            if (error) {
-                console.error('Lỗi tải dữ liệu: ', error.message);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Lỗi hệ thống',
-                    text: 'Không thể tải dữ liệu từ cơ sở dữ liệu!'
-                });
-                return;
-            }
-
-            if (data && data.length > 0) {
-                data.forEach(row => {
+            if (dataArray && dataArray.length > 0) {
+                dataArray.forEach(row => {
                     tbody.innerHTML += `
                         <tr>
                             <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${row.ngay_thang || ''}</td>
@@ -299,6 +312,62 @@
                     `;
                 });
             }
+        }
+
+        // Hàm lọc dữ liệu theo thời gian thực
+        function filterData() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const filterDate = document.getElementById('filter-ngay').value;
+            const filterMon = document.getElementById('filter-mon').value.toLowerCase();
+            const filterLop = document.getElementById('filter-lop').value.toLowerCase();
+
+            const filtered = allElogData.filter(row => {
+                // Kiểm tra từ khóa tìm kiếm
+                const matchesSearch = 
+                    (row.mon && row.mon.toLowerCase().includes(searchTerm)) ||
+                    (row.lop && row.lop.toLowerCase().includes(searchTerm)) ||
+                    (row.ma_hv_vang && row.ma_hv_vang.toLowerCase().includes(searchTerm)) ||
+                    (row.ma_hv_phat_bieu && row.ma_hv_phat_bieu.toLowerCase().includes(searchTerm)) ||
+                    (row.chat_luong && row.chat_luong.toLowerCase().includes(searchTerm)) ||
+                    (row.luu_y && row.luu_y.toLowerCase().includes(searchTerm));
+
+                // Kiểm tra điều kiện lọc theo ngày
+                const matchesDate = !filterDate || row.ngay_thang === filterDate;
+
+                // Kiểm tra điều kiện lọc theo môn
+                const matchesMon = !filterMon || (row.mon && row.mon.toLowerCase().includes(filterMon));
+
+                // Kiểm tra điều kiện lọc theo lớp
+                const matchesLop = !filterLop || (row.lop && row.lop.toLowerCase().includes(filterLop));
+
+                return matchesSearch && matchesDate && matchesMon && matchesLop;
+            });
+
+            displayData(filtered);
+        }
+
+        // Gắn sự kiện cho các ô tìm kiếm/lọc
+        document.getElementById('search-input').addEventListener('input', filterData);
+        document.getElementById('filter-ngay').addEventListener('change', filterData);
+        document.getElementById('filter-mon').addEventListener('input', filterData);
+        document.getElementById('filter-lop').addEventListener('input', filterData);
+
+        // Hàm tải dữ liệu từ Supabase
+        async function loadData() {
+            const { data, error } = await supabase.from('elog').select('*').order('id', { ascending: false });
+
+            if (error) {
+                console.error('Lỗi tải dữ liệu: ', error.message);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi hệ thống',
+                    text: 'Không thể tải dữ liệu từ cơ sở dữ liệu!'
+                });
+                return;
+            }
+
+            allElogData = data || [];
+            displayData(allElogData);
         }
 
         // Xử lý sự kiện khi thêm mới
