@@ -5,6 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ thống Hỗ trợ Giảng dạy - TS. Cao Thanh Hùng</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+            padding: 10px;
+        }
+        .dashboard-card {
+            background-color: #fff;
+            border: 1px solid #DAA520;
+            border-radius: 8px;
+            padding: 24px 20px;
+            text-align: center;
+            text-decoration: none;
+            color: #8B0000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(139,0,0,0.15);
+            background-color: #fdf6e9;
+        }
+        .card-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+        .card-title {
+            font-size: 15px;
+            font-weight: bold;
+            margin: 0;
+            line-height: 1.4;
+        }
+    </style>
 </head>
 <body>
 
@@ -15,7 +54,58 @@
         
         <main id="content-area">
             <h1>Chào mừng đến với Hệ thống Giảng dạy số</h1>
-            <p>Chọn một chức năng từ thanh điều hướng (Sidebar) để bắt đầu.</p>
+            <p>Chọn một chức năng từ thanh điều hướng (Sidebar) hoặc truy cập nhanh qua các danh mục dưới đây:</p>
+
+            <div class="dashboard-grid">
+                <a href="edoc.html" class="dashboard-card">
+                    <div class="card-icon">📁</div>
+                    <div class="card-title">1. Hồ sơ bài giảng (eDoc)</div>
+                </a>
+                <a href="elog.html" class="dashboard-card">
+                    <div class="card-icon">📋</div>
+                    <div class="card-title">2. Sổ đầu bài (eLog)</div>
+                </a>
+                <a href="eslide.html" class="dashboard-card">
+                    <div class="card-icon">🖥️</div>
+                    <div class="card-title">3. Bài giảng số (eSlide)</div>
+                </a>
+                <a href="echat.html" class="dashboard-card">
+                    <div class="card-icon">💬</div>
+                    <div class="card-title">4. Thư mục thảo luận (eChat)</div>
+                </a>
+                <a href="ethink.html" class="dashboard-card">
+                    <div class="card-icon">🤖</div>
+                    <div class="card-title">5. Trí tuệ nhân tạo (eThinK1)</div>
+                </a>
+                <a href="elib.html" class="dashboard-card">
+                    <div class="card-icon">📚</div>
+                    <div class="card-title">6. Học liệu số (eLib)</div>
+                </a>
+                <a href="eclass.html" class="dashboard-card">
+                    <div class="card-icon">🎓</div>
+                    <div class="card-title">7. Lớp học số (eClass)</div>
+                </a>
+                <a href="emedia.html" class="dashboard-card">
+                    <div class="card-icon">🎬</div>
+                    <div class="card-title">8. Phim (eMedia)</div>
+                </a>
+                <a href="egame.html" class="dashboard-card">
+                    <div class="card-icon">🎮</div>
+                    <div class="card-title">9. Trò chơi (eGame)</div>
+                </a>
+                <a href="equiz.html" class="dashboard-card">
+                    <div class="card-icon">📝</div>
+                    <div class="card-title">10. Kiểm tra (eQuiz)</div>
+                </a>
+                <a href="eform.html" class="dashboard-card">
+                    <div class="card-icon">📊</div>
+                    <div class="card-title">11. Phản hồi sư phạm (eForm)</div>
+                </a>
+                <a href="edata.html" class="dashboard-card">
+                    <div class="card-icon">📈</div>
+                    <div class="card-title">12. Báo cáo học thuật (eData)</div>
+                </a>
+            </div>
         </main>
     </div>
 
