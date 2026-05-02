@@ -147,62 +147,53 @@
         #btn-export { background: var(--success); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
         #btn-clear { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
 
+        /* Đã xóa pointer-events: none để cho phép sinh viên click link ở các cột mờ */
         .inactive .box-input-area { display: none; }
-        .inactive { pointer-events: none; opacity: 0.6; }
+        .inactive { opacity: 0.6; }
     </style>
 </head>
 <body>
 
-<div id="banner-area"></div>
-<div id="main-layout">
-    <aside id="sidebar-area"></aside>
-    <main id="content-area" style="padding: 0; overflow: hidden; display: flex; flex-direction: column; height: 100vh;">
-        
-        <div id="login-overlay">
-            <div class="login-card">
-                <h2>TRANG THẢO LUẬN ONLINE</h2>
-                
-                <div class="form-group" style="margin-bottom: 15px; text-align: left;">
-                    <label for="inputChannel" style="font-size: 13px; font-weight: bold; color: var(--primary);">Chọn Đội hoặc Vai trò:</label>
-                    <select id="inputChannel" onchange="toggleInputPlaceholder()">
-                        <option value="1">Tham gia Đội 1</option>
-                        <option value="2">Tham gia Đội 2</option>
-                        <option value="3">Tham gia Đội 3</option>
-                        <option value="4">Tham gia Đội 4</option>
-                        <option value="5">Giảng viên / Quản trị</option>
-                    </select>
-                </div>
-                
-                <input type="text" id="inputName" placeholder="Nhập tên thành viên...">
-                <button class="btn-start" onclick="joinChat()">BẮT ĐẦU THẢO LUẬN</button>
+    <div id="login-overlay">
+        <div class="login-card">
+            <h2>TRANG THẢO LUẬN ONLINE</h2>
+            
+            <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                <label for="inputChannel" style="font-size: 13px; font-weight: bold; color: var(--primary);">Chọn Đội hoặc Vai trò:</label>
+                <select id="inputChannel" onchange="toggleInputPlaceholder()">
+                    <option value="1">Tham gia Đội 1</option>
+                    <option value="2">Tham gia Đội 2</option>
+                    <option value="3">Tham gia Đội 3</option>
+                    <option value="4">Tham gia Đội 4</option>
+                    <option value="5">Giảng viên / Quản trị</option>
+                </select>
             </div>
+            
+            <input type="text" id="inputName" placeholder="Nhập tên thành viên...">
+            <button class="btn-start" onclick="joinChat()">BẮT ĐẦU THẢO LUẬN</button>
+        </div>
+    </div>
+
+    <div id="main-chat">
+        <header>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="font-size: 1.1rem; font-weight: bold; color: var(--primary);">TRANG THẢO LUẬN ONLINE</div>
+                <div class="admin-controls" id="admin-tools">
+                    <button id="btn-export" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> TẢI FILE EXCEL DỮ LIỆU THẢO LUẬN</button>
+                    <button id="btn-clear" onclick="clearAllData()"><i class="fas fa-trash-alt"></i> Xóa dữ liệu</button>
+                </div>
+            </div>
+            <div class="user-info" id="displayInfo">Đang tải...</div>
+        </header>
+
+        <div class="search-area">
+            <label style="font-size: 13px; font-weight: 600;"><i class="fas fa-search"></i> Lọc tin nhắn:</label>
+            <input type="text" id="input-search" oninput="filterMessages()" placeholder="Gõ để tìm kiếm nội dung tin nhắn...">
         </div>
 
-        <div id="main-chat">
-            <header>
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <div style="font-size: 1.1rem; font-weight: bold; color: var(--primary);">TRANG THẢO LUẬN ONLINE</div>
-                    <div class="admin-controls" id="admin-tools">
-                        <button id="btn-export" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> TẢI FILE EXCEL DỮ LIỆU THẢO LUẬN</button>
-                        <button id="btn-clear" onclick="clearAllData()"><i class="fas fa-trash-alt"></i> Xóa dữ liệu</button>
-                    </div>
-                </div>
-                <div class="user-info" id="displayInfo">Đang tải...</div>
-            </header>
-
-            <div class="search-area">
-                <label style="font-size: 13px; font-weight: 600;"><i class="fas fa-search"></i> Lọc tin nhắn:</label>
-                <input type="text" id="input-search" oninput="filterMessages()" placeholder="Gõ để tìm kiếm nội dung tin nhắn...">
+        <div class="chat-grid" id="chat-container-root">
             </div>
-
-            <div class="chat-grid" id="chat-container-root">
-                </div>
-        </div>
-
-    </main>
-</div>
-
-<script src="js/main.js"></script>
+    </div>
 
 <script type="module">
     import { supabase } from './js/supabase-client.js';
@@ -211,7 +202,6 @@
     let currentChannel = "";
     let allMessages = [];
 
-    // Gắn hàm vào window để có thể gọi từ giao diện HTML (onclick, onchange...)
     window.toggleInputPlaceholder = function() {
         const chan = document.getElementById('inputChannel').value;
         const inputName = document.getElementById('inputName');
@@ -266,12 +256,22 @@
             document.getElementById('admin-tools').style.display = 'flex';
         }
 
+        // Xử lý bật/tắt các cột tùy theo quyền
         for (let i = 1; i <= 5; i++) {
-            if (i != currentChannel) {
-                document.getElementById(`box-${i}`).classList.add('inactive');
+            if (currentChannel == 5) {
+                // Nếu là Giảng viên: Không làm mờ cột nào, cho phép thảo luận ở mọi cột
+                if (i == 5) {
+                    document.getElementById(`status-${i}`).innerText = "(Bạn)";
+                    document.getElementById(`title-${i}`).innerText = "GV: " + currentUser;
+                }
             } else {
-                document.getElementById(`status-${i}`).innerText = "(Bạn)";
-                document.getElementById(`title-${i}`).innerText = (i==5?"GV: ":"ĐỘI "+i+": ") + currentUser;
+                // Nếu là Đội/Thành viên: Làm mờ các cột khác (bao gồm cột GV)
+                if (i != currentChannel) {
+                    document.getElementById(`box-${i}`).classList.add('inactive');
+                } else {
+                    document.getElementById(`status-${i}`).innerText = "(Bạn)";
+                    document.getElementById(`title-${i}`).innerText = "ĐỘI " + i + ": " + currentUser;
+                }
             }
         }
 
@@ -279,7 +279,6 @@
     };
 
     async function loadOldMessages() {
-        // Sử dụng biến supabase đã import
         const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: true });
         if (error) {
             console.error("Lỗi tải tin nhắn:", error);
@@ -332,7 +331,6 @@
         renderMessages(filtered);
     };
 
-    // Lắng nghe realtime qua supabase
     supabase.channel('any')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, payload => {
             if (payload.eventType === 'INSERT') {
@@ -426,7 +424,6 @@
         });
     };
 
-    // Hỗ trợ Enter để gửi tin
     for (let i = 1; i <= 5; i++) {
         const inputField = document.getElementById(`input-field-${i}`);
         if(inputField) {
