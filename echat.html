@@ -6,7 +6,6 @@
     <title>Trang Thảo Luận Online - TS. Cao Thanh Hùng</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
@@ -154,61 +153,66 @@
 </head>
 <body>
 
-<div id="login-overlay">
-    <div class="login-card">
-        <h2>TRANG THẢO LUẬN ONLINE</h2>
+<div id="banner-area"></div>
+<div id="main-layout">
+    <aside id="sidebar-area"></aside>
+    <main id="content-area" style="padding: 0; overflow: hidden; display: flex; flex-direction: column; height: 100vh;">
         
-        <div class="form-group" style="margin-bottom: 15px; text-align: left;">
-            <label for="inputChannel" style="font-size: 13px; font-weight: bold; color: var(--primary);">Chọn Đội hoặc Vai trò:</label>
-            <select id="inputChannel" onchange="toggleInputPlaceholder()">
-                <option value="1">Tham gia Đội 1</option>
-                <option value="2">Tham gia Đội 2</option>
-                <option value="3">Tham gia Đội 3</option>
-                <option value="4">Tham gia Đội 4</option>
-                <option value="5">Giảng viên / Quản trị</option>
-            </select>
-        </div>
-        
-        <input type="text" id="inputName" placeholder="Nhập tên thành viên...">
-        
-        <button class="btn-start" onclick="joinChat()">BẮT ĐẦU THẢO LUẬN</button>
-    </div>
-</div>
-
-<div id="main-chat">
-    <header>
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <div style="font-size: 1.1rem; font-weight: bold; color: var(--primary);">TRANG THẢO LUẬN ONLINE</div>
-            <div class="admin-controls" id="admin-tools">
-                <button id="btn-export" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> TẢI FILE EXCEL DỮ LIỆU THẢO LUẬN</button>
-                <button id="btn-clear" onclick="clearAllData()"><i class="fas fa-trash-alt"></i> Xóa dữ liệu</button>
+        <div id="login-overlay">
+            <div class="login-card">
+                <h2>TRANG THẢO LUẬN ONLINE</h2>
+                
+                <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                    <label for="inputChannel" style="font-size: 13px; font-weight: bold; color: var(--primary);">Chọn Đội hoặc Vai trò:</label>
+                    <select id="inputChannel" onchange="toggleInputPlaceholder()">
+                        <option value="1">Tham gia Đội 1</option>
+                        <option value="2">Tham gia Đội 2</option>
+                        <option value="3">Tham gia Đội 3</option>
+                        <option value="4">Tham gia Đội 4</option>
+                        <option value="5">Giảng viên / Quản trị</option>
+                    </select>
+                </div>
+                
+                <input type="text" id="inputName" placeholder="Nhập tên thành viên...">
+                <button class="btn-start" onclick="joinChat()">BẮT ĐẦU THẢO LUẬN</button>
             </div>
         </div>
-        <div class="user-info" id="displayInfo">Đang tải...</div>
-    </header>
 
-    <div class="search-area">
-        <label style="font-size: 13px; font-weight: 600;"><i class="fas fa-search"></i> Lọc tin nhắn:</label>
-        <input type="text" id="input-search" oninput="filterMessages()" placeholder="Gõ để tìm kiếm nội dung tin nhắn...">
-    </div>
+        <div id="main-chat">
+            <header>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div style="font-size: 1.1rem; font-weight: bold; color: var(--primary);">TRANG THẢO LUẬN ONLINE</div>
+                    <div class="admin-controls" id="admin-tools">
+                        <button id="btn-export" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> TẢI FILE EXCEL DỮ LIỆU THẢO LUẬN</button>
+                        <button id="btn-clear" onclick="clearAllData()"><i class="fas fa-trash-alt"></i> Xóa dữ liệu</button>
+                    </div>
+                </div>
+                <div class="user-info" id="displayInfo">Đang tải...</div>
+            </header>
 
-    <div class="chat-grid" id="chat-container-root">
+            <div class="search-area">
+                <label style="font-size: 13px; font-weight: 600;"><i class="fas fa-search"></i> Lọc tin nhắn:</label>
+                <input type="text" id="input-search" oninput="filterMessages()" placeholder="Gõ để tìm kiếm nội dung tin nhắn...">
+            </div>
+
+            <div class="chat-grid" id="chat-container-root">
+                </div>
         </div>
+
+    </main>
 </div>
 
-<script>
-    // THẦY VUI LÒNG THAY BẰNG URL VÀ ANON KEY CHUẨN TỪ SUPABASE (Bắt đầu bằng eyJ...)
-    const SUPABASE_URL = 'https://iatarpzwbpmvxafkuhvh.supabase.co'; 
-    const SUPABASE_KEY = 'sb_publishable_L8zkZyosiIUfXbznifDV5g_Stvlxt_O'; // <-- KHÓA NÀY ĐANG BỊ SAI ĐỊNH DẠNG
-    
-    const mySupabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+<script src="js/main.js"></script>
+
+<script type="module">
+    import { supabase } from './js/supabase-client.js';
 
     let currentUser = "";
     let currentChannel = "";
     let allMessages = [];
 
-    // Tự động đổi chữ mờ (placeholder) dựa trên lựa chọn
-    function toggleInputPlaceholder() {
+    // Gắn hàm vào window để có thể gọi từ giao diện HTML (onclick, onchange...)
+    window.toggleInputPlaceholder = function() {
         const chan = document.getElementById('inputChannel').value;
         const inputName = document.getElementById('inputName');
         if(chan == 5) {
@@ -216,7 +220,7 @@
         } else {
             inputName.placeholder = "Nhập tên thành viên...";
         }
-    }
+    };
 
     const root = document.getElementById('chat-container-root');
     for (let i = 1; i <= 5; i++) {
@@ -240,7 +244,7 @@
         `;
     }
 
-    function joinChat() {
+    window.joinChat = function() {
         const name = document.getElementById('inputName').value.trim();
         const chan = document.getElementById('inputChannel').value;
         
@@ -272,13 +276,14 @@
         }
 
         loadOldMessages();
-    }
+    };
 
     async function loadOldMessages() {
-        const { data, error } = await mySupabase.from('messages').select('*').order('created_at', { ascending: true });
+        // Sử dụng biến supabase đã import
+        const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: true });
         if (error) {
             console.error("Lỗi tải tin nhắn:", error);
-            Swal.fire('Lỗi kết nối', 'Vui lòng kiểm tra lại cấu hình Supabase Key.', 'error');
+            Swal.fire('Lỗi kết nối', 'Không thể tải tin nhắn từ máy chủ.', 'error');
             return;
         }
         if (data) {
@@ -290,7 +295,7 @@
     function renderMessages(dataArray) {
         for (let i = 1; i <= 5; i++) {
             const container = document.getElementById(`msg-${i}`);
-            container.innerHTML = '';
+            if(container) container.innerHTML = '';
         }
 
         dataArray.forEach(msg => {
@@ -318,16 +323,17 @@
         });
     }
 
-    function filterMessages() {
+    window.filterMessages = function() {
         const keyword = document.getElementById('input-search').value.toLowerCase();
         const filtered = allMessages.filter(msg => 
             msg.content.toLowerCase().includes(keyword) || 
             msg.sender_name.toLowerCase().includes(keyword)
         );
         renderMessages(filtered);
-    }
+    };
 
-    mySupabase.channel('any')
+    // Lắng nghe realtime qua supabase
+    supabase.channel('any')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, payload => {
             if (payload.eventType === 'INSERT') {
                 allMessages.push(payload.new);
@@ -339,12 +345,12 @@
         })
         .subscribe();
 
-    async function sendMsgFromBox(chanId, manualText = null) {
+    window.sendMsgFromBox = async function(chanId, manualText = null) {
         const input = document.getElementById(`input-field-${chanId}`);
         const text = manualText || input.value.trim();
         if (!text) return;
 
-        const { error } = await mySupabase.from('messages').insert([{
+        const { error } = await supabase.from('messages').insert([{
             sender_name: currentUser,
             channel_id: chanId.toString(),
             content: text
@@ -355,34 +361,33 @@
         } else {
             input.value = '';
         }
-    }
+    };
 
-    async function uploadFile(chanId) {
+    window.uploadFile = async function(chanId) {
         const fileInput = document.getElementById(`file-${chanId}`);
         const file = fileInput.files[0];
         if (!file) return;
 
-        // Báo hiệu đang tải file
         Swal.fire({ title: 'Đang tải file...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
 
         const cleanName = file.name.replace(/\s+/g, '_');
         const fileName = `${Date.now()}_${cleanName}`;
 
-        const { data, error } = await mySupabase.storage.from('CHAT-FILES').upload(fileName, file);
+        const { data, error } = await supabase.storage.from('CHAT-FILES').upload(fileName, file);
         if (error) {
             Swal.fire('Thất bại', 'Lỗi upload file: ' + error.message, 'error');
             return;
         }
 
-        const { data: urlData } = mySupabase.storage.from('CHAT-FILES').getPublicUrl(fileName);
+        const { data: urlData } = supabase.storage.from('CHAT-FILES').getPublicUrl(fileName);
         
-        Swal.close(); // Đóng thông báo
+        Swal.close(); 
         sendMsgFromBox(chanId, urlData.publicUrl);
         fileInput.value = '';
-    }
+    };
 
-    async function exportToExcel() {
-        const { data } = await mySupabase.from('messages').select('*').order('created_at', { ascending: true });
+    window.exportToExcel = async function() {
+        const { data } = await supabase.from('messages').select('*').order('created_at', { ascending: true });
         if (!data || data.length === 0) {
             Swal.fire('Thông báo', 'Không có dữ liệu để xuất', 'info');
             return;
@@ -403,9 +408,9 @@
         link.href = URL.createObjectURL(blob);
         link.download = `Du_Lieu_Thao_Luan_Online_${new Date().toLocaleDateString('vi-VN')}.csv`;
         link.click();
-    }
+    };
 
-    async function clearAllData() {
+    window.clearAllData = async function() {
         Swal.fire({
             title: 'Xóa toàn bộ dữ liệu?',
             text: "Dữ liệu thảo luận sẽ bị xóa sạch trên database!",
@@ -416,15 +421,19 @@
             confirmButtonText: 'Xóa'
         }).then(async (result) => {
             if (result.isConfirmed) {
-                await mySupabase.from('messages').delete().neq('channel_id', '0');
+                await supabase.from('messages').delete().neq('channel_id', '0');
             }
         });
-    }
+    };
 
+    // Hỗ trợ Enter để gửi tin
     for (let i = 1; i <= 5; i++) {
-        document.getElementById(`input-field-${i}`).addEventListener("keypress", (e) => {
-            if (e.key === "Enter") sendMsgFromBox(i);
-        });
+        const inputField = document.getElementById(`input-field-${i}`);
+        if(inputField) {
+            inputField.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") sendMsgFromBox(i);
+            });
+        }
     }
 </script>
 </body>
