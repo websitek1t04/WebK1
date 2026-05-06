@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thi đấu Điền khuyết - eQuiz Đối Kháng</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e9ecef;
+            color: #333;
+            line-height: 1.6;
+            padding: 10px 20px;
+            margin: 0;
+        }
+
+        /* Bảng điều khiển trung tâm */
+        .control-panel {
+            text-align: center;
+            background: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border-top: 5px solid #DAA520;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .timer-display {
+            font-size: 36px;
+            font-weight: bold;
+            color: #900000;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 10px 0;
+        }
+
+        .btn-start {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            padding: 10px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 0 #1e7e34;
+        }
+        .btn-start:hover { background-color: #218838; }
+        .btn-start:active { transform: translateY(2px); box-shadow: 0 2px 0 #1e7e34; }
+        .btn-start:disabled { background-color: #ccc; box-shadow: none; cursor: not-allowed; }
+
+        /* Bố cục chia đôi màn hình */
+        .split-screen {
+            display: flex;
+            gap: 25px;
+            justify-content: center;
+        }
+
+        .team-column {
+            flex: 1;
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+            position: relative;
+            border-width: 8px 1px 1px 1px;
+            border-style: solid;
+        }
+
+        /* Nhận diện Đội 1: BÚA LIỀM (Tông Đỏ) */
+        #team1 {
+            border-color: #900000 #dee2e6 #dee2e6 #dee2e6;
+            background-color: #fffafa;
+        }
+        #team1 .team-name-display {
+            background-color: #900000;
+            color: #ffffff;
+        }
+
+        /* Nhận diện Đội 2: SAO VÀNG (Tông Vàng/Vàng Đồng) */
+        #team2 {
+            border-color: #DAA520 #dee2e6 #dee2e6 #dee2e6;
+            background-color: #fffff2;
+        }
+        #team2 .team-name-display {
+            background-color: #DAA520;
+            color: #ffffff;
+        }
+
+        .team-name-display {
+            width: 100%;
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            text-transform: uppercase;
+            padding: 10px 0;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            letter-spacing: 2px;
+        }
+
+        .station-title {
+            color: #555;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            border-left: 4px solid #DAA520;
+            padding-left: 10px;
+        }
+
+        .quiz-content p {
+            font-size: 15px;
+            margin-bottom: 15px;
+            text-align: justify;
+            line-height: 1.8;
+        }
+
+        .milestone {
+            display: inline-block;
+            background-color: #444;
+            color: #ffffff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 5px;
+            font-size: 14px;
+        }
+
+        /* Ô nhập liệu điền khuyết */
+        .blank-input {
+            width: 110px;
+            border: none;
+            border-bottom: 2px dashed #900000;
+            background-color: #fdfdfd;
+            font-size: 15px;
+            color: #000;
+            text-align: center;
+            font-weight: bold;
+            padding: 2px 5px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+        .blank-input:focus { border-bottom: 2px solid #DAA520; background-color: #fff9e6; }
+        .blank-input:disabled { background-color: #e9ecef; cursor: not-allowed; border-bottom-color: #ccc; }
+
+        .correct { border-bottom: 3px solid #28a745 !important; color: #28a745; background-color: #e6ffed !important; }
+        .incorrect { border-bottom: 3px solid #dc3545 !important; color: #dc3545; background-color: #ffe6e6 !important; }
+
+        /* Nút nộp bài */
+        .btn-submit {
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+            padding: 15px;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        #btnSubmit1 { background-color: #900000; }
+        #btnSubmit1:hover { background-color: #b30000; }
+        #btnSubmit2 { background-color: #DAA520; }
+        #btnSubmit2:hover { background-color: #f0b41a; }
+        .btn-submit:disabled { background-color: #ccc !important; cursor: not-allowed; }
+
+        /* Kết quả */
+        .team-result {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            display: none;
+            padding: 10px;
+            border-radius: 5px;
+            background: #fff;
+            border: 1px solid #ddd;
+        }
+        .score-text { color: #900000; font-size: 22px; }
+        .time-text { color: #0056b3; font-size: 18px; }
+
+        /* Bảng xếp hạng chung cuộc */
+        #finalResultBanner {
+            display: none;
+            text-align: center;
+            background: #212529;
+            color: #DAA520;
+            padding: 20px;
+            font-size: 26px;
+            font-weight: bold;
+            border-radius: 12px;
+            margin-top: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+            border: 2px solid #DAA520;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="control-panel">
+        <button class="btn-start" id="btnStart" onclick="startCompetition()">BẮT ĐẦU</button>
+        <div class="timer-display" id="globalTimer">00:00:00</div>
+     </div>
+
+    <div class="split-screen">
+        
+        <div class="team-column" id="team1">
+            <div class="team-name-display" id="nameTeam1Display">BÚA LIỀM</div>
+            <input type="hidden" id="nameTeam1" value="BÚA LIỀM">
+            
+            <div class="quiz-content" id="areaTeam1">
+                <div class="station-title">Trạm 1: Phát triển tư duy của Đảng về thể chế kinh tế</div>
+                <p><span class="milestone">Đại hội IV:</span> Đảng tiếp tục chủ trương xây dựng nền kinh tế <input type="text" class="blank-input" data-answer="kế hoạch hóa|kế hoạch hoá" disabled>, tập trung, bao cấp trên phạm vi cả nước;</p>
+                <p><span class="milestone">Đại hội VI:</span> Đảng chủ trương phát triển kinh tế <input type="text" class="blank-input" data-answer="hàng hóa|hàng hoá" disabled> nhiều thành phần.</p>
+                <p><span class="milestone">Đại hội IX:</span> Xây dựng nền kinh tế <input type="text" class="blank-input" data-answer="thị trường" disabled> định hướng xã hội chủ nghĩa.</p>
+                <p><span class="milestone">Nghị quyết số 68, khoá XIII:</span> phát triển kinh tế <input type="text" class="blank-input" data-answer="tư nhân" disabled>.</p>
+                <p><span class="milestone">Nghị quyết số 79, khoá XIII:</span> phát triển kinh tế <input type="text" class="blank-input" data-answer="nhà nước" disabled>.</p>
+                <p><span class="milestone">Đại hội XIV:</span> Đẩy mạnh phát triển nền kinh tế thị trường định hướng xã hội chủ nghĩa hiện đại, hội nhập quốc tế, đáp ứng yêu cầu phát triển <input type="text" class="blank-input" data-answer="lực lượng sản xuất" disabled> mới.</p>
+                
+                <div class="station-title">Trạm 2</div>
+                <p>Đến năm 2025 quy mô kinh tế của Việt Nam xếp hạng <input type="text" class="blank-input" data-answer="32" style="width: 40px;" disabled> thế giới, thứ tư khu vực Đông Nam Á với <input type="text" class="blank-input" data-answer="510" style="width: 50px;" disabled> tỷ đô la Mỹ và triển vọng năm <input type="text" class="blank-input" data-answer="2045" style="width: 50px;" disabled>, Việt Nam có mặt trong danh sách <input type="text" class="blank-input" data-answer="20" style="width: 40px;" disabled> nền kinh tế lớn nhất thế giới.</p>
+            </div>
+
+            <button class="btn-submit" id="btnSubmit1" onclick="submitTeam(1)" disabled>NỘP BÀI</button>
+            <div class="team-result" id="resultTeam1">
+                Số đáp án đúng: <span class="score-text" id="score1">0/11</span> <br>
+                Thời gian hoàn thành: <span class="time-text" id="time1">--:--:--</span>
+            </div>
+        </div>
+
+        <div class="team-column" id="team2">
+            <div class="team-name-display" id="nameTeam2Display">SAO VÀNG</div>
+            <input type="hidden" id="nameTeam2" value="SAO VÀNG">
+            
+            <div class="quiz-content" id="areaTeam2">
+                <div class="station-title">Trạm 1: Phát triển tư duy của Đảng về thể chế kinh tế</div>
+                <p><span class="milestone">Đại hội IV:</span> Đảng tiếp tục chủ trương xây dựng nền kinh tế <input type="text" class="blank-input" data-answer="kế hoạch hóa|kế hoạch hoá" disabled>, tập trung, bao cấp trên phạm vi cả nước;</p>
+                <p><span class="milestone">Đại hội VI:</span> Đảng chủ trương phát triển kinh tế <input type="text" class="blank-input" data-answer="hàng hóa|hàng hoá" disabled> nhiều thành phần.</p>
+                <p><span class="milestone">Đại hội IX:</span> Xây dựng nền kinh tế <input type="text" class="blank-input" data-answer="thị trường" disabled> định hướng xã hội chủ nghĩa.</p>
+                <p><span class="milestone">Nghị quyết số 68, khoá XIII:</span> phát triển kinh tế <input type="text" class="blank-input" data-answer="tư nhân" disabled>.</p>
+                <p><span class="milestone">Nghị quyết số 79, khoá XIII:</span> phát triển kinh tế <input type="text" class="blank-input" data-answer="nhà nước" disabled>.</p>
+                <p><span class="milestone">Đại hội XIV:</span> Đẩy mạnh phát triển nền kinh tế thị trường định hướng xã hội chủ nghĩa hiện đại, hội nhập quốc tế, đáp ứng yêu cầu phát triển <input type="text" class="blank-input" data-answer="lực lượng sản xuất" disabled> mới.</p>
+                
+                <div class="station-title">Trạm 2</div>
+                <p>Đến năm 2025, quy mô kinh tế của Việt Nam xếp hạng <input type="text" class="blank-input" data-answer="32" style="width: 40px;" disabled> thế giới, thứ tư khu vực Đông Nam Á với <input type="text" class="blank-input" data-answer="510" style="width: 50px;" disabled> tỷ đô la Mỹ và triển vọng năm <input type="text" class="blank-input" data-answer="2045" style="width: 50px;" disabled>, Việt Nam có mặt trong danh sách <input type="text" class="blank-input" data-answer="20" style="width: 40px;" disabled> nền kinh tế lớn nhất thế giới.</p>
+            </div>
+
+            <button class="btn-submit" id="btnSubmit2" onclick="submitTeam(2)" disabled>NỘP BÀI</button>
+            <div class="team-result" id="resultTeam2">
+                Số đáp án đúng: <span class="score-text" id="score2">0/11</span> <br>
+                Thời gian hoàn thành: <span class="time-text" id="time2">--:--:--</span>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="finalResultBanner"></div>
+
+    <script>
+        let startTime;
+        let timerInterval;
+        let teamData = {
+            1: { score: 0, timeMs: 0, finished: false },
+            2: { score: 0, timeMs: 0, finished: false }
+        };
+
+        function formatTime(ms) {
+            let minutes = Math.floor(ms / 60000);
+            let seconds = Math.floor((ms % 60000) / 1000);
+            let centiseconds = Math.floor((ms % 1000) / 10);
+            return (minutes < 10 ? "0" : "") + minutes + ":" + 
+                   (seconds < 10 ? "0" : "") + seconds + ":" + 
+                   (centiseconds < 10 ? "0" : "") + centiseconds;
+        }
+
+        function updateTimer() {
+            let currentTime = Date.now() - startTime;
+            document.getElementById('globalTimer').innerText = formatTime(currentTime);
+        }
+
+        function startCompetition() {
+            document.getElementById('btnSubmit1').disabled = false;
+            document.getElementById('btnSubmit2').disabled = false;
+            document.getElementById('btnStart').disabled = true;
+            document.getElementById('btnStart').innerText = "ĐANG THI ĐẤU...";
+
+            document.querySelectorAll('.blank-input').forEach(input => {
+                input.disabled = false;
+                input.onfocus = function() { this.type = "text"; };
+                input.onblur = function() {
+                    if (this.value.trim() !== "") { this.type = "password"; }
+                };
+            });
+
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 10);
+        }
+
+        function submitTeam(teamId) {
+            teamData[teamId].timeMs = Date.now() - startTime;
+            teamData[teamId].finished = true;
+
+            let area = document.getElementById('areaTeam' + teamId);
+            let inputs = area.querySelectorAll('.blank-input');
+            let correctCount = 0;
+            const totalQuestions = inputs.length;
+
+            inputs.forEach(input => {
+                const studentAnswer = input.value.trim().toLowerCase();
+                const correctAnswers = input.getAttribute('data-answer').toLowerCase().split('|');
+
+                input.type = "text"; 
+                input.classList.remove('correct', 'incorrect');
+                input.onfocus = null;
+                input.onblur = null;
+                input.disabled = true; 
+
+                if (correctAnswers.includes(studentAnswer)) {
+                    input.classList.add('correct');
+                    correctCount++;
+                } else {
+                    input.classList.add('incorrect');
+                }
+            });
+
+            teamData[teamId].score = correctCount;
+            document.getElementById('score' + teamId).innerText = correctCount + '/' + totalQuestions;
+            document.getElementById('time' + teamId).innerText = formatTime(teamData[teamId].timeMs);
+            document.getElementById('resultTeam' + teamId).style.display = 'block';
+            
+            let btnSubmit = document.getElementById('btnSubmit' + teamId);
+            btnSubmit.disabled = true;
+            btnSubmit.innerText = "ĐÃ XONG";
+
+            if (teamData[1].finished && teamData[2].finished) {
+                clearInterval(timerInterval);
+                declareWinner();
+            }
+        }
+
+        function declareWinner() {
+            let name1 = document.getElementById('nameTeam1').value;
+            let name2 = document.getElementById('nameTeam2').value;
+            let banner = document.getElementById('finalResultBanner');
+            let message = "";
+
+            let score1 = teamData[1].score;
+            let score2 = teamData[2].score;
+            let time1 = teamData[1].timeMs;
+            let time2 = teamData[2].timeMs;
+
+            if (score1 > score2) {
+                message = `🏆 CHÚC MỪNG ĐỘI ${name1} CHIẾN THẮNG!`;
+            } else if (score2 > score1) {
+                message = `🏆 CHÚC MỪNG ĐỘI ${name2} CHIẾN THẮNG!`;
+            } else {
+                if (time1 < time2) {
+                    message = `🏆 ĐỘI ${name1} THẮNG NHỜ TỐC ĐỘ! (BẰNG ĐIỂM)`;
+                } else if (time2 < time1) {
+                    message = `🏆 ĐỘI ${name2} THẮNG NHỜ TỐC ĐỘ! (BẰNG ĐIỂM)`;
+                } else {
+                    message = `🤝 HAI ĐỘI HÒA NHAU TUYỆT ĐỐI!`;
+                }
+            }
+
+            banner.innerText = message;
+            banner.style.display = 'block';
+            document.getElementById('btnStart').innerText = "KẾT THÚC";
+        }
+    </script>
+</body>
+</html>
