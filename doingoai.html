@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thi đấu Điền khuyết - eQuiz Đối Kháng</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,155 +16,99 @@
             margin: 0;
         }
 
-        /* Bảng điều khiển trung tâm */
+        /* --- CSS MÀN HÌNH ĐĂNG NHẬP (Lấy từ eGame) --- */
+        #login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #8B0000, #5c0505);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999; transition: 0.5s;
+        }
+        .login-card {
+            background: white; padding: 40px; border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center; width: 380px;
+        }
+        .login-card h2 { color: #8B0000; margin-bottom: 25px; font-size: 24px; text-transform: uppercase;}
+        .login-card input, .login-card select {
+            width: 100%; padding: 12px; margin-bottom: 15px;
+            border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px;
+        }
+        .btn-start-login {
+            width: 100%; padding: 12px; background: #DAA520;
+            color: #8B0000; border: none; border-radius: 8px; font-weight: bold;
+            cursor: pointer; font-size: 16px; box-shadow: 0 4px #b8860b;
+        }
+        .btn-start-login:hover { background-color: #c59b27; transform: translateY(-2px); }
+
+        /* --- CSS BẢNG ĐIỀU KHIỂN & TRÒ CHƠI --- */
+        #game-layout { display: none; }
+
         .control-panel {
-            text-align: center;
-            background: #ffffff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            border-top: 5px solid #DAA520;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            text-align: center; background: #ffffff; padding: 15px;
+            border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px; border-top: 5px solid #DAA520;
+            position: sticky; top: 0; z-index: 100;
         }
 
         .timer-display {
-            font-size: 36px;
-            font-weight: bold;
-            color: #900000;
-            font-family: 'Courier New', Courier, monospace;
-            margin: 10px 0;
+            font-size: 36px; font-weight: bold; color: #900000;
+            font-family: 'Courier New', Courier, monospace; margin: 10px 0;
         }
 
         .btn-start {
-            background-color: #28a745;
-            color: #fff;
-            border: none;
-            padding: 10px 40px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: 0.3s;
+            background-color: #28a745; color: #fff; border: none;
+            padding: 10px 40px; font-size: 18px; font-weight: bold;
+            border-radius: 5px; cursor: pointer; transition: 0.3s;
             box-shadow: 0 4px 0 #1e7e34;
         }
         .btn-start:hover { background-color: #218838; }
         .btn-start:active { transform: translateY(2px); box-shadow: 0 2px 0 #1e7e34; }
-        .btn-start:disabled { background-color: #ccc; box-shadow: none; cursor: not-allowed; }
+        .btn-start:disabled { background-color: #ccc; box-shadow: none; cursor: not-allowed; display: none; }
 
-        /* Bố cục chia đôi màn hình */
-        .split-screen {
-            display: flex;
-            gap: 25px;
-            justify-content: center;
-        }
+        .split-screen { display: flex; gap: 25px; justify-content: center; }
 
         .team-column {
-            flex: 1;
-            background: #ffffff;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
-            position: relative;
-            border-width: 8px 1px 1px 1px;
-            border-style: solid;
+            flex: 1; background: #ffffff; padding: 25px; border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1); position: relative;
+            border-width: 8px 1px 1px 1px; border-style: solid;
+            opacity: 0.9; transition: opacity 0.3s;
         }
+        .team-column.my-team { opacity: 1; box-shadow: 0 0 20px rgba(218, 165, 32, 0.4); }
 
-        /* Nhận diện Đội 1: BÚA LIỀM (Tông Đỏ) */
-        #team1 {
-            border-color: #900000 #dee2e6 #dee2e6 #dee2e6;
-            background-color: #fffafa;
-        }
-        #team1 .team-name-display {
-            background-color: #900000;
-            color: #ffffff;
-        }
+        #team1 { border-color: #900000 #dee2e6 #dee2e6 #dee2e6; background-color: #fffafa; }
+        #team1 .team-name-display { background-color: #900000; color: #ffffff; }
 
-        /* Nhận diện Đội 2: SAO VÀNG (Tông Vàng/Vàng Đồng) */
-        #team2 {
-            border-color: #DAA520 #dee2e6 #dee2e6 #dee2e6;
-            background-color: #fffff2;
-        }
-        #team2 .team-name-display {
-            background-color: #DAA520;
-            color: #ffffff;
-        }
+        #team2 { border-color: #DAA520 #dee2e6 #dee2e6 #dee2e6; background-color: #fffff2; }
+        #team2 .team-name-display { background-color: #DAA520; color: #ffffff; }
 
         .team-name-display {
-            width: 100%;
-            text-align: center;
-            font-size: 28px;
-            font-weight: bold;
-            text-transform: uppercase;
-            padding: 10px 0;
-            margin-bottom: 20px;
-            border-radius: 6px;
-            letter-spacing: 2px;
+            width: 100%; text-align: center; font-size: 28px; font-weight: bold;
+            text-transform: uppercase; padding: 10px 0; margin-bottom: 20px;
+            border-radius: 6px; letter-spacing: 2px;
         }
 
         .station-title {
-            color: #555;
-            font-size: 18px;
-            font-weight: bold;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            border-left: 4px solid #DAA520;
-            padding-left: 10px;
+            color: #555; font-size: 18px; font-weight: bold;
+            margin-top: 20px; margin-bottom: 10px;
+            border-left: 4px solid #DAA520; padding-left: 10px;
         }
 
-        .quiz-content p {
-            font-size: 15px;
-            margin-bottom: 15px;
-            text-align: justify;
-            line-height: 1.8;
-        }
+        .quiz-content p { font-size: 15px; margin-bottom: 15px; text-align: justify; line-height: 1.8; }
+        .milestone { display: inline-block; background-color: #444; color: #ffffff; padding: 2px 8px; border-radius: 4px; font-weight: bold; margin-right: 5px; font-size: 14px; }
 
-        .milestone {
-            display: inline-block;
-            background-color: #444;
-            color: #ffffff;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            margin-right: 5px;
-            font-size: 14px;
-        }
-
-        /* Ô nhập liệu điền khuyết */
         .blank-input {
-            width: 110px;
-            border: none;
-            border-bottom: 2px dashed #900000;
-            background-color: #fdfdfd;
-            font-size: 15px;
-            color: #000;
-            text-align: center;
-            font-weight: bold;
-            padding: 2px 5px;
-            transition: all 0.3s ease;
-            outline: none;
+            width: 110px; border: none; border-bottom: 2px dashed #900000;
+            background-color: #fdfdfd; font-size: 15px; color: #000;
+            text-align: center; font-weight: bold; padding: 2px 5px; outline: none;
         }
         .blank-input:focus { border-bottom: 2px solid #DAA520; background-color: #fff9e6; }
         .blank-input:disabled { background-color: #e9ecef; cursor: not-allowed; border-bottom-color: #ccc; }
-
         .correct { border-bottom: 3px solid #28a745 !important; color: #28a745; background-color: #e6ffed !important; }
         .incorrect { border-bottom: 3px solid #dc3545 !important; color: #dc3545; background-color: #ffe6e6 !important; }
 
-        /* Nút nộp bài */
         .btn-submit {
-            display: block;
-            width: 100%;
-            margin-top: 20px;
-            padding: 15px;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.3s;
+            display: block; width: 100%; margin-top: 20px; padding: 15px;
+            color: #fff; border: none; border-radius: 6px; font-size: 18px;
+            font-weight: bold; cursor: pointer;
         }
         #btnSubmit1 { background-color: #900000; }
         #btnSubmit1:hover { background-color: #b30000; }
@@ -170,106 +116,187 @@
         #btnSubmit2:hover { background-color: #f0b41a; }
         .btn-submit:disabled { background-color: #ccc !important; cursor: not-allowed; }
 
-        /* Kết quả */
         .team-result {
-            text-align: center;
-            margin-top: 15px;
-            font-size: 18px;
-            font-weight: bold;
-            display: none;
-            padding: 10px;
-            border-radius: 5px;
-            background: #fff;
-            border: 1px solid #ddd;
+            text-align: center; margin-top: 15px; font-size: 18px; font-weight: bold;
+            display: none; padding: 10px; border-radius: 5px; background: #fff; border: 1px solid #ddd;
         }
         .score-text { color: #900000; font-size: 22px; }
         .time-text { color: #0056b3; font-size: 18px; }
 
-        /* Bảng xếp hạng chung cuộc */
         #finalResultBanner {
-            display: none;
-            text-align: center;
-            background: #212529;
-            color: #DAA520;
-            padding: 20px;
-            font-size: 26px;
-            font-weight: bold;
-            border-radius: 12px;
-            margin-top: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            text-transform: uppercase;
-            border: 2px solid #DAA520;
+            display: none; text-align: center; background: #212529; color: #DAA520;
+            padding: 20px; font-size: 26px; font-weight: bold; border-radius: 12px;
+            margin-top: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            text-transform: uppercase; border: 2px solid #DAA520;
         }
     </style>
 </head>
 <body>
 
-    <div class="control-panel">
-        <button class="btn-start" id="btnStart" onclick="startCompetition()">BẮT ĐẦU</button>
-        <div class="timer-display" id="globalTimer">00:00:00</div>
-        <div style="font-size: 14px; color: #666; font-style: italic;">.</div>
+    <div id="login-overlay">
+        <div class="login-card">
+            <h2>ĐĂNG NHẬP THI ĐẤU</h2>
+            <input type="text" id="inputPin" placeholder="Nhập Mã Phòng (VD: 123)..." style="text-align:center; font-size: 18px; font-weight: bold; letter-spacing: 2px;">
+            <select id="inputRole">
+                <option value="host">👨‍🏫 Giảng Viên (Điều khiển)</option>
+                <option value="1">🚩 Đội 1 - BÚA LIỀM</option>
+                <option value="2">⭐ Đội 2 - SAO VÀNG</option>
+            </select>
+            <button class="btn-start-login" onclick="joinGame()">VÀO PHÒNG</button>
+        </div>
     </div>
 
-    <div class="split-screen">
+    <div id="game-layout">
+        <div class="control-panel">
+            <div id="room-info" style="font-size: 16px; font-weight: bold; color: #555; margin-bottom: 10px;">PHÒNG: --- | VAI TRÒ: ---</div>
+            <button class="btn-start" id="btnStart" onclick="hostStartGame()">BẮT ĐẦU THI ĐẤU</button>
+            <div class="timer-display" id="globalTimer">00:00:00</div>
+            <div style="font-size: 14px; color: #666; font-style: italic;" id="status-text">Đang chờ Giảng viên bấm Bắt đầu...</div>
+        </div>
+
+        <div class="split-screen">
+            <div class="team-column" id="team1">
+                <div class="team-name-display">BÚA LIỀM</div>
+                
+                <div class="quiz-content" id="areaTeam1">
+                    <div class="station-title">Trạm 1: Phát triển tư duy về đối ngoại – quốc phòng – an ninh</div>
+                    <p><span class="milestone">Đại hội VI:</span> “Tăng cường đoàn kết và hợp tác toàn diện với <input type="text" class="blank-input" data-answer="liên xô" disabled> luôn luôn là <input type="text" class="blank-input" data-answer="hòn đá tảng" disabled> trong chính sách đối ngoại của Đảng và Nhà nước ta”;</p>
+                    <p><span class="milestone">Đại hội VII:</span> “Việt Nam muốn là <input type="text" class="blank-input" data-answer="bạn" style="width: 60px;" disabled> với tất cả các nước trong cộng đồng thế giới, phấn đấu vì hòa bình, độc lập và phát triển”.</p>
+                    <p><span class="milestone">Nghị quyết số 44:</span> về “Chiến lược <input type="text" class="blank-input" data-answer="bảo vệ tổ quốc|bảo vệ Tổ quốc" disabled> trong tình hình mới”;</p>
+                    <p><span class="milestone">Nghị quyết số 59:</span> về “<input type="text" class="blank-input" data-answer="hội nhập quốc tế" disabled> trong tình hình mới”.</p>
+                    <p><span class="milestone">Đại hội XIV:</span> kiên định và nhất quán đường lối đối ngoại độc lập, tự chủ, hoà bình, hữu nghị, hợp tác và phát triển; là bạn, là <input type="text" class="blank-input" data-answer="đối tác" style="width: 80px;" disabled> tin cậy, là thành viên tích cực, có <input type="text" class="blank-input" data-answer="trách nhiệm" disabled> của cộng đồng quốc tế.</p>
+                    
+                    <div class="station-title">Trạm 2</div>
+                    <p>Hiện nay, Việt Nam có <input type="text" class="blank-input" data-answer="194" style="width: 50px;" disabled> quan hệ ngoại giao cấp nhà nước, <input type="text" class="blank-input" data-answer="14" style="width: 40px;" disabled> quốc gia là đối tác chiến lược <input type="text" class="blank-input" data-answer="toàn diện" disabled>, trong đó có <input type="text" class="blank-input" data-answer="4/5|4" style="width: 50px;" disabled> quốc gia trong Hội đồng <input type="text" class="blank-input" data-answer="bảo an" style="width: 80px;" disabled> Liên Hiệp quốc.</p>
+                </div>
+
+                <button class="btn-submit" id="btnSubmit1" onclick="submitMyTeam(1)" disabled>NỘP BÀI (ĐỘI 1)</button>
+                <div class="team-result" id="resultTeam1">
+                    Số đáp án đúng: <span class="score-text" id="score1">0/12</span> <br>
+                    Thời gian hoàn thành: <span class="time-text" id="time1">--:--:--</span>
+                </div>
+            </div>
+
+            <div class="team-column" id="team2">
+                <div class="team-name-display">SAO VÀNG</div>
+                
+                <div class="quiz-content" id="areaTeam2">
+                    <div class="station-title">Trạm 1: Phát triển tư duy về đối ngoại – quốc phòng – an ninh</div>
+                    <p><span class="milestone">Đại hội VI:</span> “Tăng cường đoàn kết và hợp tác toàn diện với <input type="text" class="blank-input" data-answer="liên xô" disabled> luôn luôn là <input type="text" class="blank-input" data-answer="hòn đá tảng" disabled> trong chính sách đối ngoại của Đảng và Nhà nước ta”;</p>
+                    <p><span class="milestone">Đại hội VII:</span> “Việt Nam muốn là <input type="text" class="blank-input" data-answer="bạn" style="width: 60px;" disabled> với tất cả các nước trong cộng đồng thế giới, phấn đấu vì hòa bình, độc lập và phát triển”.</p>
+                    <p><span class="milestone">Nghị quyết số 44:</span> về “Chiến lược <input type="text" class="blank-input" data-answer="bảo vệ tổ quốc|bảo vệ Tổ quốc" disabled> trong tình hình mới”;</p>
+                    <p><span class="milestone">Nghị quyết số 59:</span> về “<input type="text" class="blank-input" data-answer="hội nhập quốc tế" disabled> trong tình hình mới”.</p>
+                    <p><span class="milestone">Đại hội XIV:</span> kiên định và nhất quán đường lối đối ngoại độc lập, tự chủ, hoà bình, hữu nghị, hợp tác và phát triển; là bạn, là <input type="text" class="blank-input" data-answer="đối tác" style="width: 80px;" disabled> tin cậy, là thành viên tích cực, có <input type="text" class="blank-input" data-answer="trách nhiệm" disabled> của cộng đồng quốc tế.</p>
+                    
+                    <div class="station-title">Trạm 2</div>
+                    <p>Hiện nay, Việt Nam có <input type="text" class="blank-input" data-answer="194" style="width: 50px;" disabled> quan hệ ngoại giao cấp nhà nước, <input type="text" class="blank-input" data-answer="14" style="width: 40px;" disabled> quốc gia là đối tác chiến lược <input type="text" class="blank-input" data-answer="toàn diện" disabled>, trong đó có <input type="text" class="blank-input" data-answer="4/5|4" style="width: 50px;" disabled> quốc gia trong Hội đồng <input type="text" class="blank-input" data-answer="bảo an" style="width: 80px;" disabled> Liên Hiệp quốc.</p>
+                </div>
+
+                <button class="btn-submit" id="btnSubmit2" onclick="submitMyTeam(2)" disabled>NỘP BÀI (ĐỘI 2)</button>
+                <div class="team-result" id="resultTeam2">
+                    Số đáp án đúng: <span class="score-text" id="score2">0/12</span> <br>
+                    Thời gian hoàn thành: <span class="time-text" id="time2">--:--:--</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="finalResultBanner"></div>
+    </div>
+
+    <script type="module">
+        import { supabase } from './js/supabase-client.js';
+
+        let myRole = ""; 
+        let roomPin = "";
+        let channel = null;
         
-        <div class="team-column" id="team1">
-            <div class="team-name-display" id="nameTeam1Display">BÚA LIỀM</div>
-            <input type="hidden" id="nameTeam1" value="BÚA LIỀM">
-            
-            <div class="quiz-content" id="areaTeam1">
-                <div class="station-title">Trạm 1: Phát triển tư duy về đối ngoại – quốc phòng – an ninh</div>
-                <p><span class="milestone">Đại hội VI:</span> “Tăng cường đoàn kết và hợp tác toàn diện với <input type="text" class="blank-input" data-answer="liên xô" disabled> luôn luôn là <input type="text" class="blank-input" data-answer="hòn đá tảng" disabled> trong chính sách đối ngoại của Đảng và Nhà nước ta”;</p>
-                <p><span class="milestone">Đại hội VII:</span> “Việt Nam muốn là <input type="text" class="blank-input" data-answer="bạn" style="width: 60px;" disabled> với tất cả các nước trong cộng đồng thế giới, phấn đấu vì hòa bình, độc lập và phát triển”.</p>
-                <p><span class="milestone">Nghị quyết số 44:</span> về “Chiến lược <input type="text" class="blank-input" data-answer="bảo vệ tổ quốc|bảo vệ Tổ quốc" disabled> trong tình hình mới”;</p>
-                <p><span class="milestone">Nghị quyết số 59:</span> về “<input type="text" class="blank-input" data-answer="hội nhập quốc tế" disabled> trong tình hình mới”.</p>
-                <p><span class="milestone">Đại hội XIV:</span> kiên định và nhất quán đường lối đối ngoại độc lập, tự chủ, hoà bình, hữu nghị, hợp tác và phát triển; là bạn, là <input type="text" class="blank-input" data-answer="đối tác" style="width: 80px;" disabled> tin cậy, là thành viên tích cực, có <input type="text" class="blank-input" data-answer="trách nhiệm" disabled> của cộng đồng quốc tế.</p>
-                
-                <div class="station-title">Trạm 2</div>
-                <p>Hiện nay, Việt Nam có <input type="text" class="blank-input" data-answer="194" style="width: 50px;" disabled> quan hệ ngoại giao cấp nhà nước, <input type="text" class="blank-input" data-answer="14" style="width: 40px;" disabled> quốc gia là đối tác chiến lược <input type="text" class="blank-input" data-answer="toàn diện" disabled>, trong đó có <input type="text" class="blank-input" data-answer="4/5|4" style="width: 50px;" disabled> quốc gia trong Hội đồng <input type="text" class="blank-input" data-answer="bảo an" style="width: 80px;" disabled> Liên Hiệp quốc.</p>
-            </div>
-
-            <button class="btn-submit" id="btnSubmit1" onclick="submitTeam(1)" disabled>NỘP BÀI</button>
-            <div class="team-result" id="resultTeam1">
-                Số đáp án đúng: <span class="score-text" id="score1">0/12</span> <br>
-                Thời gian hoàn thành: <span class="time-text" id="time1">--:--:--</span>
-            </div>
-        </div>
-
-        <div class="team-column" id="team2">
-            <div class="team-name-display" id="nameTeam2Display">SAO VÀNG</div>
-            <input type="hidden" id="nameTeam2" value="SAO VÀNG">
-            
-            <div class="quiz-content" id="areaTeam2">
-                <div class="station-title">Trạm 1: Phát triển tư duy về đối ngoại – quốc phòng – an ninh</div>
-                <p><span class="milestone">Đại hội VI:</span> “Tăng cường đoàn kết và hợp tác toàn diện với <input type="text" class="blank-input" data-answer="liên xô" disabled> luôn luôn là <input type="text" class="blank-input" data-answer="hòn đá tảng" disabled> trong chính sách đối ngoại của Đảng và Nhà nước ta”;</p>
-                <p><span class="milestone">Đại hội VII:</span> “Việt Nam muốn là <input type="text" class="blank-input" data-answer="bạn" style="width: 60px;" disabled> với tất cả các nước trong cộng đồng thế giới, phấn đấu vì hòa bình, độc lập và phát triển”.</p>
-                <p><span class="milestone">Nghị quyết số 44:</span> về “Chiến lược <input type="text" class="blank-input" data-answer="bảo vệ tổ quốc|bảo vệ Tổ quốc" disabled> trong tình hình mới”;</p>
-                <p><span class="milestone">Nghị quyết số 59:</span> về “<input type="text" class="blank-input" data-answer="hội nhập quốc tế" disabled> trong tình hình mới”.</p>
-                <p><span class="milestone">Đại hội XIV:</span> kiên định và nhất quán đường lối đối ngoại độc lập, tự chủ, hoà bình, hữu nghị, hợp tác và phát triển; là bạn, là <input type="text" class="blank-input" data-answer="đối tác" style="width: 80px;" disabled> tin cậy, là thành viên tích cực, có <input type="text" class="blank-input" data-answer="trách nhiệm" disabled> của cộng đồng quốc tế.</p>
-                
-                <div class="station-title">Trạm 2</div>
-                <p>Hiện nay, Việt Nam có <input type="text" class="blank-input" data-answer="194" style="width: 50px;" disabled> quan hệ ngoại giao cấp nhà nước, <input type="text" class="blank-input" data-answer="14" style="width: 40px;" disabled> quốc gia là đối tác chiến lược <input type="text" class="blank-input" data-answer="toàn diện" disabled>, trong đó có <input type="text" class="blank-input" data-answer="4/5|4" style="width: 50px;" disabled> quốc gia trong Hội đồng <input type="text" class="blank-input" data-answer="bảo an" style="width: 80px;" disabled> Liên Hiệp quốc.</p>
-            </div>
-
-            <button class="btn-submit" id="btnSubmit2" onclick="submitTeam(2)" disabled>NỘP BÀI</button>
-            <div class="team-result" id="resultTeam2">
-                Số đáp án đúng: <span class="score-text" id="score2">0/12</span> <br>
-                Thời gian hoàn thành: <span class="time-text" id="time2">--:--:--</span>
-            </div>
-        </div>
-
-    </div>
-
-    <div id="finalResultBanner"></div>
-
-    <script>
-        let startTime;
+        let startTimestamp = 0;
         let timerInterval;
         let teamData = {
             1: { score: 0, timeMs: 0, finished: false },
             2: { score: 0, timeMs: 0, finished: false }
         };
 
+        // --- ĐĂNG NHẬP VÀ KẾT NỐI ---
+        window.joinGame = function() {
+            roomPin = document.getElementById('inputPin').value.trim();
+            myRole = document.getElementById('inputRole').value;
+
+            if(!roomPin) {
+                Swal.fire('Lỗi', 'Vui lòng nhập Mã Phòng!', 'warning');
+                return;
+            }
+
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('game-layout').style.display = 'block';
+
+            let roleText = (myRole === 'host') ? 'GIẢNG VIÊN' : (myRole === '1' ? 'ĐỘI 1 - BÚA LIỀM' : 'ĐỘI 2 - SAO VÀNG');
+            document.getElementById('room-info').innerText = `PHÒNG: ${roomPin} | VAI TRÒ: ${roleText}`;
+
+            // Cấu hình giao diện theo vai trò
+            if(myRole === 'host') {
+                document.getElementById('btnStart').style.display = 'inline-block';
+                document.getElementById('btnSubmit1').style.display = 'none';
+                document.getElementById('btnSubmit2').style.display = 'none';
+            } else {
+                document.getElementById('btnStart').style.display = 'none';
+                document.getElementById(`team${myRole}`).classList.add('my-team');
+                // Ẩn nút nộp bài của đội đối thủ
+                let opponent = myRole === '1' ? '2' : '1';
+                document.getElementById(`btnSubmit${opponent}`).style.display = 'none';
+            }
+
+            initChannel(roomPin);
+        };
+
+        // --- KHỞI TẠO KÊNH REALTIME ---
+        function initChannel(pin) {
+            channel = supabase.channel('room_quiz_' + pin);
+            
+            channel
+            .on('broadcast', { event: 'start_game' }, (p) => {
+                handleStartGame(p.payload.startTime);
+            })
+            .on('broadcast', { event: 'submit_team' }, (p) => {
+                handleTeamSubmit(p.payload.teamId, p.payload.score, p.payload.timeMs);
+            })
+            .subscribe();
+        }
+
+        // --- GIẢNG VIÊN BẤM BẮT ĐẦU ---
+        window.hostStartGame = function() {
+            let st = Date.now();
+            channel.send({ type: 'broadcast', event: 'start_game', payload: { startTime: st } });
+            handleStartGame(st);
+        };
+
+        // --- TẤT CẢ MÁY NHẬN LỆNH BẮT ĐẦU ---
+        function handleStartGame(st) {
+            startTimestamp = st;
+            document.getElementById('status-text').innerText = "THỜI GIAN ĐANG TRÔI...";
+            if(myRole === 'host') {
+                document.getElementById('btnStart').disabled = true;
+                document.getElementById('btnStart').innerText = "ĐANG THI ĐẤU...";
+            }
+
+            // Mở khóa ô nhập liệu cho máy của Đội tương ứng
+            if(myRole === '1' || myRole === '2') {
+                let myArea = document.getElementById('areaTeam' + myRole);
+                myArea.querySelectorAll('.blank-input').forEach(input => {
+                    input.disabled = false;
+                    input.onfocus = function() { this.type = "text"; };
+                    input.onblur = function() {
+                        if (this.value.trim() !== "") { this.type = "password"; }
+                    };
+                });
+                document.getElementById('btnSubmit' + myRole).disabled = false;
+            }
+
+            clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 10);
+        }
+
+        // --- ĐỒNG HỒ THỜI GIAN ---
         function formatTime(ms) {
             let minutes = Math.floor(ms / 60000);
             let seconds = Math.floor((ms % 60000) / 1000);
@@ -280,45 +307,23 @@
         }
 
         function updateTimer() {
-            let currentTime = Date.now() - startTime;
+            let currentTime = Date.now() - startTimestamp;
             document.getElementById('globalTimer').innerText = formatTime(currentTime);
         }
 
-        function startCompetition() {
-            document.getElementById('btnSubmit1').disabled = false;
-            document.getElementById('btnSubmit2').disabled = false;
-            document.getElementById('btnStart').disabled = true;
-            document.getElementById('btnStart').innerText = "ĐANG THI ĐẤU...";
-
-            document.querySelectorAll('.blank-input').forEach(input => {
-                input.disabled = false;
-                input.onfocus = function() { this.type = "text"; };
-                input.onblur = function() {
-                    if (this.value.trim() !== "") { this.type = "password"; }
-                };
-            });
-
-            startTime = Date.now();
-            timerInterval = setInterval(updateTimer, 10);
-        }
-
-        function submitTeam(teamId) {
-            teamData[teamId].timeMs = Date.now() - startTime;
-            teamData[teamId].finished = true;
-
+        // --- ĐỘI CHƠI BẤM NỘP BÀI ---
+        window.submitMyTeam = function(teamId) {
+            // Tính toán trên máy của Đội đó
+            let timeMs = Date.now() - startTimestamp;
             let area = document.getElementById('areaTeam' + teamId);
             let inputs = area.querySelectorAll('.blank-input');
             let correctCount = 0;
-            const totalQuestions = inputs.length;
 
             inputs.forEach(input => {
                 const studentAnswer = input.value.trim().toLowerCase();
                 const correctAnswers = input.getAttribute('data-answer').toLowerCase().split('|');
-
-                input.type = "text"; 
-                input.classList.remove('correct', 'incorrect');
-                input.onfocus = null;
-                input.onblur = null;
+                
+                input.type = "text";
                 input.disabled = true; 
 
                 if (correctAnswers.includes(studentAnswer)) {
@@ -329,41 +334,58 @@
                 }
             });
 
-            teamData[teamId].score = correctCount;
-            document.getElementById('score' + teamId).innerText = correctCount + '/' + totalQuestions;
-            document.getElementById('time' + teamId).innerText = formatTime(teamData[teamId].timeMs);
-            document.getElementById('resultTeam' + teamId).style.display = 'block';
-            
-            let btnSubmit = document.getElementById('btnSubmit' + teamId);
-            btnSubmit.disabled = true;
-            btnSubmit.innerText = "ĐÃ XONG";
+            document.getElementById('btnSubmit' + teamId).disabled = true;
+            document.getElementById('btnSubmit' + teamId).innerText = "ĐÃ NỘP BÀI";
 
+            // Phát tín hiệu cho mọi người biết
+            channel.send({ type: 'broadcast', event: 'submit_team', payload: { teamId: teamId, score: correctCount, timeMs: timeMs } });
+            
+            // Tự cập nhật lên máy mình
+            handleTeamSubmit(teamId, correctCount, timeMs);
+        };
+
+        // --- TẤT CẢ MÁY NHẬN LỆNH NỘP BÀI CỦA 1 ĐỘI ---
+        function handleTeamSubmit(teamId, score, timeMs) {
+            teamData[teamId].score = score;
+            teamData[teamId].timeMs = timeMs;
+            teamData[teamId].finished = true;
+
+            let totalQuestions = document.getElementById('areaTeam' + teamId).querySelectorAll('.blank-input').length;
+            
+            document.getElementById('score' + teamId).innerText = score + '/' + totalQuestions;
+            document.getElementById('time' + teamId).innerText = formatTime(timeMs);
+            document.getElementById('resultTeam' + teamId).style.display = 'block';
+
+            // Nếu không phải là đội đó, làm mờ đi để biết họ đã xong
+            if(myRole !== teamId.toString()) {
+                document.getElementById('btnSubmit' + teamId).innerText = "ĐỐI THỦ ĐÃ NỘP BÀI";
+            }
+
+            // Kiểm tra kết thúc trò chơi
             if (teamData[1].finished && teamData[2].finished) {
                 clearInterval(timerInterval);
                 declareWinner();
             }
         }
 
+        // --- CÔNG BỐ KẾT QUẢ ---
         function declareWinner() {
-            let name1 = document.getElementById('nameTeam1').value;
-            let name2 = document.getElementById('nameTeam2').value;
             let banner = document.getElementById('finalResultBanner');
             let message = "";
 
-            let score1 = teamData[1].score;
-            let score2 = teamData[2].score;
-            let time1 = teamData[1].timeMs;
-            let time2 = teamData[2].timeMs;
+            let score1 = teamData[1].score; let score2 = teamData[2].score;
+            let time1 = teamData[1].timeMs; let time2 = teamData[2].timeMs;
 
             if (score1 > score2) {
-                message = `🏆 CHÚC MỪNG ĐỘI ${name1} CHIẾN THẮNG!`;
+                message = `🏆 CHÚC MỪNG ĐỘI BÚA LIỀM CHIẾN THẮNG!`;
             } else if (score2 > score1) {
-                message = `🏆 CHÚC MỪNG ĐỘI ${name2} CHIẾN THẮNG!`;
+                message = `🏆 CHÚC MỪNG ĐỘI SAO VÀNG CHIẾN THẮNG!`;
             } else {
+                // Bằng điểm thì xét thời gian
                 if (time1 < time2) {
-                    message = `🏆 ĐỘI ${name1} THẮNG NHỜ TỐC ĐỘ! (BẰNG ĐIỂM)`;
+                    message = `🏆 ĐỘI BÚA LIỀM THẮNG NHỜ TỐC ĐỘ! (BẰNG ĐIỂM)`;
                 } else if (time2 < time1) {
-                    message = `🏆 ĐỘI ${name2} THẮNG NHỜ TỐC ĐỘ! (BẰNG ĐIỂM)`;
+                    message = `🏆 ĐỘI SAO VÀNG THẮNG NHỜ TỐC ĐỘ! (BẰNG ĐIỂM)`;
                 } else {
                     message = `🤝 HAI ĐỘI HÒA NHAU TUYỆT ĐỐI!`;
                 }
@@ -371,7 +393,8 @@
 
             banner.innerText = message;
             banner.style.display = 'block';
-            document.getElementById('btnStart').innerText = "KẾT THÚC";
+            document.getElementById('status-text').innerText = "TRÒ CHƠI KẾT THÚC";
+            if(myRole === 'host') document.getElementById('btnStart').innerText = "KẾT THÚC";
         }
     </script>
 </body>
