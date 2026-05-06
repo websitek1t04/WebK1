@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Phim - eMedia</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS đồng bộ với giao diện Hệ thống hỗ trợ giảng dạy số */
+        .emedia-container {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e2d1b7;
+            color: #333;
+        }
+        
+        .emedia-container h2 {
+            color: #8B0000; /* Đỏ đô */
+            border-bottom: 2px solid #DAA520; /* Vàng đồng */
+            padding-bottom: 10px;
+            margin-top: 0;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Khu vực Form */
+        .emedia-form-card {
+            background: #fdf6e9; /* Màu nền nhẹ đồng bộ hệ thống */
+            padding: 20px;
+            border: 1px solid #DAA520;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .emedia-form-card h3 {
+            margin-top: 0;
+            font-size: 17px;
+            color: #8B0000;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #444;
+            font-size: 13px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+            transition: all 0.3s;
+            outline: none;
+        }
+        
+        .form-group input:focus {
+            border-color: #DAA520;
+            box-shadow: 0 0 0 2px rgba(218, 165, 32, 0.2);
+        }
+
+        /* Nút bấm */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: background 0.3s, transform 0.1s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .btn:active { transform: scale(0.98); }
+
+        .btn-save { background-color: #8B0000; }
+        .btn-save:hover { background-color: #A52A2A; }
+        
+        .btn-cancel { background-color: #6c757d; display: none; }
+        .btn-cancel:hover { background-color: #5a6268; }
+
+        .btn-edit { background-color: #DAA520; color: #fff; padding: 6px 12px; font-size: 13px; }
+        .btn-edit:hover { background-color: #c5951c; }
+
+        .btn-delete { background-color: #dc3545; color: #fff; padding: 6px 12px; font-size: 13px; }
+        .btn-delete:hover { background-color: #c82333; }
+
+        /* Bảng danh sách */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .emedia-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: #fff;
+        }
+
+        .emedia-table th, .emedia-table td {
+            border: 1px solid #eee;
+            padding: 12px 15px;
+            text-align: left;
+        }
+
+        .emedia-table th {
+            background-color: #fdf6e9;
+            color: #8B0000;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .emedia-table tr:hover {
+            background-color: #fcf8e3;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .video-link {
+            color: #DAA520;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .video-link:hover {
+            text-decoration: underline;
+            color: #8B0000;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="banner-area"></div>
+
+    <div id="main-layout">
+        <aside id="sidebar-area"></aside>
+        
+        <main id="content-area">
+            
+            <div class="emedia-container">
+                <h2><i class="fas fa-film"></i> Học liệu Phim (eMedia)</h2>
+
+                <div class="emedia-form-card">
+                    <h3 id="formTitle"><i class="fas fa-plus-circle"></i> Thêm Phim / Video Mới</h3>
+                    <input type="hidden" id="editIndex" value="-1">
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="movieName">Tên phim / Tiêu đề bài giảng:</label>
+                            <input type="text" id="movieName" placeholder="VD: Phim tài liệu lịch sử Đảng bộ...">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="movieLink">Đường dẫn (URL YouTube, Google Drive...):</label>
+                            <input type="url" id="movieLink" placeholder="VD: https://youtube.com/watch?v=...">
+                        </div>
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button class="btn btn-save" id="saveBtn" onclick="saveMovie()">
+                            <i class="fas fa-save"></i> Lưu Phim
+                        </button>
+                        <button class="btn btn-cancel" id="cancelBtn" onclick="resetForm()">
+                            <i class="fas fa-times"></i> Hủy thao tác
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="emedia-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 5%; text-align: center;">STT</th>
+                                <th style="width: 45%;">Tên Phim</th>
+                                <th style="width: 30%;">Đường dẫn</th>
+                                <th style="width: 20%;">Thao tác (Admin)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="movieTableBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <footer id="footer-area"></footer>
+
+    <script src="js/main.js"></script>
+
+    <script>
+        // Lấy dữ liệu từ localStorage, nếu chưa có thì tạo mảng rỗng
+        let eMediaList = JSON.parse(localStorage.getItem('eMedia_Data')) || [];
+
+        // Hàm render bảng danh sách phim
+        function renderTable() {
+            const tbody = document.getElementById('movieTableBody');
+            tbody.innerHTML = '';
+
+            if (eMediaList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#888; padding: 25px;">Chưa có dữ liệu phim nào. Hãy thêm phim mới ở form phía trên.</td></tr>';
+                return;
+            }
+
+            eMediaList.forEach((movie, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="text-align:center;">${index + 1}</td>
+                    <td style="font-weight: 600; color: #333;">${movie.name}</td>
+                    <td>
+                        <a href="${movie.link}" class="video-link" target="_blank" title="Mở liên kết">
+                            <i class="fas fa-play-circle"></i> Xem Video
+                        </a>
+                    </td>
+                    <td class="actions">
+                        <button class="btn btn-edit" onclick="editMovie(${index})" title="Sửa thông tin"><i class="fas fa-edit"></i> Sửa</button>
+                        <button class="btn btn-delete" onclick="deleteMovie(${index})" title="Xóa phim"><i class="fas fa-trash-alt"></i> Xóa</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Hàm Xử lý thêm mới hoặc cập nhật
+        function saveMovie() {
+            const nameInput = document.getElementById('movieName').value.trim();
+            const linkInput = document.getElementById('movieLink').value.trim();
+            const editIndex = parseInt(document.getElementById('editIndex').value);
+
+            if (!nameInput || !linkInput) {
+                alert('Yêu cầu nhập đầy đủ Tên phim và Đường dẫn!');
+                return;
+            }
+
+            if (editIndex === -1) {
+                // Thêm mới
+                eMediaList.push({ name: nameInput, link: linkInput });
+            } else {
+                // Cập nhật
+                eMediaList[editIndex].name = nameInput;
+                eMediaList[editIndex].link = linkInput;
+            }
+
+            // Lưu dữ liệu và làm mới UI
+            localStorage.setItem('eMedia_Data', JSON.stringify(eMediaList));
+            resetForm();
+            renderTable();
+        }
+
+        // Hàm đẩy dữ liệu lên form để Sửa
+        function editMovie(index) {
+            const movie = eMediaList[index];
+            document.getElementById('movieName').value = movie.name;
+            document.getElementById('movieLink').value = movie.link;
+            document.getElementById('editIndex').value = index;
+
+            document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit"></i> Cập nhật thông tin Phim';
+            document.getElementById('saveBtn').innerHTML = '<i class="fas fa-check"></i> Lưu Cập Nhật';
+            document.getElementById('cancelBtn').style.display = 'inline-flex';
+        }
+
+        // Hàm Xóa phim
+        function deleteMovie(index) {
+            if (confirm('Đồng chí có chắc chắn muốn xóa học liệu phim này khỏi hệ thống không?')) {
+                eMediaList.splice(index, 1);
+                localStorage.setItem('eMedia_Data', JSON.stringify(eMediaList));
+                renderTable();
+                resetForm(); // Reset lại form phòng trường hợp đang sửa thì bấm xóa
+            }
+        }
+
+        // Hàm reset lại form nhập liệu
+        function resetForm() {
+            document.getElementById('movieName').value = '';
+            document.getElementById('movieLink').value = '';
+            document.getElementById('editIndex').value = '-1';
+            
+            document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus-circle"></i> Thêm Phim / Video Mới';
+            document.getElementById('saveBtn').innerHTML = '<i class="fas fa-save"></i> Lưu Phim';
+            document.getElementById('cancelBtn').style.display = 'none';
+        }
+
+        // Khởi chạy render dữ liệu lần đầu khi load trang
+        window.onload = renderTable;
+    </script>
+</body>
+</html>
