@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phòng Học eClass - Đội Thanh Niên</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #8B0000;
+            --secondary: #DAA520;
+            --bg-color: #fdf6e9;
+            --card-bg: #ffffff;
+            --active-color: #48bb78;
+        }
+        
+        .eclass-container {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+            margin: 0;
+            padding: 25px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100%;
+            border-radius: 8px;
+        }
+
+        .eclass-container h1 {
+            color: var(--primary); 
+            text-transform: uppercase;
+            font-size: 28px;
+            margin-top: 0;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 800;
+            border-bottom: 2px solid var(--secondary);
+            padding-bottom: 10px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        .student-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-top: 5px solid var(--primary);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+
+        /* Hiệu ứng giữ lại từ phiên bản trước */
+        .student-card.active {
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0 15px 25px rgba(72, 187, 120, 0.2);
+            border-top-color: var(--active-color);
+            z-index: 10;
+        }
+
+        .speaker-header {
+            font-size: 1.15rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .student-card.active .speaker-header {
+            color: var(--active-color);
+        }
+
+        .media-box {
+            width: 100%;
+            height: 180px;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #000; /* Nền đen cho video */
+            border: 2px solid transparent;
+            transition: border-color 0.3s;
+        }
+
+        .student-card.active .media-box {
+            border-color: var(--active-color);
+        }
+
+        video, audio {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button.action-btn {
+            flex: 1;
+            border: none;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 14px;
+        }
+
+        .play-btn {
+            background-color: var(--primary);
+            color: white;
+        }
+        .play-btn:hover { background-color: #600000; }
+
+        .student-card.active .play-btn {
+            background-color: var(--active-color);
+            box-shadow: 0 0 10px rgba(72, 187, 120, 0.5);
+            animation: pulse 1.5s infinite;
+        }
+
+        .stop-btn {
+            background-color: #718096;
+            color: white;
+        }
+        .stop-btn:hover { background-color: #4a5568; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(72, 187, 120, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="banner-area"></div>
+
+    <div id="main-layout">
+        <aside id="sidebar-area"></aside>
+        
+        <main id="content-area" style="padding: 0;">
+            
+            <div class="eclass-container">
+                <h1>ĐỘI THANH NIÊN PHÁT BIỂU</h1>
+
+                <div class="grid-container">
+                    
+                    <div class="student-card" id="card-1">
+                        <div class="speaker-header"><i class="fas fa-user-graduate"></i> Thảo Tâm</div>
+                        <div class="media-box">
+                            <video class="speaker-media" src="thaotam.mp4" controls></video>
+                        </div>
+                        <div class="btn-group">
+                            <button class="action-btn play-btn" onclick="playMedia('card-1')"><i class="fas fa-play"></i> Phát biểu</button>
+                            <button class="action-btn stop-btn" onclick="stopMedia('card-1')"><i class="fas fa-stop"></i> Dừng</button>
+                        </div>
+                    </div>
+
+                    <div class="student-card" id="card-2">
+                        <div class="speaker-header"><i class="fas fa-user-graduate"></i> Thanh Sang</div>
+                        <div class="media-box">
+                            <video class="speaker-media" src="thanhsang.mp4" controls></video>
+                        </div>
+                        <div class="btn-group">
+                            <button class="action-btn play-btn" onclick="playMedia('card-2')"><i class="fas fa-play"></i> Phát biểu</button>
+                            <button class="action-btn stop-btn" onclick="stopMedia('card-2')"><i class="fas fa-stop"></i> Dừng</button>
+                        </div>
+                    </div>
+
+                    <div class="student-card" id="card-3">
+                        <div class="speaker-header"><i class="fas fa-user-graduate"></i> Tường Vi</div>
+                        <div class="media-box">
+                            <video class="speaker-media" src="tuongvi.mp4" controls></video>
+                        </div>
+                        <div class="btn-group">
+                            <button class="action-btn play-btn" onclick="playMedia('card-3')"><i class="fas fa-play"></i> Phát biểu</button>
+                            <button class="action-btn stop-btn" onclick="stopMedia('card-3')"><i class="fas fa-stop"></i> Dừng</button>
+                        </div>
+                    </div>
+
+                    <div class="student-card" id="card-4">
+                        <div class="speaker-header"><i class="fas fa-user-graduate"></i> Trung Khang</div>
+                        <div class="media-box">
+                            <video class="speaker-media" src="trungkhang.mp4" controls></video>
+                        </div>
+                        <div class="btn-group">
+                            <button class="action-btn play-btn" onclick="playMedia('card-4')"><i class="fas fa-play"></i> Phát biểu</button>
+                            <button class="action-btn stop-btn" onclick="stopMedia('card-4')"><i class="fas fa-stop"></i> Dừng</button>
+                        </div>
+                    </div>
+
+                    <div class="student-card" id="card-5">
+                        <div class="speaker-header"><i class="fas fa-user-graduate"></i> Mỹ Tiên</div>
+                        <div class="media-box">
+                            <video class="speaker-media" src="mytien.mp4" controls></video>
+                        </div>
+                        <div class="btn-group">
+                            <button class="action-btn play-btn" onclick="playMedia('card-5')"><i class="fas fa-play"></i> Phát biểu</button>
+                            <button class="action-btn stop-btn" onclick="stopMedia('card-5')"><i class="fas fa-stop"></i> Dừng</button>
+                        </div>
+                    </div>
+
+                    <div class="student-card" id="card-6">
+                        <div class="speaker-header"><i class="fas fa-user-graduate"></i> Minh Trường</div>
+                        <div class="media-box">
+                            <video class="speaker-media" src="minhtruong.mp4" controls></video>
+                        </div>
+                        <div class="btn-group">
+                            <button class="action-btn play-btn" onclick="playMedia('card-6')"><i class="fas fa-play"></i> Phát biểu</button>
+                            <button class="action-btn stop-btn" onclick="stopMedia('card-6')"><i class="fas fa-stop"></i> Dừng</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <footer id="footer-area"></footer>
+
+    <script src="js/main.js"></script>
+
+    <script>
+        // Xóa trạng thái active của tất cả thẻ
+        function resetAllCards() {
+            document.querySelectorAll('.student-card').forEach(card => {
+                card.classList.remove('active');
+            });
+        }
+
+        function playMedia(cardId) {
+            const card = document.getElementById(cardId);
+            const media = card.querySelector('.speaker-media');
+
+            // Tạm dừng các media khác đang phát và xóa trạng thái nổi bật
+            document.querySelectorAll('.speaker-media').forEach(m => {
+                if (m !== media) {
+                    m.pause();
+                    m.currentTime = 0;
+                }
+            });
+            resetAllCards();
+
+            // Kích hoạt hiệu ứng nổi bật cho thẻ hiện tại
+            card.classList.add('active');
+
+            // Phát media
+            media.play().catch(e => console.log("Không thể phát media:", e));
+        }
+
+        function stopMedia(cardId) {
+            const card = document.getElementById(cardId);
+            const media = card.querySelector('.speaker-media');
+
+            media.pause();
+            media.currentTime = 0;
+            card.classList.remove('active');
+        }
+
+        // Tự động tắt hiệu ứng active khi video chạy hết
+        document.querySelectorAll('.speaker-media').forEach(media => {
+            media.addEventListener('ended', function() {
+                resetAllCards();
+            });
+            media.addEventListener('pause', function() {
+                // Tránh việc nhấn pause trên trình điều khiển mặc định mà thẻ vẫn sáng
+                if (this.currentTime !== 0 && this.currentTime !== this.duration) {
+                    resetAllCards();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
