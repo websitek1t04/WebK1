@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài Giảng Trực Tuyến - TS. Cao Thanh Hùng</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <style>
+        :root {
+            --primary: #8B0000;
+            --secondary: #DAA520;
+            --bg-lecture: #1a1a1a; 
+        }
+
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: var(--bg-lecture); }
+
+        /* Màn hình chờ để kích hoạt Fullscreen */
+        #start-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #8B0000, #222);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999; color: white; flex-direction: column;
+        }
+
+        .btn-ready {
+            background: var(--secondary);
+            color: #8B0000;
+            border: none;
+            padding: 20px 50px;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+            transition: 0.3s;
+        }
+        .btn-ready:hover { transform: scale(1.1); background: #fff; }
+
+        .lecture-container {
+            display: none; /* Ẩn khi chưa bắt đầu */
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        /* Thanh điều khiển tối giản */
+        .pdf-toolbar {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 25px;
+            border-radius: 30px;
+            margin-bottom: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .pdf-btn {
+            background: transparent;
+            color: white;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pdf-btn:hover { color: var(--secondary); transform: scale(1.2); }
+        .page-info { font-weight: bold; color: white; font-family: 'Segoe UI'; font-size: 16px; }
+
+        #pdf-render-container {
+            flex: 1;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            overflow: auto;
+            background: #000;
+        }
+
+        canvas {
+            max-height: 100%;
+            max-width: 100%;
+            object-fit: contain;
+        }
+
+        /* Ẩn các thành phần hệ thống khi đang giảng bài */
+        #banner-area, #sidebar-area, #footer-area { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="start-overlay">
+        <button class="btn-ready" onclick="startLecture()">
+            <i class="fas fa-play-circle"></i> BẮT ĐẦU TRÌNH CHIẾU
+        </button>
+        <p style="margin-top: 20px; opacity: 0.7;">Click để mở chế độ toàn màn hình</p>
+    </div>
+
+    <div class="lecture-container" id="lecture-scope">
+        <div class="pdf-toolbar">
+            <button class="pdf-btn" id="prev-page" title="Trang trước">
+                <i class="fas fa-arrow-circle-left"></i>
+            </button>
+            
+            <span class="page-info">
+                <span id="page-num">0</span> / <span id="page-count">0</span>
+            </span>
+
+            <button class="pdf-btn" id="next-page" title="Trang sau">
+                <i class="fas fa-arrow-circle-right"></i>
+            </button>
+
+            <button class="pdf-btn" onclick="exitLecture()" title="Thoát">
+                <i class="fas fa-times-circle" style="color: #ff4444;"></i>
+            </button>
+        </div>
+
+        <div id="pdf-render-container">
+            <canvas id="pdf-render"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // 1. Cấu hình file PDF
+        const url = 'baigiang.pdf'; 
+
+        let pdfDoc = null,
+            pageNum = 1,
+            pageIsRendering = false,
+            pageNumIsPending = null;
+
+        const scale = 2, 
+              canvas = document.querySelector('#pdf-render'),
+              ctx = canvas.getContext('2d');
+
+        // Hàm bắt đầu bài giảng (Kích hoạt Fullscreen)
+        function startLecture() {
+            const docElm = document.documentElement;
+            if (docElm.requestFullscreen) {
+                docElm.requestFullscreen();
+            } else if (docElm.webkitRequestFullscreen) {
+                docElm.webkitRequestFullscreen();
+            }
+
+            document.getElementById('start-overlay').style.display = 'none';
+            document.getElementById('lecture-scope').style.display = 'flex';
+            loadPDF();
+        }
+
+        function exitLecture() {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+            location.href = 'index.html'; // Quay về trang chủ
+        }
+
+        // Render trang
+        const renderPage = num => {
+            pageIsRendering = true;
+            pdfDoc.getPage(num).then(page => {
+                const viewport = page.getViewport({ scale });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderCtx = { canvasContext: ctx, viewport };
+                page.render(renderCtx).promise.then(() => {
+                    pageIsRendering = false;
+                    if (pageNumIsPending !== null) {
+                        renderPage(pageNumIsPending);
+                        pageNumIsPending = null;
+                    }
+                });
+                document.querySelector('#page-num').textContent = num;
+            });
+        };
+
+        const queueRenderPage = num => {
+            if (pageIsRendering) { pageNumIsPending = num; } else { renderPage(num); }
+        };
+
+        const showPrevPage = () => {
+            if (pageNum <= 1) return;
+            pageNum--;
+            queueRenderPage(pageNum);
+        };
+
+        const showNextPage = () => {
+            if (pageNum >= pdfDoc.numPages) return;
+            pageNum++;
+            queueRenderPage(pageNum);
+        };
+
+        function loadPDF() {
+            pdfjsLib.getDocument(url).promise.then(pdfDoc_ => {
+                pdfDoc = pdfDoc_;
+                document.querySelector('#page-count').textContent = pdfDoc.numPages;
+                renderPage(pageNum);
+            }).catch(err => {
+                alert("Lỗi: Không tìm thấy file 'baigiang.pdf' trong thư mục.");
+            });
+        }
+
+        // Sự kiện phím cứng & Bút điều khiển
+        window.addEventListener('keydown', e => {
+            if (e.keyCode === 39 || e.keyCode === 34 || e.keyCode === 40) showNextPage();
+            if (e.keyCode === 37 || e.keyCode === 33 || e.keyCode === 38) showPrevPage();
+            if (e.keyCode === 27) exitLecture(); // Phím Esc
+        });
+
+        document.querySelector('#prev-page').addEventListener('click', showPrevPage);
+        document.querySelector('#next-page').addEventListener('click', showNextPage);
+    </script>
+</body>
+</html>
