@@ -6,6 +6,7 @@
     <title>Phòng Học eClass - Đội Thanh Niên</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --primary: #8B0000;
@@ -20,7 +21,7 @@
             background-color: var(--bg-color);
             color: #333;
             margin: 0;
-            padding: 25px 20px;
+            padding: 30px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -29,133 +30,161 @@
         }
 
         .eclass-container h1 {
-            color: var(--primary); 
+            color: #0056b3; 
             text-transform: uppercase;
-            font-size: 28px;
+            font-size: 32px;
             margin-top: 0;
             margin-bottom: 25px;
             text-align: center;
             font-weight: 800;
-            border-bottom: 2px solid var(--secondary);
+            border-bottom: 2px solid #0056b3;
             padding-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .eclass-container #status {
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #2b6cb0;
+            min-height: 24px;
+            font-style: italic;
+            font-size: 16px;
         }
 
+        /* Nút điều khiển giọng nói tổng */
+        #voice-btn {
+            background-color: #DAA520;
+            color: #8B0000;
+            border: none;
+            padding: 10px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #voice-btn:hover { background-color: #c59b27; transform: translateY(-2px); }
+        #voice-btn.listening {
+            background-color: #dc3545; /* Đỏ khi đang nghe */
+            color: white;
+            animation: pulse-voice 1.5s infinite;
+        }
+
+        @keyframes pulse-voice {
+            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(220, 53, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+        
         .grid-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
+            gap: 30px;
             max-width: 1100px;
             width: 100%;
         }
 
         .student-card {
             background: var(--card-bg);
-            border-radius: 12px;
+            border-radius: 15px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-            padding: 20px;
+            padding: 25px;
             display: flex;
             flex-direction: column;
+            align-items: center;
             justify-content: space-between;
-            border-top: 5px solid var(--primary);
+            border-top: 5px solid #cbd5e0;
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             position: relative;
         }
 
-        /* Hiệu ứng giữ lại từ phiên bản trước */
+        .speaker-header {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .gender-icon { font-size: 1.5rem; }
+
+        .media-box {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #000;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; 
+            display: block;
+        }
+
         .student-card.active {
             transform: scale(1.05) translateY(-5px);
             box-shadow: 0 15px 25px rgba(72, 187, 120, 0.2);
             border-top-color: var(--active-color);
             z-index: 10;
         }
-
-        .speaker-header {
-            font-size: 1.15rem;
-            font-weight: bold;
-            color: var(--primary);
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .student-card.active .speaker-header {
-            color: var(--active-color);
-        }
-
-        .media-box {
-            width: 100%;
-            height: 180px;
-            border-radius: 8px;
-            overflow: hidden;
-            position: relative;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #000; /* Nền đen cho video */
-            border: 2px solid transparent;
-            transition: border-color 0.3s;
-        }
-
         .student-card.active .media-box {
             border-color: var(--active-color);
+            box-shadow: 0 0 20px rgba(72, 187, 120, 0.4);
         }
+        .student-card.active .speaker-header { color: var(--active-color); }
 
-        video, audio {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        button.action-btn {
-            flex: 1;
-            border: none;
-            padding: 10px 12px;
-            border-radius: 6px;
-            font-weight: bold;
+        .mic-toggle-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #e2e8f0;
+            background-color: #f1f5f9;
+            color: #64748b;
+            font-size: 22px;
             cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
+            transition: all 0.3s ease;
+            display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
-        .play-btn {
-            background-color: var(--primary);
-            color: white;
+        .mic-toggle-btn:hover {
+            background-color: #e2e8f0;
+            color: #333;
+            transform: scale(1.1);
         }
-        .play-btn:hover { background-color: #600000; }
 
-        .student-card.active .play-btn {
+        .student-card.active .mic-toggle-btn {
             background-color: var(--active-color);
-            box-shadow: 0 0 10px rgba(72, 187, 120, 0.5);
-            animation: pulse 1.5s infinite;
-        }
-
-        .stop-btn {
-            background-color: #718096;
+            border-color: #2f855a;
             color: white;
+            animation: pulse-mic 1.5s infinite;
         }
-        .stop-btn:hover { background-color: #4a5568; }
 
-        @keyframes pulse {
+        @keyframes pulse-mic {
             0% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(72, 187, 120, 0); }
+            70% { box-shadow: 0 0 0 12px rgba(72, 187, 120, 0); }
             100% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0); }
         }
-
     </style>
 </head>
 <body>
@@ -166,137 +195,213 @@
         <aside id="sidebar-area"></aside>
         
         <main id="content-area" style="padding: 0;">
-            
             <div class="eclass-container">
                 <h1>ĐỘI THANH NIÊN</h1>
+                <div id="status">Nhấp vào biểu tượng 🎤 ở từng người, HOẶC bật Điều khiển giọng nói.</div>
+                
+                <button id="voice-btn" onclick="toggleVoiceControl()">
+                    <i class="fas fa-headset"></i> <span>Bật Gọi tên bằng Giọng nói</span>
+                </button>
 
                 <div class="grid-container">
                     
-                    <div class="student-card" id="card-1">
-                        <div class="speaker-header"><i class="fas fa-user-graduate"></i> Thảo Tâm</div>
+                    <div class="student-card" id="card-1" style="border-top-color: #d53f8c;">
+                        <div class="speaker-header">Thảo Tâm <span class="gender-icon">👩‍🎓</span></div>
                         <div class="media-box">
-                            <video class="speaker-media" src="thaotam.mp4" controls></video>
+                            <video class="speaker-media" src="thaotam.mp4"></video>
                         </div>
-                        <div class="btn-group">
-                            <button class="action-btn play-btn" onclick="playMedia('card-1')"><i class="fas fa-play"></i> Phát biểu</button>
-                            <button class="action-btn stop-btn" onclick="stopMedia('card-1')"><i class="fas fa-stop"></i> Dừng</button>
-                        </div>
+                        <button class="mic-toggle-btn" onclick="toggleMedia('card-1')" title="Phát biểu / Dừng">
+                            <i class="fas fa-microphone"></i>
+                        </button>
                     </div>
 
-                    <div class="student-card" id="card-2">
-                        <div class="speaker-header"><i class="fas fa-user-graduate"></i> Thanh Sang</div>
+                    <div class="student-card" id="card-2" style="border-top-color: #3182ce;">
+                        <div class="speaker-header">Thanh Sang <span class="gender-icon">👨‍🎓</span></div>
                         <div class="media-box">
-                            <video class="speaker-media" src="thanhsang.mp4" controls></video>
+                            <video class="speaker-media" src="thanhsang.mp4"></video>
                         </div>
-                        <div class="btn-group">
-                            <button class="action-btn play-btn" onclick="playMedia('card-2')"><i class="fas fa-play"></i> Phát biểu</button>
-                            <button class="action-btn stop-btn" onclick="stopMedia('card-2')"><i class="fas fa-stop"></i> Dừng</button>
-                        </div>
+                        <button class="mic-toggle-btn" onclick="toggleMedia('card-2')" title="Phát biểu / Dừng">
+                            <i class="fas fa-microphone"></i>
+                        </button>
                     </div>
 
-                    <div class="student-card" id="card-3">
-                        <div class="speaker-header"><i class="fas fa-user-graduate"></i> Tường Vi</div>
+                    <div class="student-card" id="card-3" style="border-top-color: #ed8936;">
+                        <div class="speaker-header">Tường Vi <span class="gender-icon">👩‍🎓</span></div>
                         <div class="media-box">
-                            <video class="speaker-media" src="tuongvi.mp4" controls></video>
+                            <video class="speaker-media" src="tuongvi.mp4"></video>
                         </div>
-                        <div class="btn-group">
-                            <button class="action-btn play-btn" onclick="playMedia('card-3')"><i class="fas fa-play"></i> Phát biểu</button>
-                            <button class="action-btn stop-btn" onclick="stopMedia('card-3')"><i class="fas fa-stop"></i> Dừng</button>
-                        </div>
+                        <button class="mic-toggle-btn" onclick="toggleMedia('card-3')" title="Phát biểu / Dừng">
+                            <i class="fas fa-microphone"></i>
+                        </button>
                     </div>
 
-                    <div class="student-card" id="card-4">
-                        <div class="speaker-header"><i class="fas fa-user-graduate"></i> Trung Khang</div>
+                    <div class="student-card" id="card-4" style="border-top-color: #319795;">
+                        <div class="speaker-header">Trung Khang <span class="gender-icon">👨‍🎓</span></div>
                         <div class="media-box">
-                            <video class="speaker-media" src="trungkhang.mp4" controls></video>
+                            <video class="speaker-media" src="trungkhang.mp4"></video>
                         </div>
-                        <div class="btn-group">
-                            <button class="action-btn play-btn" onclick="playMedia('card-4')"><i class="fas fa-play"></i> Phát biểu</button>
-                            <button class="action-btn stop-btn" onclick="stopMedia('card-4')"><i class="fas fa-stop"></i> Dừng</button>
-                        </div>
+                        <button class="mic-toggle-btn" onclick="toggleMedia('card-4')" title="Phát biểu / Dừng">
+                            <i class="fas fa-microphone"></i>
+                        </button>
                     </div>
 
-                    <div class="student-card" id="card-5">
-                        <div class="speaker-header"><i class="fas fa-user-graduate"></i> Mỹ Tiên</div>
+                    <div class="student-card" id="card-5" style="border-top-color: #9f7aea;">
+                        <div class="speaker-header">Mỹ Tiên <span class="gender-icon">👩‍🎓</span></div>
                         <div class="media-box">
-                            <video class="speaker-media" src="mytien.mp4" controls></video>
+                            <video class="speaker-media" src="mytien.mp4"></video>
                         </div>
-                        <div class="btn-group">
-                            <button class="action-btn play-btn" onclick="playMedia('card-5')"><i class="fas fa-play"></i> Phát biểu</button>
-                            <button class="action-btn stop-btn" onclick="stopMedia('card-5')"><i class="fas fa-stop"></i> Dừng</button>
-                        </div>
+                        <button class="mic-toggle-btn" onclick="toggleMedia('card-5')" title="Phát biểu / Dừng">
+                            <i class="fas fa-microphone"></i>
+                        </button>
                     </div>
 
-                    <div class="student-card" id="card-6">
-                        <div class="speaker-header"><i class="fas fa-user-graduate"></i> Minh Trường</div>
+                    <div class="student-card" id="card-6" style="border-top-color: #5a67d8;">
+                        <div class="speaker-header">Minh Trường <span class="gender-icon">👨‍🎓</span></div>
                         <div class="media-box">
-                            <video class="speaker-media" src="minhtruong.mp4" controls></video>
+                            <video class="speaker-media" src="minhtruong.mp4"></video>
                         </div>
-                        <div class="btn-group">
-                            <button class="action-btn play-btn" onclick="playMedia('card-6')"><i class="fas fa-play"></i> Phát biểu</button>
-                            <button class="action-btn stop-btn" onclick="stopMedia('card-6')"><i class="fas fa-stop"></i> Dừng</button>
-                        </div>
+                        <button class="mic-toggle-btn" onclick="toggleMedia('card-6')" title="Phát biểu / Dừng">
+                            <i class="fas fa-microphone"></i>
+                        </button>
                     </div>
 
                 </div>
             </div>
-
         </main>
     </div>
 
     <footer id="footer-area"></footer>
 
     <script src="js/main.js"></script>
-
     <script>
-        // Xóa trạng thái active của tất cả thẻ
+        // --- LOGIC BẤM CHUỘT THÔNG THƯỜNG ---
         function resetAllCards() {
-            document.querySelectorAll('.student-card').forEach(card => {
-                card.classList.remove('active');
-            });
+            document.querySelectorAll('.student-card').forEach(card => { card.classList.remove('active'); });
+            document.getElementById('status').innerText = "Nhấp vào biểu tượng 🎤 hoặc gọi tên để phát biểu...";
         }
 
-        function playMedia(cardId) {
+        function forcePlay(cardId, speakerName) {
+            // Dừng tất cả video khác
+            document.querySelectorAll('.speaker-media').forEach(m => { m.pause(); m.currentTime = 0; });
+            resetAllCards();
+            
             const card = document.getElementById(cardId);
             const media = card.querySelector('.speaker-media');
-
-            // Tạm dừng các media khác đang phát và xóa trạng thái nổi bật
-            document.querySelectorAll('.speaker-media').forEach(m => {
-                if (m !== media) {
-                    m.pause();
-                    m.currentTime = 0;
-                }
-            });
-            resetAllCards();
-
-            // Kích hoạt hiệu ứng nổi bật cho thẻ hiện tại
+            
             card.classList.add('active');
-
-            // Phát media
+            document.getElementById('status').innerText = `${speakerName} đang phát biểu...`;
             media.play().catch(e => console.log("Không thể phát media:", e));
         }
 
-        function stopMedia(cardId) {
+        function toggleMedia(cardId) {
             const card = document.getElementById(cardId);
             const media = card.querySelector('.speaker-media');
+            const speakerName = card.querySelector('.speaker-header').innerText.replace(/[👨‍🎓👩‍🎓]/g, '').trim();
 
-            media.pause();
-            media.currentTime = 0;
-            card.classList.remove('active');
+            if (card.classList.contains('active')) {
+                media.pause(); media.currentTime = 0;
+                card.classList.remove('active');
+                document.getElementById('status').innerText = "Nhấp vào biểu tượng 🎤 hoặc gọi tên để phát biểu...";
+            } else {
+                forcePlay(cardId, speakerName);
+            }
         }
 
-        // Tự động tắt hiệu ứng active khi video chạy hết
         document.querySelectorAll('.speaker-media').forEach(media => {
-            media.addEventListener('ended', function() {
-                resetAllCards();
-            });
+            media.addEventListener('ended', resetAllCards);
             media.addEventListener('pause', function() {
-                // Tránh việc nhấn pause trên trình điều khiển mặc định mà thẻ vẫn sáng
-                if (this.currentTime !== 0 && this.currentTime !== this.duration) {
-                    resetAllCards();
-                }
+                if (this.currentTime !== 0 && this.currentTime !== this.duration) resetAllCards();
             });
         });
+
+        // --- TÍNH NĂNG NHẬN DIỆN GIỌNG NÓI (VOICE CONTROL) ---
+        let recognition;
+        let isListening = false;
+        const voiceBtn = document.getElementById('voice-btn');
+        const statusText = document.getElementById('status');
+
+        // Kiểm tra trình duyệt có hỗ trợ Web Speech API không (Chrome, Edge)
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'vi-VN';
+            recognition.continuous = true; // Nghe liên tục
+            recognition.interimResults = false;
+
+            recognition.onstart = function() {
+                isListening = true;
+                voiceBtn.classList.add('listening');
+                voiceBtn.querySelector('span').innerText = "Hệ thống đang nghe...";
+                statusText.innerText = "🎙️ Hãy nói tên sinh viên (VD: 'Mời Thảo Tâm', 'Dừng lại')...";
+            };
+
+            recognition.onresult = function(event) {
+                // Lấy kết quả vừa nói xong
+                const lastResult = event.results[event.results.length - 1];
+                const command = lastResult[0].transcript.toLowerCase();
+                
+                statusText.innerText = `🗣️ Bạn vừa nói: "${command}"`;
+
+                // Xử lý từ khóa
+                if (command.includes("thảo tâm")) {
+                    forcePlay('card-1', 'Thảo Tâm');
+                } else if (command.includes("thanh sang")) {
+                    forcePlay('card-2', 'Thanh Sang');
+                } else if (command.includes("tường vi")) {
+                    forcePlay('card-3', 'Tường Vi');
+                } else if (command.includes("trung khang")) {
+                    forcePlay('card-4', 'Trung Khang');
+                } else if (command.includes("mỹ tiên") || command.includes("mĩ tiên")) {
+                    forcePlay('card-5', 'Mỹ Tiên');
+                } else if (command.includes("minh trường")) {
+                    forcePlay('card-6', 'Minh Trường');
+                } else if (command.includes("dừng") || command.includes("tắt") || command.includes("thôi") || command.includes("cảm ơn")) {
+                    // Lệnh dừng
+                    document.querySelectorAll('.speaker-media').forEach(m => { m.pause(); m.currentTime = 0; });
+                    resetAllCards();
+                    statusText.innerText = "🛑 Đã dừng phát biểu.";
+                }
+            };
+
+            recognition.onerror = function(event) {
+                console.error("Lỗi nhận diện giọng nói: ", event.error);
+                if(event.error === 'not-allowed') {
+                    Swal.fire('Lỗi Micro', 'Trình duyệt chưa được cấp quyền sử dụng Micro.', 'error');
+                    toggleVoiceControl(); // Tắt UI
+                }
+            };
+
+            recognition.onend = function() {
+                // Nếu bị ngắt (do im lặng lâu), tự bật lại nếu user chưa bấm tắt
+                if(isListening) {
+                    recognition.start();
+                } else {
+                    voiceBtn.classList.remove('listening');
+                    voiceBtn.querySelector('span').innerText = "Bật Gọi tên bằng Giọng nói";
+                    statusText.innerText = "Đã tắt chế độ nhận diện giọng nói.";
+                }
+            };
+
+        } else {
+            // Trình duyệt không hỗ trợ
+            voiceBtn.style.display = "none";
+            console.warn("Trình duyệt này không hỗ trợ Web Speech API.");
+        }
+
+        // Bật/tắt chế độ nghe
+        function toggleVoiceControl() {
+            if (!recognition) {
+                Swal.fire('Không hỗ trợ', 'Tính năng này cần trình duyệt Google Chrome hoặc Microsoft Edge.', 'info');
+                return;
+            }
+
+            if (isListening) {
+                isListening = false;
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
     </script>
 </body>
 </html>
