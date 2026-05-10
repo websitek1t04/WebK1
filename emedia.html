@@ -229,12 +229,14 @@
 
     <script src="js/main.js"></script>
 
-    <script>
-        // Lấy dữ liệu từ localStorage, nếu chưa có thì tạo mảng rỗng
-        let eMediaList = JSON.parse(localStorage.getItem('eMedia_Data')) || [];
+    <script type="module">
+        import { supabase } from './js/supabase-client.js';
+
+        // Mảng chứa dữ liệu phim từ Database
+        let eMediaList = [];
 
         // Hàm render bảng danh sách phim
-        function renderTable() {
+        window.renderTable = function() {
             const tbody = document.getElementById('movieTableBody');
             tbody.innerHTML = '';
 
@@ -247,53 +249,77 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="text-align:center;">${index + 1}</td>
-                    <td style="font-weight: 600; color: #333;">${movie.name}</td>
+                    <td style="font-weight: 600; color: #333;">${movie.ten_phim}</td>
                     <td>
                         <a href="${movie.link}" class="video-link" target="_blank" title="Mở liên kết">
                             <i class="fas fa-play-circle"></i> Xem Video
                         </a>
                     </td>
                     <td class="actions">
-                        <button class="btn btn-edit" onclick="editMovie(${index})" title="Sửa thông tin"><i class="fas fa-edit"></i> Sửa</button>
-                        <button class="btn btn-delete" onclick="deleteMovie(${index})" title="Xóa phim"><i class="fas fa-trash-alt"></i> Xóa</button>
+                        <button class="btn btn-edit" onclick="editMovie(${movie.id})" title="Sửa thông tin"><i class="fas fa-edit"></i> Sửa</button>
+                        <button class="btn btn-delete" onclick="deleteMovie(${movie.id})" title="Xóa phim"><i class="fas fa-trash-alt"></i> Xóa</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
+        // Tải dữ liệu từ Supabase
+        window.loadData = async function() {
+            const { data, error } = await supabase.from('emedia').select('*').order('id', { ascending: false });
+            if (error) {
+                console.error("Lỗi khi tải phim:", error);
+                alert("Không thể tải danh sách phim từ máy chủ.");
+            } else {
+                eMediaList = data || [];
+                window.renderTable();
+            }
+        }
+
         // Hàm Xử lý thêm mới hoặc cập nhật
-        function saveMovie() {
+        window.saveMovie = async function() {
             const nameInput = document.getElementById('movieName').value.trim();
             const linkInput = document.getElementById('movieLink').value.trim();
-            const editIndex = parseInt(document.getElementById('editIndex').value);
+            const editId = parseInt(document.getElementById('editIndex').value); // editIndex giờ đây sẽ lưu id của DB
 
             if (!nameInput || !linkInput) {
                 alert('Yêu cầu nhập đầy đủ Tên phim và Đường dẫn!');
                 return;
             }
 
-            if (editIndex === -1) {
-                // Thêm mới
-                eMediaList.push({ name: nameInput, link: linkInput });
+            // Đổi text thành Đang tải để chờ kết quả DB
+            const btnSave = document.getElementById('saveBtn');
+            const originalText = btnSave.innerHTML;
+            btnSave.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
+            btnSave.disabled = true;
+
+            if (editId === -1) {
+                // Thêm mới vào Supabase
+                const { error } = await supabase.from('emedia').insert([{ ten_phim: nameInput, link: linkInput }]);
+                if (error) alert('Lỗi khi thêm phim: ' + error.message);
             } else {
-                // Cập nhật
-                eMediaList[editIndex].name = nameInput;
-                eMediaList[editIndex].link = linkInput;
+                // Cập nhật trên Supabase
+                const { error } = await supabase.from('emedia').update({ ten_phim: nameInput, link: linkInput }).eq('id', editId);
+                if (error) alert('Lỗi khi cập nhật phim: ' + error.message);
             }
 
-            // Lưu dữ liệu và làm mới UI
-            localStorage.setItem('eMedia_Data', JSON.stringify(eMediaList));
-            resetForm();
-            renderTable();
+            // Trả lại text cho nút
+            btnSave.innerHTML = originalText;
+            btnSave.disabled = false;
+
+            // Làm mới form và dữ liệu
+            window.resetForm();
+            window.loadData();
         }
 
         // Hàm đẩy dữ liệu lên form để Sửa
-        function editMovie(index) {
-            const movie = eMediaList[index];
-            document.getElementById('movieName').value = movie.name;
+        window.editMovie = function(id) {
+            const movie = eMediaList.find(m => m.id === id);
+            if(!movie) return;
+
+            document.getElementById('movieName').value = movie.ten_phim;
             document.getElementById('movieLink').value = movie.link;
-            document.getElementById('editIndex').value = index;
+            document.getElementById('editIndex').value = movie.id; // Gắn id của Database
 
             document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit"></i> Cập nhật thông tin Phim';
             document.getElementById('saveBtn').innerHTML = '<i class="fas fa-check"></i> Lưu Cập Nhật';
@@ -301,17 +327,20 @@
         }
 
         // Hàm Xóa phim
-        function deleteMovie(index) {
+        window.deleteMovie = async function(id) {
             if (confirm('Đồng chí có chắc chắn muốn xóa học liệu phim này khỏi hệ thống không?')) {
-                eMediaList.splice(index, 1);
-                localStorage.setItem('eMedia_Data', JSON.stringify(eMediaList));
-                renderTable();
-                resetForm(); // Reset lại form phòng trường hợp đang sửa thì bấm xóa
+                const { error } = await supabase.from('emedia').delete().eq('id', id);
+                if (error) {
+                    alert('Lỗi khi xóa phim: ' + error.message);
+                } else {
+                    window.loadData();
+                    window.resetForm(); // Reset lại form phòng trường hợp đang sửa thì bấm xóa
+                }
             }
         }
 
         // Hàm reset lại form nhập liệu
-        function resetForm() {
+        window.resetForm = function() {
             document.getElementById('movieName').value = '';
             document.getElementById('movieLink').value = '';
             document.getElementById('editIndex').value = '-1';
@@ -321,8 +350,8 @@
             document.getElementById('cancelBtn').style.display = 'none';
         }
 
-        // Khởi chạy render dữ liệu lần đầu khi load trang
-        window.onload = renderTable;
+        // Khởi chạy load dữ liệu lần đầu khi vào trang
+        window.loadData();
     </script>
 </body>
 </html>
