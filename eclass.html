@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phòng Học eClass - Đội Thanh Niên</title>
+    <title>Phòng Học eClass - Đội AI</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -41,15 +41,6 @@
             padding-bottom: 10px;
             letter-spacing: 1px;
         }
-        
-        .eclass-container #status {
-            margin-bottom: 15px;
-            font-weight: bold;
-            color: #2b6cb0;
-            min-height: 24px;
-            font-style: italic;
-            font-size: 16px;
-        }
 
         /* Nút điều khiển giọng nói tổng */
         #voice-btn {
@@ -66,14 +57,21 @@
             transition: all 0.3s;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 10px;
         }
 
         #voice-btn:hover { background-color: #c59b27; transform: translateY(-2px); }
+        
         #voice-btn.listening {
-            background-color: #dc3545; /* Đỏ khi đang nghe */
+            background-color: #dc3545;
             color: white;
+            padding: 15px; 
+            border-radius: 50%;
             animation: pulse-voice 1.5s infinite;
+        }
+        #voice-btn.listening span {
+            display: none; 
         }
 
         @keyframes pulse-voice {
@@ -95,13 +93,17 @@
             border-radius: 15px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
             padding: 25px;
+            border-top: 5px solid #cbd5e0;
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .presentation-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between;
-            border-top: 5px solid #cbd5e0;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
+            width: 100%;
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
         .speaker-header {
@@ -122,14 +124,13 @@
             border-radius: 50%;
             overflow: hidden;
             position: relative;
-            margin-bottom: 15px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
             display: flex;
             align-items: center;
             justify-content: center;
             background-color: #000;
             border: 3px solid transparent;
-            transition: all 0.3s;
+            transition: all 0.5s ease;
         }
 
         video {
@@ -139,18 +140,89 @@
             display: block;
         }
 
-        .student-card.active {
-            transform: scale(1.05) translateY(-5px);
-            box-shadow: 0 15px 25px rgba(72, 187, 120, 0.2);
-            border-top-color: var(--active-color);
-            z-index: 10;
+        /* --- LỚP MỜ ĐEN (OVERLAY) CHE TOÀN BỘ BACKGROUND --- */
+        #focus-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 900;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s ease;
         }
+        #focus-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* --- HIỆU ỨNG ZOOM TẬP TRUNG --- */
+        /* Cố tình KHÔNG set z-index cao cho .student-card.active để phần viền trắng bị che đi */
+        .student-card.active {
+            border-top-color: var(--active-color);
+        }
+        
+        .student-card.active .presentation-wrapper {
+            position: fixed;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(1.7); /* Phóng lớn gấp 2 lần */
+            z-index: 1001; /* Nổi lên trên overlay */
+            margin: 0;
+            padding: 0;
+            width: 250px;
+        }
+
         .student-card.active .media-box {
             border-color: var(--active-color);
-            box-shadow: 0 0 20px rgba(72, 187, 120, 0.4);
+            box-shadow: 0 0 25px rgba(72, 187, 120, 0.7);
+            margin: 10px 0;
         }
-        .student-card.active .speaker-header { color: var(--active-color); }
 
+        .student-card.active .speaker-header {
+            color: #fff;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+        }
+
+        /* --- NÚT MICRO KHI ĐANG PHÁT BIỂU --- */
+        .student-card.active .mic-toggle-btn {
+            background-color: var(--active-color);
+            border-color: #2f855a;
+            color: white;
+            animation: pulse-mic 1.5s infinite;
+        }
+
+        @keyframes pulse-mic {
+            0% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(72, 187, 120, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0); }
+        }
+
+        /* --- PHỤ ĐỀ MỚI: TỐI ĐA 2 DÒNG --- */
+        .subtitle-overlay {
+            position: fixed;
+            bottom: 8%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 75vw; 
+            max-width: 1200px;
+            background: rgba(0,0,0,0.85);
+            color: #ffde00;
+            padding: 20px 30px;
+            border-radius: 12px;
+            font-size: 28px; 
+            text-align: center;
+            display: none;
+            box-sizing: border-box;
+            font-weight: bold;
+            line-height: 1.5;
+            text-shadow: 2px 2px 4px #000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            z-index: 1005; 
+        }
+        .student-card.active .subtitle-overlay { display: block; animation: fadeIn 0.3s; }
+
+        /* --- NÚT MICRO KHI BÌNH THƯỜNG --- */
         .mic-toggle-btn {
             width: 50px;
             height: 50px;
@@ -165,29 +237,37 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-top: 15px;
         }
 
-        .mic-toggle-btn:hover {
-            background-color: #e2e8f0;
+        .mic-toggle-btn:hover { background-color: #e2e8f0; color: #333; transform: scale(1.1); }
+
+        /* --- TOÀN VĂN SAU KHI PHÁT BIỂU XONG --- */
+        .transcript-box {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            border-left: 4px solid var(--active-color);
+            font-size: 14px;
             color: #333;
-            transform: scale(1.1);
+            text-align: justify;
+            display: none;
+            width: 100%;
+            box-sizing: border-box;
+            animation: fadeIn 0.5s;
         }
+        .student-card.finished .transcript-box { display: block; }
 
-        .student-card.active .mic-toggle-btn {
-            background-color: var(--active-color);
-            border-color: #2f855a;
-            color: white;
-            animation: pulse-mic 1.5s infinite;
-        }
-
-        @keyframes pulse-mic {
-            0% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7); }
-            70% { box-shadow: 0 0 0 12px rgba(72, 187, 120, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
+
+    <div id="focus-overlay"></div>
 
     <div id="banner-area"></div>
 
@@ -196,73 +276,108 @@
         
         <main id="content-area" style="padding: 0;">
             <div class="eclass-container">
-                <h1>ĐỘI THANH NIÊN</h1>
-                <div id="status">Nhấp vào biểu tượng 🎤 ở từng người, HOẶC bật Điều khiển giọng nói.</div>
+                <h1>ĐỘI AI</h1>
                 
-                <button id="voice-btn" onclick="toggleVoiceControl()">
+                <button id="voice-btn" onclick="toggleVoiceControl()" title="Bật Gọi tên bằng Giọng nói">
                     <i class="fas fa-headset"></i> <span>Bật Gọi tên bằng Giọng nói</span>
                 </button>
 
                 <div class="grid-container">
                     
                     <div class="student-card" id="card-1" style="border-top-color: #d53f8c;">
-                        <div class="speaker-header">Thảo Tâm <span class="gender-icon">👩‍🎓</span></div>
-                        <div class="media-box">
-                            <video class="speaker-media" src="thaotam.mp4"></video>
+                        <div class="presentation-wrapper">
+                            <div class="speaker-header">Thảo Tâm <span class="gender-icon">👩‍🎓</span></div>
+                            <div class="media-box">
+                                <video class="speaker-media" src="thaotam.mp4"></video>
+                            </div>
+                            <button class="mic-toggle-btn" onclick="toggleMedia('card-1')" title="Phát biểu / Dừng">
+                                <i class="fas fa-microphone"></i>
+                            </button>
                         </div>
-                        <button class="mic-toggle-btn" onclick="toggleMedia('card-1')" title="Phát biểu / Dừng">
-                            <i class="fas fa-microphone"></i>
-                        </button>
+                        <div class="subtitle-overlay">...</div>
+                        <div class="transcript-box">
+                            <b>Nội dung:</b> <span class="text-content">Thưa thầy và các bạn, cảm ơn phần thuyết trình của Đội Búa Liềm, đã đưa ra nhiều lập luận để phản bác quan điểm, tuy nhiên đội nhận thấy rằng nhiều quốc gia như Mỹ, Anh, EU đạt phát triển mạnh mẽ bằng kinh tế thị trường tự do. CNXH không còn là mô hình lý tưởng, thậm chí gây trì trệ, nghèo đói. Đội Búa Liềm lý giải thế nào?</span>
+                        </div>
                     </div>
 
                     <div class="student-card" id="card-2" style="border-top-color: #3182ce;">
-                        <div class="speaker-header">Thanh Sang <span class="gender-icon">👨‍🎓</span></div>
-                        <div class="media-box">
-                            <video class="speaker-media" src="thanhsang.mp4"></video>
+                        <div class="presentation-wrapper">
+                            <div class="speaker-header">Thanh Sang <span class="gender-icon">👨‍🎓</span></div>
+                            <div class="media-box">
+                                <video class="speaker-media" src="thanhsang.mp4"></video>
+                            </div>
+                            <button class="mic-toggle-btn" onclick="toggleMedia('card-2')" title="Phát biểu / Dừng">
+                                <i class="fas fa-microphone"></i>
+                            </button>
                         </div>
-                        <button class="mic-toggle-btn" onclick="toggleMedia('card-2')" title="Phát biểu / Dừng">
-                            <i class="fas fa-microphone"></i>
-                        </button>
+                        <div class="subtitle-overlay">...</div>
+                        <div class="transcript-box">
+                            <b>Nội dung:</b> <span class="text-content">Em thống nhất với những cơ sở thực tiễn thuyết phục các đồng chí Búa Liềm đưa ra, tuy nhiên hiện nay có ý kiến cho rằng: “Những quốc gia theo chủ nghĩa xã hội cho thấy việc tập trung quyền lực vào một đội người có thể dẫn đến tham nhũng và chính quyền độc tài, làm tổn hại đến tự do cá nhân”. Những vụ án điển hình trong thời gian qua gây dư luận không tốt như: Việt Á, chuyến bay giải cứu, Trương Mỹ Lan,… Các đồng chí Đội Búa Liềm có thể lý giải điều này.</span>
+                        </div>
                     </div>
 
                     <div class="student-card" id="card-3" style="border-top-color: #ed8936;">
-                        <div class="speaker-header">Tường Vi <span class="gender-icon">👩‍🎓</span></div>
-                        <div class="media-box">
-                            <video class="speaker-media" src="tuongvi.mp4"></video>
+                        <div class="presentation-wrapper">
+                            <div class="speaker-header">Tường Vi <span class="gender-icon">👩‍🎓</span></div>
+                            <div class="media-box">
+                                <video class="speaker-media" src="tuongvi.mp4"></video>
+                            </div>
+                            <button class="mic-toggle-btn" onclick="toggleMedia('card-3')" title="Phát biểu / Dừng">
+                                <i class="fas fa-microphone"></i>
+                            </button>
                         </div>
-                        <button class="mic-toggle-btn" onclick="toggleMedia('card-3')" title="Phát biểu / Dừng">
-                            <i class="fas fa-microphone"></i>
-                        </button>
+                        <div class="subtitle-overlay">...</div>
+                        <div class="transcript-box">
+                            <b>Nội dung:</b> <span class="text-content">Với những điểm các bạn đội Búa Liềm nêu ta thấy đúng đắn, tuy nhiên vẫn chưa thật sự thuyết phục, khi có ý kiến cho rằng quá trình giám sát, phản biện xã hội chỉ mang tính hình thức, chủ nghĩa xã hội vẫn không khuyến khích tự do cá nhân, quyền sở hữu tư nhân, điều này có thể làm giảm động lực cá nhân trong việc đóng góp cho sự phát triển của xã hội. Đội Búa Liềm hãy cho ý kiến về nội dung này.</span>
+                        </div>
                     </div>
 
                     <div class="student-card" id="card-4" style="border-top-color: #319795;">
-                        <div class="speaker-header">Trung Khang <span class="gender-icon">👨‍🎓</span></div>
-                        <div class="media-box">
-                            <video class="speaker-media" src="trungkhang.mp4"></video>
+                        <div class="presentation-wrapper">
+                            <div class="speaker-header">Trung Khang <span class="gender-icon">👨‍🎓</span></div>
+                            <div class="media-box">
+                                <video class="speaker-media" src="trungkhang.mp4"></video>
+                            </div>
+                            <button class="mic-toggle-btn" onclick="toggleMedia('card-4')" title="Phát biểu / Dừng">
+                                <i class="fas fa-microphone"></i>
+                            </button>
                         </div>
-                        <button class="mic-toggle-btn" onclick="toggleMedia('card-4')" title="Phát biểu / Dừng">
-                            <i class="fas fa-microphone"></i>
-                        </button>
+                        <div class="subtitle-overlay">...</div>
+                        <div class="transcript-box">
+                            <b>Nội dung:</b> <span class="text-content">Qua phần lý giải vừa rồi, chúng thấy có sự thuyết phục nhất định, tuy nhiên, quan điểm kinh tế thị trường là tự do, vậy sự định hướng của Đảng, quản lý của Nhà nước đối với thị trường, có làm thị trường không linh hoạt, kìm hãm con người sáng tạo hay không?</span>
+                        </div>
                     </div>
 
                     <div class="student-card" id="card-5" style="border-top-color: #9f7aea;">
-                        <div class="speaker-header">Mỹ Tiên <span class="gender-icon">👩‍🎓</span></div>
-                        <div class="media-box">
-                            <video class="speaker-media" src="mytien.mp4"></video>
+                        <div class="presentation-wrapper">
+                            <div class="speaker-header">Mỹ Tiên <span class="gender-icon">👩‍🎓</span></div>
+                            <div class="media-box">
+                                <video class="speaker-media" src="mytien.mp4"></video>
+                            </div>
+                            <button class="mic-toggle-btn" onclick="toggleMedia('card-5')" title="Phát biểu / Dừng">
+                                <i class="fas fa-microphone"></i>
+                            </button>
                         </div>
-                        <button class="mic-toggle-btn" onclick="toggleMedia('card-5')" title="Phát biểu / Dừng">
-                            <i class="fas fa-microphone"></i>
-                        </button>
+                        <div class="subtitle-overlay">...</div>
+                        <div class="transcript-box">
+                            <b>Nội dung:</b> <span class="text-content">Trong bối cảnh thế giới đa cực, các nước lớn liên tục gây ảnh hưởng, liệu chủ nghĩa xã hội có thể dẫn đến tình trạng cô lập quốc tế, vì các chính sách bảo vệ nền kinh tế nội địa có thể làm giảm khả năng giao thương và hợp tác với các quốc gia khác, từ đó gây ảnh hưởng tiêu cực đến sự phát triển kinh tế và quan hệ quốc tế. Theo các đồng chí, suy nghĩ như thế nào về điều này?</span>
+                        </div>
                     </div>
 
                     <div class="student-card" id="card-6" style="border-top-color: #5a67d8;">
-                        <div class="speaker-header">Minh Trường <span class="gender-icon">👨‍🎓</span></div>
-                        <div class="media-box">
-                            <video class="speaker-media" src="minhtruong.mp4"></video>
+                        <div class="presentation-wrapper">
+                            <div class="speaker-header">Minh Trường <span class="gender-icon">👨‍🎓</span></div>
+                            <div class="media-box">
+                                <video class="speaker-media" src="minhtruong.mp4"></video>
+                            </div>
+                            <button class="mic-toggle-btn" onclick="toggleMedia('card-6')" title="Phát biểu / Dừng">
+                                <i class="fas fa-microphone"></i>
+                            </button>
                         </div>
-                        <button class="mic-toggle-btn" onclick="toggleMedia('card-6')" title="Phát biểu / Dừng">
-                            <i class="fas fa-microphone"></i>
-                        </button>
+                        <div class="subtitle-overlay">...</div>
+                        <div class="transcript-box">
+                            <b>Nội dung:</b> <span class="text-content">Với vai trò là một công cụ trí tuệ nhân tạo do giảng viên định hướng để thử thách bản lĩnh chính trị và khả năng vận dụng kiến thức của tập thể học viên Đội Búa Liềm và Đội Sao Vàng. Đội Thanh niên xin chúc mừng hai đội đã hoàn thành các thử thách, việc đánh giá kết quả tổng thể xin mời thầy giáo cho ý kiến.</span>
+                        </div>
                     </div>
 
                 </div>
@@ -274,127 +389,150 @@
 
     <script src="js/main.js"></script>
     <script>
-        // --- LOGIC BẤM CHUỘT THÔNG THƯỜNG ---
+        // Tắt lớp mờ và reset toàn bộ
         function resetAllCards() {
-            document.querySelectorAll('.student-card').forEach(card => { card.classList.remove('active'); });
-            document.getElementById('status').innerText = "Nhấp vào biểu tượng 🎤 hoặc gọi tên để phát biểu...";
+            document.querySelectorAll('.student-card').forEach(card => { 
+                card.classList.remove('active'); 
+            });
+            document.getElementById('focus-overlay').classList.remove('show');
         }
 
-        function forcePlay(cardId, speakerName) {
-            // Dừng tất cả video khác
+        function forcePlay(cardId) {
             document.querySelectorAll('.speaker-media').forEach(m => { m.pause(); m.currentTime = 0; });
             resetAllCards();
             
             const card = document.getElementById(cardId);
             const media = card.querySelector('.speaker-media');
             
-            card.classList.add('active');
-            document.getElementById('status').innerText = `${speakerName} đang phát biểu...`;
+            card.classList.remove('finished'); 
+            card.classList.add('active'); 
+            document.getElementById('focus-overlay').classList.add('show');
             media.play().catch(e => console.log("Không thể phát media:", e));
         }
 
         function toggleMedia(cardId) {
             const card = document.getElementById(cardId);
             const media = card.querySelector('.speaker-media');
-            const speakerName = card.querySelector('.speaker-header').innerText.replace(/[👨‍🎓👩‍🎓]/g, '').trim();
 
             if (card.classList.contains('active')) {
-                media.pause(); media.currentTime = 0;
+                // Đang phát -> Dừng
+                media.pause();
+                media.currentTime = 0;
                 card.classList.remove('active');
-                document.getElementById('status').innerText = "Nhấp vào biểu tượng 🎤 hoặc gọi tên để phát biểu...";
+                card.classList.add('finished');
+                document.getElementById('focus-overlay').classList.remove('show');
             } else {
-                forcePlay(cardId, speakerName);
+                forcePlay(cardId);
             }
         }
 
+        // Chạy phụ đề (Chia theo khối ~12-14 từ để đảm bảo tối đa 2 dòng)
         document.querySelectorAll('.speaker-media').forEach(media => {
-            media.addEventListener('ended', resetAllCards);
-            media.addEventListener('pause', function() {
-                if (this.currentTime !== 0 && this.currentTime !== this.duration) resetAllCards();
+            const card = media.closest('.student-card');
+            const fullText = card.querySelector('.text-content').innerText;
+            const wordsArray = fullText.split(/\s+/);
+            const chunks = [];
+            
+            // Nhóm mỗi 14 từ thành 1 cụm để làm phụ đề
+            for (let i = 0; i < wordsArray.length; i += 14) {
+                chunks.push(wordsArray.slice(i, i + 14).join(" "));
+            }
+            
+            const subtitleEl = card.querySelector('.subtitle-overlay');
+
+            media.addEventListener('timeupdate', function() {
+                if(this.duration && !this.paused) {
+                    let progress = this.currentTime / this.duration;
+                    let currentIndex = Math.floor(progress * chunks.length);
+                    if (currentIndex >= chunks.length) currentIndex = chunks.length - 1;
+                    subtitleEl.innerHTML = chunks[currentIndex];
+                }
+            });
+
+            media.addEventListener('ended', function() {
+                card.classList.remove('active');
+                card.classList.add('finished');
+                document.getElementById('focus-overlay').classList.remove('show');
             });
         });
 
-        // --- TÍNH NĂNG NHẬN DIỆN GIỌNG NÓI (VOICE CONTROL) ---
+        // --- NHẬN DIỆN GIỌNG NÓI TỨC THỜI (ĐỘ NHẠY CAO) ---
         let recognition;
         let isListening = false;
         const voiceBtn = document.getElementById('voice-btn');
-        const statusText = document.getElementById('status');
 
-        // Kiểm tra trình duyệt có hỗ trợ Web Speech API không (Chrome, Edge)
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
             recognition.lang = 'vi-VN';
-            recognition.continuous = true; // Nghe liên tục
-            recognition.interimResults = false;
+            recognition.continuous = true; 
+            recognition.interimResults = true; // BẬT NHẬN DIỆN TỨC THÌ (REAL-TIME)
 
             recognition.onstart = function() {
                 isListening = true;
                 voiceBtn.classList.add('listening');
-                voiceBtn.querySelector('span').innerText = "Hệ thống đang nghe...";
-                statusText.innerText = "🎙️ Hãy nói tên sinh viên (VD: 'Mời Thảo Tâm', 'Dừng lại')...";
             };
 
             recognition.onresult = function(event) {
-                // Lấy kết quả vừa nói xong
-                const lastResult = event.results[event.results.length - 1];
-                const command = lastResult[0].transcript.toLowerCase();
-                
-                statusText.innerText = `🗣️ Bạn vừa nói: "${command}"`;
+                let command = "";
+                // Ghép tất cả các chuỗi nghe được (cả kết quả tạm thời và kết quả chốt)
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    command += event.results[i][0].transcript.toLowerCase();
+                }
 
-                // Xử lý từ khóa
+                // Nhận diện nhân vật với các từ khóa Alias (đồng âm/phát âm sai)
                 if (command.includes("thảo tâm")) {
-                    forcePlay('card-1', 'Thảo Tâm');
+                    if(!document.getElementById('card-1').classList.contains('active')) forcePlay('card-1');
                 } else if (command.includes("thanh sang")) {
-                    forcePlay('card-2', 'Thanh Sang');
-                } else if (command.includes("tường vi")) {
-                    forcePlay('card-3', 'Tường Vi');
-                } else if (command.includes("trung khang")) {
-                    forcePlay('card-4', 'Trung Khang');
+                    if(!document.getElementById('card-2').classList.contains('active')) forcePlay('card-2');
+                } else if (command.includes("tường vi") || command.includes("tường vy")) {
+                    if(!document.getElementById('card-3').classList.contains('active')) forcePlay('card-3');
+                } else if (command.includes("trung khang") || command.includes("chung khang")) {
+                    if(!document.getElementById('card-4').classList.contains('active')) forcePlay('card-4');
                 } else if (command.includes("mỹ tiên") || command.includes("mĩ tiên")) {
-                    forcePlay('card-5', 'Mỹ Tiên');
-                } else if (command.includes("minh trường")) {
-                    forcePlay('card-6', 'Minh Trường');
-                } else if (command.includes("dừng") || command.includes("tắt") || command.includes("thôi") || command.includes("cảm ơn")) {
-                    // Lệnh dừng
-                    document.querySelectorAll('.speaker-media').forEach(m => { m.pause(); m.currentTime = 0; });
-                    resetAllCards();
-                    statusText.innerText = "🛑 Đã dừng phát biểu.";
+                    if(!document.getElementById('card-5').classList.contains('active')) forcePlay('card-5');
+                } else if (command.includes("minh trường") || command.includes("minh chường")) {
+                    if(!document.getElementById('card-6').classList.contains('active')) forcePlay('card-6');
+                } 
+                // Xử lý các từ khóa yêu cầu DỪNG LẠI
+                else if (command.includes("dừng") || command.includes("dừng lại") || command.includes("tắt") || command.includes("thôi") || command.includes("cám ơn") || command.includes("cảm ơn")) {
+                    let anyActive = false;
+                    document.querySelectorAll('.speaker-media').forEach(m => { 
+                        if (!m.paused) { m.pause(); m.currentTime = 0; anyActive = true; }
+                    });
+                    
+                    if (anyActive) {
+                        document.querySelectorAll('.student-card.active').forEach(c => {
+                            c.classList.remove('active');
+                            c.classList.add('finished');
+                        });
+                        document.getElementById('focus-overlay').classList.remove('show');
+                    }
                 }
             };
 
             recognition.onerror = function(event) {
-                console.error("Lỗi nhận diện giọng nói: ", event.error);
                 if(event.error === 'not-allowed') {
-                    Swal.fire('Lỗi Micro', 'Trình duyệt chưa được cấp quyền sử dụng Micro.', 'error');
-                    toggleVoiceControl(); // Tắt UI
+                    Swal.fire('Lỗi Micro', 'Trình duyệt chưa cấp quyền sử dụng Micro.', 'error');
+                    isListening = false;
+                    voiceBtn.classList.remove('listening');
                 }
             };
 
             recognition.onend = function() {
-                // Nếu bị ngắt (do im lặng lâu), tự bật lại nếu user chưa bấm tắt
                 if(isListening) {
-                    recognition.start();
+                    try { recognition.start(); } catch(e) {}
                 } else {
                     voiceBtn.classList.remove('listening');
-                    voiceBtn.querySelector('span').innerText = "Bật Gọi tên bằng Giọng nói";
-                    statusText.innerText = "Đã tắt chế độ nhận diện giọng nói.";
                 }
             };
 
         } else {
-            // Trình duyệt không hỗ trợ
             voiceBtn.style.display = "none";
-            console.warn("Trình duyệt này không hỗ trợ Web Speech API.");
         }
 
-        // Bật/tắt chế độ nghe
         function toggleVoiceControl() {
-            if (!recognition) {
-                Swal.fire('Không hỗ trợ', 'Tính năng này cần trình duyệt Google Chrome hoặc Microsoft Edge.', 'info');
-                return;
-            }
-
+            if (!recognition) return Swal.fire('Lỗi', 'Trình duyệt không hỗ trợ Web Speech API.', 'info');
             if (isListening) {
                 isListening = false;
                 recognition.stop();

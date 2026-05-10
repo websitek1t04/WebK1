@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Bài giảng Thông minh - TS. Cao Thanh Hùng</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #8B0000;
+            --secondary: #DAA520;
+            --dark-glass: rgba(0, 0, 0, 0.7);
+        }
+
+        body, html { 
+            margin: 0; padding: 0; height: 100%; 
+            background: #f4f7f6; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* --- KHUNG CHỨA TÍCH HỢP TRONG GIAO DIỆN --- */
+        .eslide-container {
+            width: 100%;
+            height: calc(100vh - 120px); /* Tự động vừa vặn với Banner/Footer */
+            min-height: 600px;
+            position: relative;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 2px solid var(--secondary);
+        }
+
+        /* --- MÀN HÌNH CHỜ (LOBBY) --- */
+        #start-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, #a52a2a 0%, #310000 100%);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 10; color: white; flex-direction: column;
+            text-align: center;
+        }
+
+        .lobby-content h2 {
+            font-size: 32px; margin-bottom: 30px; letter-spacing: 2px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Sửa lỗi font */
+        }
+
+        .btn-start-lecture {
+            background: var(--secondary);
+            color: var(--primary);
+            border: none;
+            padding: 22px 60px;
+            font-size: 26px;
+            font-weight: 800;
+            border-radius: 60px;
+            cursor: pointer;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; gap: 15px;
+            font-family: inherit; /* Kế thừa font chuẩn */
+        }
+
+        .btn-start-lecture:hover {
+            transform: scale(1.1) translateY(-5px);
+            background: #fff;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+
+        /* --- KHUNG BÀI GIẢNG --- */
+        .lecture-view {
+            display: none; /* Hiện sau khi nhấn bắt đầu */
+            width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0;
+            background: #000;
+        }
+
+        iframe {
+            width: 100%; height: 100%; border: none;
+        }
+
+        /* --- THANH CÔNG CỤ THÔNG MINH --- */
+        .smart-toolbar {
+            position: absolute;
+            top: -60px; /* Ẩn mặc định */
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: var(--dark-glass);
+            backdrop-filter: blur(15px);
+            padding: 8px 20px;
+            border-radius: 0 0 20px 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-top: none;
+            z-index: 10000;
+            transition: all 0.4s ease;
+            opacity: 0;
+        }
+
+        /* Vùng nhạy cảm để hiện Toolbar */
+        .hover-trigger {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 40px;
+            z-index: 9999;
+        }
+
+        .hover-trigger:hover + .smart-toolbar, .smart-toolbar:hover {
+            top: 0; opacity: 1;
+        }
+
+        .tool-btn {
+            background: transparent;
+            color: #ddd;
+            border: none;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 10px;
+            display: flex; align-items: center; gap: 8px;
+            transition: 0.3s;
+            font-family: inherit;
+        }
+
+        .tool-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+        .btn-home-mode:hover { color: #3b82f6; }
+        .btn-edit-mode:hover { color: #48bb78; }
+        .btn-exit-mode:hover { color: #ff4d4d; }
+
+        /* Icon phím tắt */
+        kbd {
+            background: rgba(255,255,255,0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            margin-left: 5px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="banner-area"></div>
+
+    <div id="main-layout">
+        <aside id="sidebar-area"></aside>
+        
+        <main id="content-area">
+            
+            <div class="eslide-container" id="presentation-container">
+                
+                <div id="start-overlay">
+                    <div class="lobby-content">
+                        <i class="fas fa-desktop" style="font-size: 80px; color: var(--secondary); margin-bottom: 20px;"></i>
+                        <h2>HỆ THỐNG TRÌNH CHIẾU BÀI GIẢNG</h2>
+                        <button class="btn-start-lecture" onclick="launchPresentation()">
+                            <i class="fas fa-play"></i> BẮT ĐẦU BÀI GIẢNG
+                        </button>
+                        <p style="margin-top: 25px; color: rgba(255,255,255,0.5); font-style: italic;">
+                            Chế độ toàn màn hình sẽ được kích hoạt tự động
+                        </p>
+                    </div>
+                </div>
+
+                <div class="lecture-view" id="lecture-area">
+                    
+                    <div class="hover-trigger" title="Rê chuột vào đây để hiện công cụ"></div>
+                    
+                    <div class="smart-toolbar">
+                        <button class="tool-btn btn-home-mode" onclick="goHome()" title="Quay về Trang chủ hệ thống">
+                            <i class="fas fa-home"></i> Quay Trang chủ
+                        </button>
+                        <div style="width: 1px; background: rgba(255,255,255,0.2); margin: 5px 10px;"></div>
+                        <button class="tool-btn btn-edit-mode" onclick="goToGoogleSlides()" title="Mở tab chỉnh sửa">
+                            <i class="fas fa-edit"></i> Chỉnh sửa bài giảng <kbd>E</kbd>
+                        </button>
+                        <div style="width: 1px; background: rgba(255,255,255,0.2); margin: 5px 10px;"></div>
+                        <button class="tool-btn btn-exit-mode" onclick="quitFullscreen()" title="Thoát chế độ toàn màn hình">
+                            <i class="fas fa-compress"></i> Thu nhỏ <kbd>Esc</kbd>
+                        </button>
+                    </div>
+
+                    <iframe 
+                        id="slide-frame"
+                        src="https://docs.google.com/presentation/d/1hOdBkes22oXsH7b3mLGW6X5AhIhuFx2ybbarlDvCJME/embed?start=false&loop=false&delayms=3000" 
+                        allowfullscreen="true" 
+                        mozallowfullscreen="true" 
+                        webkitallowfullscreen="true">
+                    </iframe>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <footer id="footer-area"></footer>
+
+    <script src="js/main.js"></script>
+
+    <script>
+        // Đường dẫn gốc để chỉnh sửa
+        const EDIT_LINK = "https://docs.google.com/presentation/d/1hOdBkes22oXsH7b3mLGW6X5AhIhuFx2ybbarlDvCJME/edit";
+        const lectureArea = document.getElementById('lecture-area');
+        const startOverlay = document.getElementById('start-overlay');
+
+        function launchPresentation() {
+            // Hiển thị iframe bài giảng
+            startOverlay.style.display = 'none';
+            lectureArea.style.display = 'block';
+
+            // Yêu cầu Fullscreen chỉ riêng khung bài giảng (che mất banner/sidebar)
+            if (lectureArea.requestFullscreen) {
+                lectureArea.requestFullscreen();
+            } else if (lectureArea.webkitRequestFullscreen) {
+                lectureArea.webkitRequestFullscreen();
+            }
+        }
+
+        function quitFullscreen() {
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+            }
+        }
+
+        function goHome() {
+            quitFullscreen();
+            location.href = 'index.html'; // Quay về trang chủ
+        }
+
+        function goToGoogleSlides() {
+            window.open(EDIT_LINK, '_blank');
+        }
+
+        // Xử lý phím tắt thông minh
+        window.addEventListener('keydown', (e) => {
+            // Phím E để sửa (chỉ hoạt động khi đã vào bài giảng)
+            if (e.key.toLowerCase() === 'e' && lectureArea.style.display === 'block') {
+                goToGoogleSlides();
+            }
+        });
+    </script>
+</body>
+</html>
