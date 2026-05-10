@@ -107,32 +107,31 @@
             width: 300px; outline: none;
         }
 
+        /* Chỉnh lưới thành 3 cột */
         .chat-grid {
-            display: grid; grid-template-columns: repeat(5, 1fr);
-            gap: 12px; padding: 15px; flex-grow: 1; overflow: hidden;
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 15px; padding: 15px; flex-grow: 1; overflow: hidden;
             background: #fafafa;
         }
 
         .chat-box {
             background: white; border-radius: 10px; display: flex; flex-direction: column;
             border: 2px solid rgba(0,0,0,0.1); box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-            overflow: hidden; min-width: 200px;
+            overflow: hidden; min-width: 250px;
         }
 
-        #box-1 { border-color: #e67e22; }
-        #box-2 { border-color: #3498db; }
-        #box-3 { border-color: #2ecc71; }
-        #box-4 { border-color: #9b59b6; }
-        #box-5 { border-color: var(--primary); }
+        #box-1 { border-color: #900000; } /* Búa Liềm */
+        #box-2 { border-color: #DAA520; } /* Sao Vàng */
+        #box-3 { border-color: var(--primary); } /* Giảng viên */
 
         .chat-header {
             padding: 10px; background: rgba(0,0,0,0.03); 
             border-bottom: 1px solid rgba(0,0,0,0.08); font-weight: bold;
-            display: flex; justify-content: space-between; align-items: center; font-size: 13px;
+            display: flex; justify-content: space-between; align-items: center; font-size: 14px;
         }
 
         .messages { 
-            flex-grow: 1; overflow-y: auto; padding: 12px; font-size: 13px;
+            flex-grow: 1; overflow-y: auto; padding: 12px; font-size: 14px;
             background-image: radial-gradient(rgba(0,0,0,0.05) 1px, transparent 1px); 
             background-size: 15px 15px;
         }
@@ -147,10 +146,9 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         .msg-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
-        .msg-team { font-weight: bold; color: var(--primary); font-size: 11px; margin-right: 10px; }
-        .msg-time { font-size: 9px; color: #888; }
+        .msg-team { font-weight: bold; color: var(--primary); font-size: 12px; margin-right: 10px; }
+        .msg-time { font-size: 10px; color: #888; }
         
-        /* Đã Sửa Lỗi Ngắt Chữ: Sử dụng overflow-wrap và word-wrap thay vì break-all */
         .msg-text { 
             color: #000; 
             overflow-wrap: break-word; 
@@ -158,26 +156,26 @@
             display: block; 
         }
 
-        .file-link { display: inline-block; color: #1a73e8; text-decoration: none; font-weight: bold; margin-top: 4px; font-size: 12px; }
+        .file-link { display: inline-block; color: #1a73e8; text-decoration: none; font-weight: bold; margin-top: 4px; font-size: 13px; }
 
         .box-input-area {
-            display: flex; padding: 8px; background: rgba(0,0,0,0.02); 
-            border-top: 1px solid rgba(0,0,0,0.05); gap: 4px;
+            display: flex; padding: 10px; background: rgba(0,0,0,0.02); 
+            border-top: 1px solid rgba(0,0,0,0.05); gap: 6px;
         }
         .box-input-area input[type="text"] {
-            flex-grow: 1; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; outline: none;
+            flex-grow: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; outline: none; font-size: 14px;
         }
         .btn-action {
             background: var(--primary); color: white; border: none; 
-            width: 32px; height: 32px; border-radius: 4px; cursor: pointer;
+            width: 36px; height: 36px; border-radius: 4px; cursor: pointer;
             display: flex; align-items: center; justify-content: center; font-size: 14px;
         }
         .btn-file { background: #5f6368; }
-        .btn-file svg { width: 14px; height: 14px; fill: none; stroke: white; stroke-width: 2; }
+        .btn-file svg { width: 16px; height: 16px; fill: none; stroke: white; stroke-width: 2; }
 
         .admin-controls { display: none; gap: 10px; }
-        #btn-export { background: var(--success); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
-        #btn-clear { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
+        #btn-export { background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px; }
+        #btn-clear { background: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px; }
 
         .inactive .box-input-area { display: none; }
         .inactive { opacity: 0.6; }
@@ -190,13 +188,11 @@
             <h2>TRANG THẢO LUẬN ONLINE</h2>
             
             <div class="form-group" style="margin-bottom: 15px; text-align: left;">
-                <label for="inputChannel" style="font-size: 13px; font-weight: bold; color: var(--primary);">Chọn Đội hoặc Vai trò:</label>
+                <label for="inputChannel" style="font-size: 14px; font-weight: bold; color: var(--primary);">Chọn Đội hoặc Vai trò:</label>
                 <select id="inputChannel" onchange="toggleInputPlaceholder()">
-                    <option value="1">Tham gia Đội 1</option>
-                    <option value="2">Tham gia Đội 2</option>
-                    <option value="3">Tham gia Đội 3</option>
-                    <option value="4">Tham gia Đội 4</option>
-                    <option value="5">Giảng viên / Quản trị</option>
+                    <option value="1">Tham gia Đội BÚA LIỀM</option>
+                    <option value="2">Tham gia Đội SAO VÀNG</option>
+                    <option value="3">Giảng viên / Quản trị</option>
                 </select>
             </div>
             
@@ -215,7 +211,7 @@
                 <button class="btn-home-header" onclick="location.href='index.html'" title="Trở về Trang chủ Hệ thống">
                     <i class="fas fa-home"></i> Trang chủ
                 </button>
-                <div style="font-size: 1.1rem; font-weight: bold; color: var(--primary);">TRANG THẢO LUẬN ONLINE</div>
+                <div style="font-size: 1.2rem; font-weight: bold; color: var(--primary);">TRANG THẢO LUẬN ONLINE</div>
                 <div class="admin-controls" id="admin-tools">
                     <button id="btn-export" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> TẢI FILE EXCEL DỮ LIỆU THẢO LUẬN</button>
                     <button id="btn-clear" onclick="clearAllData()"><i class="fas fa-trash-alt"></i> Xóa dữ liệu</button>
@@ -225,7 +221,7 @@
         </header>
 
         <div class="search-area">
-            <label style="font-size: 13px; font-weight: 600;"><i class="fas fa-search"></i> Lọc tin nhắn:</label>
+            <label style="font-size: 14px; font-weight: 600;"><i class="fas fa-search"></i> Lọc tin nhắn:</label>
             <input type="text" id="input-search" oninput="filterMessages()" placeholder="Gõ để tìm kiếm nội dung tin nhắn...">
         </div>
 
@@ -251,7 +247,7 @@
     window.toggleInputPlaceholder = function() {
         const chan = document.getElementById('inputChannel').value;
         const inputName = document.getElementById('inputName');
-        if(chan == 5) {
+        if(chan == 3) {
             inputName.placeholder = "Nhập tên Giảng viên...";
         } else {
             inputName.placeholder = "Nhập tên thành viên...";
@@ -259,13 +255,17 @@
     };
 
     const root = document.getElementById('chat-container-root');
-    for (let i = 1; i <= 5; i++) {
-        let boxTitle = i === 5 ? "GIẢNG VIÊN" : `ĐỘI ${i}`;
+    for (let i = 1; i <= 3; i++) {
+        let boxTitle = "";
+        if (i === 1) boxTitle = "ĐỘI BÚA LIỀM";
+        else if (i === 2) boxTitle = "ĐỘI SAO VÀNG";
+        else boxTitle = "GIẢNG VIÊN";
+
         root.innerHTML += `
             <div class="chat-box" id="box-${i}">
                 <div class="chat-header">
                     <span id="title-${i}">${boxTitle}</span> 
-                    <span id="status-${i}" style="font-size:10px; color:#333"></span>
+                    <span id="status-${i}" style="font-size:11px; color:#333"></span>
                 </div>
                 <div class="messages" id="msg-${i}"></div>
                 <div class="box-input-area">
@@ -295,28 +295,30 @@
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('main-chat').style.display = 'flex';
         
-        const roleText = (chan == 5) ? `Giảng viên: ${currentUser}` : `Đội ${chan}: ${currentUser}`;
+        let teamNameStr = chan == 1 ? "Đội Búa Liềm" : "Đội Sao Vàng";
+        const roleText = (chan == 3) ? `Giảng viên: ${currentUser}` : `${teamNameStr}: ${currentUser}`;
         document.getElementById('displayInfo').innerText = roleText;
 
-        if (chan == 5) {
+        if (chan == 3) {
             document.getElementById('admin-tools').style.display = 'flex';
         }
 
         // Xử lý bật/tắt các cột tùy theo quyền
-        for (let i = 1; i <= 5; i++) {
-            if (currentChannel == 5) {
-                // Nếu là Giảng viên: Không làm mờ cột nào, cho phép thảo luận ở mọi cột
-                if (i == 5) {
+        for (let i = 1; i <= 3; i++) {
+            if (currentChannel == 3) {
+                // Giảng viên: Không làm mờ
+                if (i == 3) {
                     document.getElementById(`status-${i}`).innerText = "(Bạn)";
                     document.getElementById(`title-${i}`).innerText = "GV: " + currentUser;
                 }
             } else {
-                // Nếu là Đội/Thành viên: Làm mờ các cột khác (bao gồm cột GV)
+                // Đội/Thành viên: Làm mờ cột khác
                 if (i != currentChannel) {
                     document.getElementById(`box-${i}`).classList.add('inactive');
                 } else {
                     document.getElementById(`status-${i}`).innerText = "(Bạn)";
-                    document.getElementById(`title-${i}`).innerText = "ĐỘI " + i + ": " + currentUser;
+                    let tName = i == 1 ? "BÚA LIỀM" : "SAO VÀNG";
+                    document.getElementById(`title-${i}`).innerText = "ĐỘI " + tName + ": " + currentUser;
                 }
             }
         }
@@ -338,7 +340,7 @@
     }
 
     function renderMessages(dataArray) {
-        for (let i = 1; i <= 5; i++) {
+        for (let i = 1; i <= 3; i++) {
             const container = document.getElementById(`msg-${i}`);
             if(container) container.innerHTML = '';
         }
@@ -441,11 +443,11 @@
             return;
         }
 
-        let csvContent = "\uFEFFĐội 1,Đội 2,Đội 3,Đội 4,Giảng viên\n";
+        let csvContent = "\uFEFFĐội Búa Liềm,Đội Sao Vàng,Giảng viên\n";
         data.forEach(msg => {
-            let row = ["", "", "", "", ""];
+            let row = ["", "", ""];
             let idx = parseInt(msg.channel_id) - 1;
-            if (idx >= 0 && idx < 5) {
+            if (idx >= 0 && idx < 3) {
                 row[idx] = `"${msg.sender_name}: ${msg.content.replace(/"/g, '""')}"`;
             }
             csvContent += row.join(",") + "\n";
@@ -474,7 +476,7 @@
         });
     };
 
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 1; i <= 3; i++) {
         const inputField = document.getElementById(`input-field-${i}`);
         if(inputField) {
             inputField.addEventListener("keypress", (e) => {
