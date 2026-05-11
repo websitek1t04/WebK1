@@ -22,7 +22,7 @@
         /* --- KHUNG CHỨA TÍCH HỢP TRONG GIAO DIỆN --- */
         .eslide-container {
             width: 100%;
-            height: calc(100vh - 120px); /* Tự động vừa vặn với Banner/Footer */
+            height: calc(100vh - 120px); 
             min-height: 600px;
             position: relative;
             background: #000;
@@ -32,34 +32,103 @@
             border: 2px solid var(--secondary);
         }
 
+        /* --- MÀN HÌNH CHỌN BÀI GIẢNG --- */
+        #selection-view {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #fdf6e9; /* Màu nền sáng đồng bộ hệ thống */
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            padding: 40px 20px; box-sizing: border-box; z-index: 20;
+            overflow-y: auto;
+        }
+
+        .selection-title {
+            color: var(--primary);
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 40px;
+            border-bottom: 3px solid var(--secondary);
+            padding-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .lecture-grid {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 1000px;
+        }
+
+        .lecture-card {
+            background: #fff;
+            border: 2px solid #eaeaea;
+            border-radius: 12px;
+            padding: 30px 20px;
+            width: 280px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .lecture-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--secondary);
+            box-shadow: 0 15px 25px rgba(218, 165, 32, 0.2);
+        }
+
+        .lecture-card i {
+            font-size: 50px;
+            color: var(--primary);
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .lecture-card:hover i {
+            color: var(--secondary);
+            transform: scale(1.1);
+        }
+
+        .lecture-card h3 {
+            color: #333;
+            font-size: 18px;
+            margin: 0;
+            line-height: 1.4;
+        }
+
         /* --- MÀN HÌNH CHỜ (LOBBY) --- */
         #start-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle, #a52a2a 0%, #310000 100%);
-            display: flex; justify-content: center; align-items: center;
+            display: none; /* Ẩn mặc định, sẽ được gọi bằng JS */
+            justify-content: center; align-items: center;
             z-index: 10; color: white; flex-direction: column;
             text-align: center;
         }
 
         .lobby-content h2 {
-            font-size: 32px; margin-bottom: 30px; letter-spacing: 2px;
+            font-size: 32px; margin-bottom: 15px; letter-spacing: 2px;
             text-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Sửa lỗi font */
+        }
+        
+        .lecture-subtitle {
+            font-size: 20px; color: var(--secondary); margin-bottom: 30px; font-weight: bold;
         }
 
         .btn-start-lecture {
             background: var(--secondary);
             color: var(--primary);
             border: none;
-            padding: 22px 60px;
-            font-size: 26px;
+            padding: 20px 50px;
+            font-size: 24px;
             font-weight: 800;
             border-radius: 60px;
             cursor: pointer;
             box-shadow: 0 15px 30px rgba(0,0,0,0.4);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex; align-items: center; gap: 15px;
-            font-family: inherit; /* Kế thừa font chuẩn */
+            font-family: inherit;
         }
 
         .btn-start-lecture:hover {
@@ -68,9 +137,28 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
 
+        .btn-back-selection {
+            background: transparent;
+            color: rgba(255,255,255,0.7);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 10px 20px;
+            border-radius: 30px;
+            margin-top: 30px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.3s;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .btn-back-selection:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border-color: #fff;
+        }
+
         /* --- KHUNG BÀI GIẢNG --- */
         .lecture-view {
-            display: none; /* Hiện sau khi nhấn bắt đầu */
+            display: none; 
             width: 100%; height: 100%;
             position: absolute; top: 0; left: 0;
             background: #000;
@@ -83,7 +171,7 @@
         /* --- THANH CÔNG CỤ THÔNG MINH --- */
         .smart-toolbar {
             position: absolute;
-            top: -60px; /* Ẩn mặc định */
+            top: -60px; 
             left: 50%;
             transform: translateX(-50%);
             display: flex;
@@ -99,7 +187,6 @@
             opacity: 0;
         }
 
-        /* Vùng nhạy cảm để hiện Toolbar */
         .hover-trigger {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 40px;
@@ -129,7 +216,6 @@
         .btn-edit-mode:hover { color: #48bb78; }
         .btn-exit-mode:hover { color: #ff4d4d; }
 
-        /* Icon phím tắt */
         kbd {
             background: rgba(255,255,255,0.2);
             padding: 2px 6px;
@@ -137,7 +223,6 @@
             font-size: 10px;
             margin-left: 5px;
         }
-
     </style>
 </head>
 <body>
@@ -151,16 +236,42 @@
             
             <div class="eslide-container" id="presentation-container">
                 
+                <div id="selection-view">
+                    <h2 class="selection-title"><i class="fas fa-layer-group"></i> Chọn Bài Giảng</h2>
+                    <div class="lecture-grid">
+                        
+                        <div class="lecture-card" onclick="selectLecture(
+                            'https://docs.google.com/presentation/d/1hOdBkes22oXsH7b3mLGW6X5AhIhuFx2ybbarlDvCJME/embed?start=false&loop=false&delayms=3000', 
+                            'https://docs.google.com/presentation/d/1hOdBkes22oXsH7b3mLGW6X5AhIhuFx2ybbarlDvCJME/edit', 
+                            'Tiết 1 - Chương 3 - Đảng Cộng sản cầm quyền')">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                            <h3>Tiết 1 - Chương 3<br>Đảng Cộng sản cầm quyền</h3>
+                        </div>
+
+                        <div class="lecture-card" onclick="selectLecture(
+                            'https://docs.google.com/presentation/d/1s_Pb2QywLR3H81biEg95ADkWXMvdQ5BWxLz9q_Oh5EQ/embed?start=false&loop=false&delayms=3000', 
+                            'https://docs.google.com/presentation/d/1s_Pb2QywLR3H81biEg95ADkWXMvdQ5BWxLz9q_Oh5EQ/edit', 
+                            'Tiết 2 - Thảo luận')">
+                            <i class="fas fa-users-cog"></i>
+                            <h3>Tiết 2 - Thảo luận</h3>
+                        </div>
+
+                    </div>
+                </div>
+
                 <div id="start-overlay">
                     <div class="lobby-content">
-                        <i class="fas fa-desktop" style="font-size: 80px; color: var(--secondary); margin-bottom: 20px;"></i>
+                        <i class="fas fa-desktop" style="font-size: 70px; color: var(--secondary); margin-bottom: 20px;"></i>
                         <h2>HỆ THỐNG TRÌNH CHIẾU BÀI GIẢNG</h2>
+                        <div class="lecture-subtitle" id="lobby-lecture-title">Tên bài giảng</div>
+                        
                         <button class="btn-start-lecture" onclick="launchPresentation()">
                             <i class="fas fa-play"></i> BẮT ĐẦU BÀI GIẢNG
                         </button>
-                        <p style="margin-top: 25px; color: rgba(255,255,255,0.5); font-style: italic;">
-                            Chế độ toàn màn hình sẽ được kích hoạt tự động
-                        </p>
+                        
+                        <button class="btn-back-selection" onclick="backToSelection()">
+                            <i class="fas fa-arrow-left"></i> Quay lại chọn bài giảng
+                        </button>
                     </div>
                 </div>
 
@@ -182,13 +293,7 @@
                         </button>
                     </div>
 
-                    <iframe 
-                        id="slide-frame"
-                        src="https://docs.google.com/presentation/d/1hOdBkes22oXsH7b3mLGW6X5AhIhuFx2ybbarlDvCJME/embed?start=false&loop=false&delayms=3000" 
-                        allowfullscreen="true" 
-                        mozallowfullscreen="true" 
-                        webkitallowfullscreen="true">
-                    </iframe>
+                    <iframe id="slide-frame" src="" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
                 </div>
 
             </div>
@@ -201,17 +306,41 @@
     <script src="js/main.js"></script>
 
     <script>
-        // Đường dẫn gốc để chỉnh sửa
-        const EDIT_LINK = "https://docs.google.com/presentation/d/1hOdBkes22oXsH7b3mLGW6X5AhIhuFx2ybbarlDvCJME/edit";
-        const lectureArea = document.getElementById('lecture-area');
+        // Biến lưu trữ Link Edit linh hoạt theo bài giảng được chọn
+        let CURRENT_EDIT_LINK = "";
+        
+        const selectionView = document.getElementById('selection-view');
         const startOverlay = document.getElementById('start-overlay');
+        const lectureArea = document.getElementById('lecture-area');
+        const slideFrame = document.getElementById('slide-frame');
+        const lobbyTitle = document.getElementById('lobby-lecture-title');
 
+        // Hàm 1: Khi Click chọn 1 thẻ bài giảng
+        function selectLecture(embedUrl, editUrl, title) {
+            // Cập nhật dữ liệu
+            CURRENT_EDIT_LINK = editUrl;
+            slideFrame.src = embedUrl;
+            lobbyTitle.innerText = title;
+
+            // Chuyển view
+            selectionView.style.display = 'none';
+            startOverlay.style.display = 'flex';
+        }
+
+        // Hàm 2: Quay lại màn hình chọn bài
+        function backToSelection() {
+            // Dừng tải/phát iframe để tiết kiệm tài nguyên
+            slideFrame.src = "";
+            
+            startOverlay.style.display = 'none';
+            selectionView.style.display = 'flex';
+        }
+
+        // Hàm 3: Bắt đầu bài giảng (Kích hoạt Fullscreen)
         function launchPresentation() {
-            // Hiển thị iframe bài giảng
             startOverlay.style.display = 'none';
             lectureArea.style.display = 'block';
 
-            // Yêu cầu Fullscreen chỉ riêng khung bài giảng (che mất banner/sidebar)
             if (lectureArea.requestFullscreen) {
                 lectureArea.requestFullscreen();
             } else if (lectureArea.webkitRequestFullscreen) {
@@ -231,16 +360,17 @@
 
         function goHome() {
             quitFullscreen();
-            location.href = 'index.html'; // Quay về trang chủ
+            location.href = 'index.html'; 
         }
 
         function goToGoogleSlides() {
-            window.open(EDIT_LINK, '_blank');
+            if (CURRENT_EDIT_LINK) {
+                window.open(CURRENT_EDIT_LINK, '_blank');
+            }
         }
 
-        // Xử lý phím tắt thông minh
+        // Xử lý phím tắt
         window.addEventListener('keydown', (e) => {
-            // Phím E để sửa (chỉ hoạt động khi đã vào bài giảng)
             if (e.key.toLowerCase() === 'e' && lectureArea.style.display === 'block') {
                 goToGoogleSlides();
             }
