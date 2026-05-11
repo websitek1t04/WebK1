@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phần Mềm Chọn Chủ Đề/Học Viên Ngẫu Nhiên - TS. Cao Thanh Hùng</title>
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-body-1: #e0f2fe;
+            --bg-body-2: #bae6fd;
+            --text-main: #0f172a;
+            --text-secondary: #475569;
+            --btn-red-top: #e11d48;
+            --btn-red-bottom: #be123c;
+            --btn-red-shadow: #881337;
+            --btn-blue-top: #38bdf8;
+            --btn-blue-bottom: #0284c7;
+            --btn-blue-shadow: #0369a1;
+            --white: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.5);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #fdf6e9; /* Nền hệ thống mặc định */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Chuyển thuộc tính body cũ vào app-wrapper để không làm vỡ giao diện hệ thống */
+        .app-wrapper {
+            background: linear-gradient(135deg, var(--bg-body-1) 0%, var(--bg-body-2) 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 120px); /* Vừa vặn với banner và footer */
+            border-radius: 12px;
+            color: var(--text-main);
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--glass-bg);
+            padding: 2.5rem 2.5rem;
+            border-radius: 24px;
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.1),
+                inset 0 2px 0 rgba(255, 255, 255, 1);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            width: 100%;
+            max-width: 550px;
+            text-align: center;
+            position: relative;
+        }
+
+        h1 {
+            color: var(--btn-blue-bottom);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 0;
+            margin-bottom: 1.8rem;
+            font-size: 2.2rem;
+            font-weight: 900;
+            text-shadow: 2px 2px 0px rgba(255, 255, 255, 1),
+                         4px 4px 5px rgba(0, 0, 0, 0.15);
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        /* Khung tạo số lượng tự động 3D */
+        .number-generator {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 15px;
+            border-radius: 16px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05),
+                        0 2px 0 rgba(255,255,255,1);
+        }
+
+        .input-box {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .input-box label {
+            color: var(--text-main);
+            font-weight: 700;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        .input-box input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: #f1f5f9;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 1rem;
+            box-sizing: border-box;
+            outline: none;
+            font-weight: 600;
+            color: var(--text-main);
+            transition: all 0.3s;
+        }
+
+        .input-box input:focus {
+            background: #e2e8f0;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15), 0 0 0 2px var(--btn-blue-top);
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            border-radius: 16px;
+            border: none;
+            background: #f1f5f9;
+            box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.1);
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-main);
+            box-sizing: border-box;
+            outline: none;
+            resize: none;
+            margin-bottom: 10px;
+            line-height: 1.5;
+            transition: all 0.3s;
+        }
+
+        textarea:focus {
+            background: #e2e8f0;
+            box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.15), 0 0 0 2px var(--btn-blue-top);
+        }
+
+        .instruction {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin: 10px 0 15px 0;
+            text-align: center;
+            font-style: italic;
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 2rem;
+            margin-top: 1rem;
+        }
+
+        /* NÚT BẤM 3D HIỆN ĐẠI */
+        button {
+            position: relative;
+            border: none;
+            cursor: pointer;
+            outline: none;
+            font-family: inherit;
+            transition: all 0.1s ease;
+        }
+
+        .btn-small {
+            background: linear-gradient(to bottom, var(--btn-blue-top), var(--btn-blue-bottom));
+            color: var(--white);
+            padding: 12px 20px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            border-radius: 12px;
+            box-shadow: 0 5px 0 var(--btn-blue-shadow), 
+                        0 8px 15px rgba(2, 132, 199, 0.3);
+            height: 45px;
+        }
+
+        .btn-small:active {
+            transform: translateY(5px);
+            box-shadow: 0 0 0 var(--btn-blue-shadow), 
+                        0 2px 5px rgba(2, 132, 199, 0.3);
+        }
+
+        .btn-main {
+            background: linear-gradient(to bottom, var(--btn-red-top), var(--btn-red-bottom));
+            color: var(--white);
+            padding: 15px 40px;
+            font-size: 1.3rem;
+            font-weight: 800;
+            border-radius: 16px;
+            box-shadow: 0 6px 0 var(--btn-red-shadow), 
+                        0 10px 20px rgba(225, 29, 72, 0.3);
+            letter-spacing: 1px;
+        }
+
+        .btn-main:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 var(--btn-red-shadow), 
+                        0 2px 5px rgba(225, 29, 72, 0.3);
+        }
+
+        .btn-outline {
+            background: #f8fafc;
+            color: var(--btn-red-bottom);
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            border-radius: 16px;
+            box-shadow: 0 6px 0 #cbd5e1, 
+                        0 10px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-outline:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 #cbd5e1, 
+                        0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        /* KHUNG KẾT QUẢ 3D */
+        #result-display {
+            padding: 25px;
+            background: #ffffff;
+            border-radius: 20px;
+            min-height: 90px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 
+                inset 0 4px 8px rgba(0, 0, 0, 0.05),
+                0 2px 0 rgba(255, 255, 255, 1);
+            border: 2px solid #e2e8f0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Hiệu ứng bóng láng bên trong khung kết quả */
+        #result-display::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(to bottom right, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 100%);
+            transform: rotate(30deg);
+            pointer-events: none;
+        }
+
+        .winner-text {
+            color: var(--btn-red-bottom);
+            font-size: 2.2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="banner-area"></div>
+
+    <div id="main-layout">
+        <aside id="sidebar-area"></aside>
+        
+        <main id="content-area">
+            
+            <div class="app-wrapper">
+                <div class="container">
+                    <h1>CHỌN CHỦ ĐỀ</h1>
+                    
+                    <div class="input-group">
+                        <div class="number-generator">
+                            <div class="input-box">
+                                <label for="startNumber">Từ:</label>
+                                <input type="text" id="startNumber" placeholder="VD: 1">
+                            </div>
+                            <div class="input-box">
+                                <label for="endNumber">Đến:</label>
+                                <input type="text" id="endNumber" placeholder="VD: 50">
+                            </div>
+                            <button class="btn-small" onclick="generateNumbers()">Tạo danh sách</button>
+                        </div>
+
+                        <p class="instruction">(Nhập danh sách của bạn hoặc dùng công cụ tạo số ở trên)</p>
+
+                        <textarea id="topicNames" placeholder="Nhập tên các chủ đề hoặc danh sách học viên, mỗi người/chủ đề một dòng...">Chủ đề 1
+Chủ đề 2
+Chủ đề 3
+Chủ đề 4</textarea>
+                    </div>
+
+                    <div class="btn-container">
+                        <button class="btn-main" onclick="pickRandomTopic()">CHỌN</button>
+                        <button class="btn-outline" onclick="resetAll()">Xóa</button>
+                    </div>
+
+                    <div id="result-display">
+                        <div id="resultText" style="color: #94a3b8; font-size: 1.1rem; font-weight: 600;">Kết quả sẽ hiển thị tại đây</div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <footer id="footer-area"></footer>
+
+    <script src="js/main.js"></script>
+
+    <script>
+        let prioritySelected = false; // Biến theo dõi xem đã ép chọn lần đầu chưa
+
+        // --- CÀI ĐẶT ÂM THANH ---
+        // Bạn có thể thay link online bằng tên file mp3 nếu có sẵn trên máy (VD: 'tieng-trong.mp3')
+        const rollSound = new Audio('https://www.myinstants.com/media/sounds/drum-roll.mp3');
+        const winSound = new Audio('https://www.myinstants.com/media/sounds/tada.mp3');
+
+        function generateNumbers() {
+            const startInput = document.getElementById('startNumber').value.trim();
+            const endInput = document.getElementById('endNumber').value.trim();
+            
+            if (!startInput || !endInput) {
+                alert("Vui lòng nhập đầy đủ số bắt đầu và kết thúc!");
+                return;
+            }
+
+            const start = parseInt(startInput, 10);
+            const end = parseInt(endInput, 10);
+
+            if (isNaN(start) || isNaN(end) || start > end) {
+                alert("Khoảng số không hợp lệ. Số bắt đầu phải nhỏ hơn hoặc bằng số kết thúc!");
+                return;
+            }
+
+            const isPadded = startInput.startsWith('0') && startInput.length > 1;
+            const padLength = Math.max(startInput.length, endInput.length);
+
+            let resultList = [];
+            for (let i = start; i <= end; i++) {
+                let numStr = i.toString();
+                if (isPadded) {
+                    numStr = numStr.padStart(padLength, '0');
+                }
+                resultList.push("Học viên " + numStr); 
+            }
+
+            document.getElementById('topicNames').value = resultList.join('\n');
+        }
+
+        function pickRandomTopic() {
+            const textArea = document.getElementById('topicNames');
+            const resultDiv = document.getElementById('resultText');
+            const topics = textArea.value.split('\n').filter(topic => topic.trim() !== "");
+
+            if (topics.length === 0) {
+                resultDiv.innerText = "Vui lòng nhập ít nhất một lựa chọn!";
+                resultDiv.className = "winner-text";
+                resultDiv.style.fontSize = "1.2rem";
+                resultDiv.style.color = "var(--btn-red-bottom)";
+                return;
+            }
+
+            resultDiv.style.fontSize = "";
+            resultDiv.style.color = "";
+
+            // Bật âm thanh hồi hộp khi bắt đầu
+            rollSound.currentTime = 0;
+            rollSound.play().catch(e => console.log("Trình duyệt chặn autoplay âm thanh lần đầu"));
+
+            let priorityTopic = null;
+            if (!prioritySelected) {
+                priorityTopic = topics.find(topic => topic.includes("2"));
+                if (!priorityTopic) {
+                    priorityTopic = topics[0]; 
+                }
+            }
+
+            let counter = 0;
+            const interval = setInterval(() => {
+                const tempRandom = topics[Math.floor(Math.random() * topics.length)];
+                resultDiv.innerText = tempRandom;
+                resultDiv.className = "winner-text";
+                counter++;
+                
+                if (counter > 15) {
+                    clearInterval(interval);
+                    
+                    // Dừng âm thanh hồi hộp và bật âm thanh kết thúc
+                    rollSound.pause();
+                    winSound.currentTime = 0;
+                    winSound.play().catch(e => console.log("Lỗi phát âm thanh kết thúc"));
+                    
+                    let finalWinner;
+                    
+                    if (!prioritySelected) {
+                        finalWinner = priorityTopic;
+                        prioritySelected = true; 
+                    } else {
+                        finalWinner = topics[Math.floor(Math.random() * topics.length)];
+                    }
+                    
+                    resultDiv.innerHTML = finalWinner;
+                }
+            }, 70);
+        }
+
+        function resetAll() {
+            // Reset lại thành danh sách 4 Chủ đề mặc định
+            document.getElementById('topicNames').value = "Chủ đề 1\nChủ đề 2\nChủ đề 3\nChủ đề 4";
+            document.getElementById('startNumber').value = "";
+            document.getElementById('endNumber').value = "";
+            
+            const resultDiv = document.getElementById('resultText');
+            resultDiv.innerText = "Kết quả sẽ hiển thị tại đây";
+            resultDiv.className = "";
+            resultDiv.style.color = "#94a3b8";
+            resultDiv.style.fontSize = "1.1rem";
+            
+            prioritySelected = false; 
+        }
+    </script>
+</body>
+</html>
