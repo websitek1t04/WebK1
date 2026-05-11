@@ -6,6 +6,7 @@
     <title>Hệ thống Thảo luận & Tình huống (eTest) - TS. Cao Thanh Hùng</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
             --primary-color: #8B0000;
@@ -164,6 +165,28 @@
             font-size: 16px;
         }
 
+        /* Nút Xem toàn bộ câu hỏi bổ sung */
+        .view-all-btn {
+            background: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--secondary-color);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            margin-top: 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .view-all-btn:hover {
+            background: var(--secondary-color);
+            color: #fff;
+        }
+
         /* Hiệu ứng chuyển động */
         @keyframes slideIn {
             from { opacity: 0; transform: translateX(50px) rotateY(-10deg); }
@@ -209,6 +232,11 @@
                         <span class="progress-info" id="info-part1">1 / 10</span>
                         <button class="nav-btn" onclick="nextSlide(1)"><i class="fas fa-chevron-right"></i></button>
                     </div>
+                    <div style="text-align: center;">
+                        <button class="view-all-btn" onclick="showAllQuestions(1)">
+                            <i class="fas fa-list"></i> Toàn bộ câu hỏi thảo luận
+                        </button>
+                    </div>
                 </div>
 
                 <div id="part2" class="question-part">
@@ -218,6 +246,11 @@
                         <button class="nav-btn" onclick="prevSlide(2)"><i class="fas fa-chevron-left"></i></button>
                         <span class="progress-info" id="info-part2">1 / 12</span>
                         <button class="nav-btn" onclick="nextSlide(2)"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div style="text-align: center;">
+                        <button class="view-all-btn" onclick="showAllQuestions(2)">
+                            <i class="fas fa-list"></i> Toàn bộ câu hỏi tình huống
+                        </button>
                     </div>
                 </div>
 
@@ -340,6 +373,39 @@
                 document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
                 document.getElementById('part2').classList.add('active');
             }
+        }
+
+        // Tính năng Xem Toàn Bộ Câu Hỏi bằng SweetAlert2
+        window.showAllQuestions = function(part) {
+            let title = part === 1 ? "Toàn bộ Câu hỏi thảo luận" : "Toàn bộ Câu hỏi tình huống";
+            let dataList = part === 1 ? dataPart1 : dataPart2;
+            let htmlContent = '<div style="text-align: left; font-size: 15px; line-height: 1.6; max-height: 60vh; overflow-y: auto; padding-right: 15px;">';
+            
+            dataList.forEach((q, index) => {
+                let prefix = part === 1 ? "Câu" : "Tình huống";
+                // Nếu nội dung đã có chữ "Tình huống X:" thì không cần nối thêm prefix
+                if(q.includes("<strong>Tình huống")) {
+                    htmlContent += `
+                        <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px dashed #ccc;">
+                            ${q}
+                        </div>`;
+                } else {
+                    htmlContent += `
+                        <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px dashed #ccc;">
+                            <strong style="color: var(--primary-color);">${prefix} ${index + 1}:</strong><br>
+                            ${q}
+                        </div>`;
+                }
+            });
+            htmlContent += '</div>';
+
+            Swal.fire({
+                title: `<span style="color: var(--primary-color); font-size: 24px; text-transform: uppercase;">${title}</span>`,
+                html: htmlContent,
+                width: '800px',
+                confirmButtonText: 'Đóng lại',
+                confirmButtonColor: '#8B0000'
+            });
         }
 
         // Chạy khi trang sẵn sàng
