@@ -293,13 +293,34 @@
 
             let html = '';
             sortedData.forEach(row => {
-                // Lấy ký tự đầu làm Avatar
-                const firstChar = (row.ten_van_ban || 'V').charAt(0).toUpperCase();
+                // Xác định Logo hiển thị theo Tập hồ sơ
+                let folderNameLower = (row.ten_ho_so_bai || '').toLowerCase();
+                let cardLogo = (row.ten_van_ban || 'V').charAt(0).toUpperCase(); // Mặc định nếu không thuộc các tập quy định
                 
+                if (folderNameLower.includes('tập hồ sơ thực hành giảng')) {
+                    cardLogo = 'TH';
+                } else if (folderNameLower.includes('tập 1')) {
+                    cardLogo = 'T1';
+                } else if (folderNameLower.includes('tập 2')) {
+                    cardLogo = 'T2';
+                } else if (folderNameLower.includes('tập 3')) {
+                    cardLogo = 'T3';
+                } else if (folderNameLower.includes('tập 4')) {
+                    cardLogo = 'T4';
+                } else if (folderNameLower.includes('tập 5')) {
+                    cardLogo = 'T5';
+                } else if (folderNameLower.includes('tập 6')) {
+                    cardLogo = 'T6';
+                } else if (folderNameLower.includes('tập 7')) {
+                    cardLogo = 'T7';
+                } else if (folderNameLower.includes('tập 8')) {
+                    cardLogo = 'T8';
+                }
+
                 html += `
                     <div class="doc-card">
                         <div>
-                            <div class="card-avatar">${firstChar}</div>
+                            <div class="card-avatar">${cardLogo}</div>
                             <div class="card-folder" title="Thư mục/Hồ sơ gốc"><i class="fas fa-folder"></i> ${row.ten_ho_so_bai || 'Chưa phân loại'}</div>
                             <div class="card-title" title="${row.ten_van_ban}">${row.ten_van_ban}</div>
                             <div class="card-note" title="${row.ghi_chu || ''}">${row.ghi_chu || '...'}</div>
