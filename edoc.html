@@ -225,7 +225,8 @@
                 if (result.isConfirmed) {
                     if (result.value === '250289') {
                         // Chuyển hướng sang trang Admin eDoc
-                        sessionStorage.setItem('edoc_admin_auth', '250289'); window.location.href = 'edocadmin.html';
+                        sessionStorage.setItem('edoc_admin_auth', '250289'); 
+                        window.location.href = 'edocadmin.html';
                     } else {
                         Swal.fire('Từ chối truy cập', 'Mật khẩu quản trị không chính xác!', 'error');
                     }
@@ -250,7 +251,7 @@
             renderDashboard(allDocuments);
         }
 
-        // Render giao diện Lưới Thẻ phẳng (Không phân Group)
+        // Render giao diện Lưới Thẻ phẳng (Không phân Group) với Sắp xếp
         function renderDashboard(dataArray) {
             const dashboard = document.getElementById('edoc-dashboard');
             dashboard.innerHTML = '';
@@ -260,8 +261,38 @@
                 return;
             }
 
+            // --- THUẬT TOÁN SẮP XẾP HỒ SƠ ---
+            const customOrder = [
+                "tập hồ sơ thực hành giảng",
+                "tập 1", "tập 2", "tập 3", "tập 4", 
+                "tập 5", "tập 6", "tập 7", "tập 8"
+            ];
+            
+            function getSortWeight(folderName) {
+                if (!folderName) return 999;
+                let lowerName = folderName.toLowerCase();
+                for (let i = 0; i < customOrder.length; i++) {
+                    if (lowerName.includes(customOrder[i])) return i;
+                }
+                return 999; // Các tập khác đẩy xuống cuối
+            }
+
+            // Tạo mảng mới để sort
+            let sortedData = [...dataArray];
+            sortedData.sort((a, b) => {
+                let weightA = getSortWeight(a.ten_ho_so_bai);
+                let weightB = getSortWeight(b.ten_ho_so_bai);
+                
+                // Nếu khác tập, ưu tiên tập có weight nhỏ hơn
+                if (weightA !== weightB) {
+                    return weightA - weightB;
+                }
+                // Nếu cùng 1 tập, ưu tiên ID lớn hơn (mới tạo nhất) lên trên
+                return (b.id || 0) - (a.id || 0); 
+            });
+
             let html = '';
-            dataArray.forEach(row => {
+            sortedData.forEach(row => {
                 // Lấy ký tự đầu làm Avatar
                 const firstChar = (row.ten_van_ban || 'V').charAt(0).toUpperCase();
                 
@@ -291,7 +322,7 @@
                 (row.ten_ho_so_bai && row.ten_ho_so_bai.toLowerCase().includes(keyword)) ||
                 (row.ghi_chu && row.ghi_chu.toLowerCase().includes(keyword))
             );
-            renderDashboard(filtered);
+            renderDashboard(filtered); // Gọi lại hàm render để nó tự động sắp xếp và hiển thị kết quả lọc
         });
 
         // Khởi tạo tải dữ liệu

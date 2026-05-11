@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRANG HỌC LIỆU SỐ LÝ LUẬN CHÍNH TRỊ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&family=Roboto:wght@300;400;500;700&display=swap');
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #fcfaf8; /* Warm paper tone */
+            color: #292524; /* Stone 800 */
+        }
+        
+        h1, h2, h3, .serif-font {
+            font-family: 'Merriweather', serif;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f5f5f4; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d6d3d1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a29e; 
+        }
+
+        .book-card {
+            transition: all 0.3s ease;
+        }
+        .book-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Museum Card Specifics */
+        .museum-card {
+            overflow: hidden;
+        }
+        .museum-card img {
+            transition: transform 0.5s ease;
+        }
+        .museum-card:hover img {
+            transform: scale(1.05);
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Login Overlay Transition */
+        #loginOverlay {
+            transition: opacity 0.5s ease-in-out;
+        }
+        
+        /* Toolbar active state */
+        .toolbar-btn.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            font-weight: bold;
+        }
+
+        /* Dropdown Styles */
+        /* Main Dropdown */
+        .dropdown {
+            position: relative;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: white;
+            min-width: 280px; /* Increased width for longer library names */
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 100;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+        }
+        /* Show main dropdown on hover */
+        .dropdown:hover > .dropdown-content {
+            display: block;
+        }
+
+        /* Sub Dropdown (Nested) */
+        .sub-dropdown {
+            position: relative;
+        }
+        .sub-dropdown-content {
+            display: none;
+            position: absolute;
+            left: 100%;
+            top: 0;
+            background-color: white;
+            min-width: 240px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 101;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+        }
+        /* Show sub dropdown on hover */
+        .sub-dropdown:hover > .sub-dropdown-content {
+            display: block;
+        }
+
+        /* Ensure links in dropdown behave like buttons */
+        .dropdown-content button, .sub-dropdown-content button, .dropdown-content a, .sub-dropdown-content a {
+            color: #1f2937;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            width: 100%;
+            text-align: left;
+            transition: background-color 0.2s;
+            cursor: pointer; /* Ensure pointer on hover */
+        }
+        .dropdown-content button:hover, .sub-dropdown-content button:hover, .dropdown-content a:hover, .sub-dropdown-content a:hover {
+            background-color: #f3f4f6;
+            color: #7f1d1d;
+        }
+
+        /* Chevron rotation for sub-menu indication */
+        .sub-dropdown:hover > button span.chevron {
+            transform: rotate(-90deg);
+        }
+        
+        /* Specific max-height for museum dropdown to allow scrolling if list is too long */
+        .museum-dropdown-content {
+            max-height: 400px;
+            overflow-y: auto;
+            min-width: 320px; /* Wider for long museum names */
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden">
+
+    <!-- LOGIN OVERLAY SECTION -->
+    <div id="loginOverlay" class="fixed inset-0 bg-stone-100 z-[9999] flex flex-col items-center justify-center p-4">
+        <div class="bg-white p-8 md:p-10 rounded-2xl shadow-2xl max-w-md w-full text-center border border-stone-200 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-red-900"></div>
+            <div class="mb-6 flex justify-center">
+                <!-- Use a generic flag/emblem placeholder if local image fails -->
+                <img src="logo K1.png" alt="Quốc huy/Cờ Việt Nam" class="h-32 object-contain drop-shadow-md" 
+                     onerror="this.onerror=null; this.src='https://images.jifo.co/65139819_1627098595780.png';">
+            </div>
+            <h2 class="text-2xl font-bold text-red-900 mb-2 serif-font">TRANG HỌC LIỆU SỐ LÝ LUẬN CHÍNH TRỊ</h2>
+            <p class="text-stone-500 mb-6 text-sm leading-relaxed">Vui lòng nhập mật khẩu xác thực để truy cập hệ thống.</p>
+            
+            <!-- PASSWORD INPUT ONLY -->
+            <div class="relative mb-6 text-left">
+                <input type="password" id="passwordInput" placeholder="Nhập mật khẩu..." 
+                    class="w-full px-5 py-4 rounded-xl border border-stone-300 bg-stone-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all text-lg shadow-inner"
+                    onkeypress="handleLoginKey(event)">
+                <span class="absolute right-4 top-4 text-stone-400">🔑</span>
+            </div>
+
+            <button onclick="attemptLogin()" 
+                class="w-full bg-red-900 hover:bg-red-800 active:scale-95 text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-red-900/30">
+                ĐĂNG NHẬP
+            </button>
+            <div id="loginError" class="mt-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm font-medium hidden flex items-center justify-center gap-2 animate-pulse">
+                <span⚠️</span> <span id="errorText">Mật khẩu không đúng. Vui lòng thử lại!</span>
+            </div>
+            <p class="mt-8 text-xs text-stone-400">
+        </div>
+    </div>
+
+    <!-- Header Search Bar -->
+    <header class="bg-red-900 text-white shadow-lg z-10 shrink-0">
+        <div class="container mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3 w-full md:w-auto justify-center md:justify-start">
+                <div class="text-3xl">📚</div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide uppercase">Trang học liệu số lý luận chính trị</h1>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3 w-full md:w-auto flex-1 justify-end">
+                <div class="relative w-full md:max-w-md">
+                    <input type="text" id="searchInput" placeholder="Tìm kiếm tên sách, tác giả..." 
+                        class="w-full pl-4 pr-10 py-2 rounded-full text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-400 bg-red-50 border border-red-800 placeholder-gray-500 shadow-inner">
+                    <span class="absolute right-3 top-2 text-gray-500 text-lg">🔍</span>
+                </div>
+                
+                <!-- LOGOUT BUTTON -->
+                <button onclick="logout()" class="whitespace-nowrap px-4 py-2 bg-red-800 hover:bg-red-700 text-white text-sm font-bold rounded-full border border-red-700 transition-colors shadow-sm flex items-center gap-2" title="Đăng xuất khỏi hệ thống">
+                    <span>🚪</span> <span class="hidden sm:inline">Đăng xuất</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Top Toolbar -->
+    <nav class="bg-red-800 text-white text-sm shadow-md z-20 shrink-0 border-b border-red-900">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-wrap items-center justify-between md:justify-start gap-1 md:gap-6 py-2 overflow-visible"> 
+                <button onclick="handleToolbarClick('home')" class="toolbar-btn active flex items-center gap-2 px-3 py-1.5 rounded hover:bg-white/10 transition-colors">
+                    <span>🏠</span> TRANG CHỦ
+                </button>
+                <button onclick="handleToolbarClick('intro')" class="toolbar-btn flex items-center gap-2 px-3 py-1.5 rounded hover:bg-white/10 transition-colors">
+                    <span>ℹ️</span> GIỚI THIỆU
+                </button>
+
+                <!-- PHIM - PHÓNG SỰ DROPDOWN -->
+                <div class="relative dropdown group"> 
+                    <button class="toolbar-btn flex items-center gap-2 px-3 py-1.5 rounded hover:bg-white/10 transition-colors cursor-pointer dropdown-btn">
+                        <span>🎬</span> PHIM - PHÓNG SỰ <span class="text-xs ml-1">▼</span>
+                    </button>
+                    
+                    <div class="dropdown-content">
+                        <!-- Item 1: PHIM TÀI LIỆU (Direct Link) -->
+                         <a href="https://sites.google.com/view/hoclieusolyluanchinhtri-phim/trang-ch%E1%BB%A7" target="_blank" class="block w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-100 hover:text-red-800 border-b border-stone-100 font-bold">
+                            <span class="mr-2">🌐</span> PHIM TÀI LIỆU
+                        </a>
+
+                        <!-- Item 2: PHÓNG SỰ -->
+                         <button onclick="handleToolbarClick('movies_news')" class="block w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-100 hover:text-red-800 font-bold">
+                            <span class="mr-2">📰</span> PHÓNG SỰ
+                        </button>
+                    </div>
+                </div>
+
+                <!-- THƯ VIỆN SỐ (DROPDOWN) -->
+                <div class="relative dropdown group">
+                    <button class="toolbar-btn flex items-center gap-2 px-3 py-1.5 rounded hover:bg-white/10 transition-colors cursor-pointer dropdown-btn">
+                        <span>💻</span> THƯ VIỆN SỐ <span class="text-xs ml-1">▼</span>
+                    </button>
+                    <div class="dropdown-content museum-dropdown-content"> <!-- Use same class for styling -->
+                        <div class="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-50 border-b border-gray-100">HỆ THỐNG THƯ VIỆN VIỆT NAM</div>
+                        
+                        <a href="https://nlv.gov.vn" target="_blank">Thư viện Quốc gia</a>
+                        <a href="https://phucvu.thuvientphcm.gov.vn/Home" target="_blank">Thư viện Khoa học tổng hợp TPHCM</a>
+                        <a href="https://luanvan.moet.gov.vn/?page=1.4&lv=24" target="_blank">Thư viện Bộ Giáo dục và Đào tạo</a>
+                        <a href="https://sti.vista.gov.vn/publication.html" target="_blank">Thư viện tạp chí khoa học (Bộ KH&CN)</a>
+                        <a href="https://sti.vista.gov.vn/projects.html" target="_blank">Thư viện đề tài khoa học (Bộ KH&CN)</a>
+                        <a href="https://vjol.info.vn/index.php/" target="_blank">Tạp chí Khoa học Việt Nam trực tuyến</a>
+                        <a href="https://www.vnulib.edu.vn/" target="_blank">Thư viện Trung tâm ĐHQG TPHCM</a>
+                        <a href="http://thuvienphapluat.vn/" target="_blank">Thư viện pháp luật Việt Nam</a>
+                    </div>
+                </div>
+
+                <!-- BẢO TÀNG SỐ - SIMPLE BUTTON (Grid View) -->
+                <button onclick="handleToolbarClick('museum')" class="toolbar-btn flex items-center gap-2 px-3 py-1.5 rounded hover:bg-white/10 transition-colors">
+                    <span>🏛️</span> BẢO TÀNG SỐ
+                </button>
+
+                <!-- Đổi tên AI T04 thành AI K1 (Đã di chuyển lên trên TRA CỨU) -->
+                <button onclick="handleToolbarClick('ai')" class="toolbar-btn flex items-center gap-2 px-3 py-1.5 rounded hover:bg-white/10 transition-colors">
+                    <span>🤖</span> AI K1
+                </button>
+
+                <!-- TRA CỨU DROPDOWN (UPDATED - Đã di chuyển xuống dưới AI K1) -->
+                <div class="relative dropdown group">
+                    <button class="toolbar-btn flex items-center gap-2 px-3 py-1.5 rounded hover:bg-white/10 transition-colors cursor-pointer dropdown-btn">
+                        <span>🔍</span> TRA CỨU <span class="text-xs ml-1">▼</span>
+                    </button>
+                    <div class="dropdown-content" style="min-width: 350px;"> <!-- Increased width for long titles -->
+                        <a href="https://tulieuvankien.dangcongsan.vn/he-thong-van-ban/van-ban-cua-dang" target="_blank" class="block w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-100 hover:text-red-800 border-b border-stone-100">
+                            TRA CỨU VĂN BẢN ĐẢNG
+                        </a>
+                        <a href="https://tulieuvankien.dangcongsan.vn/he-thong-van-ban/van-ban-quy-pham-phap-luat?categoryId=102000093" target="_blank" class="block w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-100 hover:text-red-800 border-b border-stone-100">
+                            TRA CỨU VĂN BẢN QUY PHẠM PHÁP LUẬT
+                        </a>
+                        <a href="https://tulieuvankien.dangcongsan.vn/he-thong-van-ban/van-ban-chi-dao-dieu-hanh?categoryId=102000094" target="_blank" class="block w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-100 hover:text-red-800 border-b border-stone-100">
+                            TRA CỨU VĂN BẢN CHỈ ĐẠO ĐIỀU HÀNH
+                        </a>
+                        <a href="https://tulieuvankien.dangcongsan.vn/he-thong-van-ban/nghi-quyet-cua-chinh-phu?categoryId=102000095" target="_blank" class="block w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-100 hover:text-red-800 border-b border-stone-100">
+                            TRA CỨU NGHỊ QUYẾT CHÍNH PHỦ
+                        </a>
+                        <a href="https://luanvan.moet.gov.vn/?page=1.5" target="_blank" class="block w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-100 hover:text-red-800 border-b border-stone-100">
+                            TRA CỨU LUẬN ÁN – LUẬN VĂN
+                        </a>
+                        <a href="https://sti.vista.gov.vn/publication.html" target="_blank" class="block w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-100 hover:text-red-800 border-b border-stone-100">
+                            TRA CỨU ĐỀ TÀI KHOA HỌC
+                        </a>
+                        <a href="https://tapchicand.gov.vn/#/" target="_blank" class="block w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-100 hover:text-red-800">
+                            TRA CỨU TẠP CHÍ CÔNG AN NHÂN DÂN
+                        </a>
+                    </div>
+                </div>
+                
+                <button onclick="handleToolbarClick('games')" class="toolbar-btn flex items-center gap-2 px-3 py-1.5 rounded hover:bg-white/10 transition-colors">
+                    <span>🎮</span> TRÒ CHƠI
+                </button>
+
+                <!-- KHẢO SÁT - GÓP Ý DROPDOWN (UPDATED with New Link) -->
+                <div class="relative dropdown group">
+                    <button class="toolbar-btn flex items-center gap-2 px-3 py-1.5 rounded hover:bg-white/10 transition-colors cursor-pointer dropdown-btn">
+                        <span>📋</span> KHẢO SÁT - GÓP Ý <span class="text-xs ml-1">▼</span>
+                    </button>
+                    <div class="dropdown-content">
+                        <a href="https://docs.google.com/forms/d/1WVQJVGHBRxpKu2RGt4g30inPQvLgN-VZ2He0yqtCYZE/edit" target="_blank" class="block w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-100 hover:text-red-800 border-b border-stone-100">
+                            <span class="mr-2">🏫</span> GIỜ GIẢNG
+                        </a>
+                        <a href="https://docs.google.com/forms/d/e/1FAIpQLSfZLwBP8hervk44EIuCDA29FSELzihmitSYKtDG11vwRjaHGQ/viewform?usp=send_form" target="_blank" class="block w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-100 hover:text-red-800 border-b border-stone-100">
+                            <span class="mr-2">🌍</span> THỰC TẾ
+                        </a>
+                        <!-- THÊM MỤC MỚI: ĐÁNH GIÁ -->
+                        <a href="https://forms.gle/6TR6ydZ1BSG2G2BT7" target="_blank" class="block w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-100 hover:text-red-800">
+                            <span class="mr-2">⭐</span> ĐÁNH GIÁ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebarPanel" class="hidden md:flex flex-col w-64 bg-stone-100 border-r border-stone-200 shadow-inner overflow-y-auto shrink-0">
+            <div class="p-4 bg-stone-200 border-b border-stone-300">
+                <h3 class="font-bold text-stone-700 uppercase text-sm tracking-wider">Danh mục</h3>
+            </div>
+            <nav id="categoryNav" class="flex-1 p-2 space-y-1">
+                <!-- Nav items injected by JS -->
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col overflow-y-auto bg-fcfaf8 relative scroll-smooth w-full" id="mainContent">
+            
+            <!-- Mobile Category Dropdown -->
+            <div id="mobileFilterPanel" class="md:hidden p-4 bg-white border-b border-stone-200 sticky top-0 z-20 shrink-0">
+                <label for="mobileCatSelect" class="block text-sm font-medium text-stone-700 mb-1">Chọn danh mục:</label>
+                <select id="mobileCatSelect" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm rounded-md border bg-stone-50">
+                    <option value="all">Tất cả</option>
+                    <!-- Options injected by JS -->
+                </select>
+            </div>
+
+            <!-- Content Container -->
+            <div id="dynamicContent" class="flex-1 flex flex-col">
+                <!-- DEFAULT VIEW: Dashboard & Book Grid -->
+                <div id="homeView" class="flex flex-col flex-1">
+
+                   <!-- NEW SECTION: TỔNG QUAN CHỨC NĂNG (Đã thay thế biểu đồ) -->
+                    <div id="dashboardSection" class="p-6 md:p-10 border-b border-stone-200 bg-white shrink-0">
+                        <div class="max-w-6xl mx-auto">
+                            <div class="text-center mb-8">
+                                <p class="text-stone-500 text-sm leading-relaxed max-w-3xl mx-auto">Chào mừng quý bạn đọc trải nghiệm Trang học liệu số Lý luận chính trị. Với hệ thống tài liệu miễn phí, bảo đảm đầy đủ bản quyền về lý luận chính trị và các nền tảng số phục vụ cho việc nghiên cứu, giảng dạy, học tập của cán bộ, giảng viên, học viên. Dưới đây là tổng quan của Trang học liệu số lý luận chính trị</p>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                <!-- 1. Kinh điển -->
+                                <div class="func-card p-4 rounded-lg bg-white cursor-pointer" onclick="setActiveCategory('Kinh điển')">
+                                    <div class="text-2xl mb-2 text-red-800">📕</div>
+                                    <h4 class="font-bold text-stone-800 text-sm mb-1">Kinh điển Mác-Lênin</h4>
+                                    <p class="text-[11px] text-stone-500">Tập hợp các tác phẩm kinh điển của C. Mác, Ph. Ăngghen, V.I. Lênin.</p>
+                                </div>
+                                
+                                <!-- 2. Hồ Chí Minh -->
+                                <div class="func-card p-4 rounded-lg bg-white cursor-pointer" onclick="setActiveCategory('Chủ tịch Hồ Chí Minh')">
+                                    <div class="text-2xl mb-2 text-yellow-600">⭐</div>
+                                    <h4 class="font-bold text-stone-800 text-sm mb-1">Chủ tịch Hồ Chí Minh</h4>
+                                    <p class="text-[11px] text-stone-500">Toàn văn tác phẩm, bài viết, tư liệu về cuộc đời và sự nghiệp của Bác.</p>
+                                </div>
+
+                                <!-- 3. Sách tham khảo -->
+                                <div class="func-card p-4 rounded-lg bg-white cursor-pointer" onclick="setActiveCategory('Sách tham khảo')">
+                                    <div class="text-2xl mb-2 text-blue-800">📂</div>
+                                    <h4 class="font-bold text-stone-800 text-sm mb-1">Sách tham khảo</h4>
+                                    <p class="text-[11px] text-stone-500">Kho sách chuyên khảo, lịch sử, hồi ký và tài liệu nghiên cứu chuyên sâu.</p>
+                                </div>
+
+                                <!-- 4. Đề tài - Kỷ yếu -->
+                                <div class="func-card p-4 rounded-lg bg-white cursor-pointer" onclick="setActiveCategory('Đề tài - Kỷ yếu')">
+                                    <div class="text-2xl mb-2 text-green-700">📝</div>
+                                    <h4 class="font-bold text-stone-800 text-sm mb-1">Đề tài - Kỷ yếu</h4>
+                                    <p class="text-[11px] text-stone-500">Các công trình nghiên cứu khoa học và kỷ yếu hội thảo các cấp.</p>
+                                </div>
+
+                                <!-- 5. Văn kiện số -->
+                                <div class="func-card p-4 rounded-lg bg-white cursor-pointer" onclick="setActiveCategory('Văn kiện số')">
+                                    <div class="text-2xl mb-2 text-red-600">📜</div>
+                                    <h4 class="font-bold text-stone-800 text-sm mb-1">Văn kiện số</h4>
+                                    <p class="text-[11px] text-stone-500">Số hóa Văn kiện Đảng toàn tập và Văn kiện các kỳ Đại hội Đảng.</p>
+                                </div>
+
+                                <!-- 6. Văn bản số -->
+                                <div class="func-card p-4 rounded-lg bg-white cursor-pointer" onclick="window.open('https://sites.google.com/view/vanbansok1/trang-ch%E1%BB%A7', '_blank')">
+                                    <div class="text-2xl mb-2 text-purple-700">📚</div>
+                                    <h4 class="font-bold text-stone-800 text-sm mb-1">Văn bản số</h4>
+                                    <p class="text-[11px] text-stone-500">Hệ thống văn bản chỉ đạo, nghị quyết, chỉ thị, kết luận mới nhất.</p>
+                                </div>
+				
+				<!-- 15. Bài giảng số -->
+                                <div class="func-card p-4 rounded-lg bg-white cursor-pointer" onclick="setActiveCategory('Bài giảng số')">
+                                    <div class="text-2xl mb-2 text-red-600">📽️</div>
+                                    <h4 class="font-bold text-stone-800 text-sm mb-1">Bài giảng số</h4>
+                                    <p class="text-[11px] text-stone-500">Hệ thống các bài giảng môn lý luận chính trị.</p>
+                                </div>
+
+                                <!-- 7. Tư liệu văn kiện Đảng (Description Only) -->
+                                <div class="func-card p-4 rounded-lg bg-white">
+                                    <div class="text-2xl mb-2 text-amber-600">🔗</div>
+                                    <h4 class="font-bold text-stone-800 text-sm mb-1">Tư liệu văn kiện Đảng</h4>
+                                    <p class="text-[11px] text-stone-500">Tra cứu Đảng kỳ, Điều lệ, Lịch sử Đảng và các văn bản gốc của Đảng.</p>
+                                </div>
+
+                                <!-- 8. Phim - Phóng sự -->
+                                <div class="func-card p-4 rounded-lg bg-white cursor-pointer" onclick="handleToolbarClick('movies')">
+                                    <div class="text-2xl mb-2 text-teal-600">🎬</div>
+                                    <h4 class="font-bold text-stone-800 text-sm mb-1">Phim - Phóng sự</h4>
+                                    <p class="text-[11px] text-stone-500">Kho tư liệu hình ảnh, phim tài liệu và phóng sự chính luận.</p>
+                                </div>
+
+                                <!-- 9. Thư viện số -->
+                                <div class="func-card p-4 rounded-lg bg-white">
+                                    <div class="text-2xl mb-2 text-indigo-600">💻</div>
+                                    <h4 class="font-bold text-stone-800 text-sm mb-1">Thư viện số</h4>
+                                    <p class="text-[11px] text-stone-500">Kết nối đến hệ thống thư viện Quốc gia và các trường Đại học.</p>
+                                </div>
+
+                                <!-- 10. Bảo tàng số -->
+                                <div class="func-card p-4 rounded-lg bg-white cursor-pointer" onclick="handleToolbarClick('museum')">
+                                    <div class="text-2xl mb-2 text-orange-700">🏛️</div>
+                                    <h4 class="font-bold text-stone-800 text-sm mb-1">Bảo tàng số</h4>
+                                    <p class="text-[11px] text-stone-500">Tham quan thực tế ảo 3D các bảo tàng và di tích lịch sử.</p>
+                                </div>
+
+                                <!-- 11. AI K1 -->
+                                <div class="func-card p-4 rounded-lg bg-white cursor-pointer" onclick="handleToolbarClick('ai')">
+                                    <div class="text-2xl mb-2 text-sky-500">🤖</div>
+                                    <h4 class="font-bold text-stone-800 text-sm mb-1">AI K1</h4>
+                                    <p class="text-[11px] text-stone-500">Trợ lý ảo thông minh hỗ trợ giải đáp và tra cứu kiến thức.</p>
+                                </div>
+
+                                <!-- 12. Tra cứu -->
+                                <div class="func-card p-4 rounded-lg bg-white">
+                                    <div class="text-2xl mb-2 text-gray-600">🔍</div>
+                                    <h4 class="font-bold text-stone-800 text-sm mb-1">Tra cứu</h4>
+                                    <p class="text-[11px] text-stone-500">Công cụ tìm kiếm văn bản pháp luật, luận văn và đề tài khoa học.</p>
+                                </div>
+
+                                <!-- 13. Trò chơi -->
+                                <div class="func-card p-4 rounded-lg bg-white cursor-pointer" onclick="handleToolbarClick('games')">
+                                    <div class="text-2xl mb-2 text-pink-500">🎮</div>
+                                    <h4 class="font-bold text-stone-800 text-sm mb-1">Trò chơi</h4>
+                                    <p class="text-[11px] text-stone-500">Ôn tập kiến thức qua các trò chơi trắc nghiệm sinh động.</p>
+                                </div>
+
+                                <!-- 14. Khảo sát - Góp ý -->
+                                <div class="func-card p-4 rounded-lg bg-white">
+                                    <div class="text-2xl mb-2 text-emerald-600">📋</div>
+                                    <h4 class="font-bold text-stone-800 text-sm mb-1">Khảo sát - Góp ý</h4>
+                                    <p class="text-[11px] text-stone-500">Kênh tiếp nhận ý kiến đóng góp nâng cao chất lượng giảng dạy.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-6 md:p-10 bg-stone-50 flex-1 flex flex-col">
+                        <div class="max-w-6xl mx-auto w-full">
+                            <div class="flex justify-between items-end mb-6">
+                                <div>
+                                    <h2 id="currentCategoryTitle" class="serif-font text-2xl font-bold text-red-900">Tất cả</h2>
+                                    <p id="resultCount" class="text-sm text-stone-500 mt-1">Đang hiển thị...</p>
+                                </div>
+                            </div>
+
+                            <div id="bookGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <!-- Book cards injected by JS -->
+                            </div>
+                            
+                            <div id="noResults" class="hidden text-center py-12">
+                                <div class="text-5xl mb-4">📭</div>
+                                <h3 class="text-xl font-bold text-stone-600">Không tìm thấy tài liệu phù hợp</h3>
+                                <p class="text-stone-500 mt-2">Hãy thử tìm kiếm với từ khóa khác.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+	
+		<!-- INFO VIEW -->
+                <div id="introView" class="hidden p-10 bg-white flex-1 overflow-y-auto">
+                    <div class="max-w-3xl mx-auto text-center">
+                        <div class="mb-8"><span class="text-6xl">🏫</span></div>
+                        <h2 class="serif-font text-3xl font-bold text-red-900 mb-6">GIỚI THIỆU TRANG HỌC LIỆU SỐ</h2>
+                        <div class="bg-stone-50 p-8 rounded-xl border border-stone-200 shadow-sm text-left">
+                            <p class="mb-4 text-stone-700 leading-relaxed">Trang Học liệu số Lý luận chính trị được xây dựng nhằm mục đích cung cấp nguồn tài liệu tham khảo chính thống, đa dạng cho cán bộ, giảng viên và học viên.</p>
+                            <hr class="border-stone-300 my-6">
+                            <h3 class="font-bold text-red-900 mb-4 uppercase text-sm tracking-wide">Thông tin liên hệ</h3>
+                            <div class="space-y-3 text-stone-600">
+                                <p class="flex items-center gap-3"><span class="text-xl">🏛️</span> <strong>Đơn vị:</strong> KHOA LÝ LUẬN CHÍNH TRỊ - KHOA HỌC XÃ HỘI VÀ NHÂN VĂN</p>
+                                <p class="flex items-center gap-3"><span class="text-xl">📧</span> <strong>Email:</strong> <a href="mailto:xaydungdangcongsanvietnam@gmail.com" class="text-blue-700 hover:underline">xaydungdangcongsanvietnam@gmail.com</a></p>
+                                <p class="flex items-center gap-3"><span class="text-xl">📞</span> <strong>Điện thoại:</strong> <a href="tel:0373310111" class="text-blue-700 hover:underline">0373310111 - 0703323222</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PLACEHOLDER VIEWS -->
+                <div id="placeholderView" class="hidden p-20 flex-1 flex flex-col items-center justify-center bg-stone-50 text-center">
+                    <div class="text-6xl mb-6 opacity-50 icon-display">📂</div>
+                    <h2 class="text-2xl font-bold text-stone-700 mb-2 title-display">Nội dung đang cập nhật</h2>
+                    <p class="text-stone-500">Mục này sẽ sớm được bổ sung tài liệu.</p>
+                    <button onclick="handleToolbarClick('home')" class="mt-8 px-6 py-2 bg-red-900 text-white rounded hover:bg-red-800 transition-colors">Quay lại Trang chủ</button>
+                </div>
+            </div>
+            
+            <!-- Footer Section -->
+            <footer class="bg-stone-800 text-stone-400 py-8 text-center text-sm w-full border-t-4 border-red-900 mt-auto shrink-0">
+                <div class="container mx-auto px-4">
+                    <p class="font-bold text-stone-300 text-lg mb-4">TRANG HỌC LIỆU SỐ LÝ LUẬN CHÍNH TRỊ</p>
+                    <div class="inline-block bg-stone-900/50 rounded-xl px-8 py-4 border border-stone-700 shadow-lg">
+                        <p class="flex items-center justify-center gap-3 mb-2 text-stone-300">
+                            <span class="text-xl">📧</span> <span class="font-bold text-xs uppercase tracking-wider text-stone-500">Email:</span>
+                            <a href="mailto:xaydungdangcongsanvietnam@gmail.com" class="hover:text-white hover:underline transition-colors font-medium">xaydungdangcongsanvietnam@gmail.com</a>
+                        </p>
+                        <p class="flex items-center justify-center gap-3 text-stone-300">
+                            <span class="text-xl">📞</span> <span class="font-bold text-xs uppercase tracking-wider text-stone-500">Điện thoại:</span>
+                            <a href="tel:0373310111" class="hover:text-white hover:underline transition-colors font-medium">0373310111 - 0703323222</a>
+                        </p>
+                    </div>
+                    
+                    <!-- PHẦN LƯỢT TRUY CẬP (REAL-TIME & ACCURATE) -->
+                    <div class="mt-6 flex flex-col items-center justify-center gap-1">
+                        <div class="text-xs text-stone-500 uppercase tracking-widest mb-1">Thống kê hệ thống</div>
+                        <div class="flex items-center gap-3 bg-stone-900 px-5 py-2 rounded-full border border-stone-700 shadow-xl">
+                            <div class="flex items-center gap-2">
+                                <span class="relative flex h-2 w-2">
+                                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                  <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                </span>
+                                <span class="text-stone-400 text-xs font-medium uppercase">Tổng lượt đăng nhập:</span>
+                            </div>
+                            <span id="visitorCount" class="font-mono font-bold text-white text-lg tracking-widest tabular-nums">Đang tải...</span>
+                        </div>
+                    </div>
+
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <!-- JavaScript Implementation -->
+    <script type="text/javascript">
+    // --- 1. CẤU HÌNH ---
+    const APP_PASSWORD = "123456"; // Mật khẩu đăng nhập
+    const STORAGE_KEY = 'stbook_luot_truy_cap'; // Khóa lưu trữ
+    const BASE_COUNT = 1; // Số lượt bắt đầu (số ảo cho đẹp)
+
+    // --- 2. DỮ LIỆU SÁCH ---
+    const libraryData = [
+            // ... (Same data as before, removed for brevity, will be auto-filled by system context)
+            { id: 101, category: "Kinh điển", title: "C. Mác và Ph. Ăngghen Toàn tập, Tập 1 (1839-1844)", link: "https://stbook.vn/store_detail/c-mac-va-ph-angghen-toan-tap-tap-1/1245" },
+            { id: 102, category: "Kinh điển", title: "C. Mác và Ph. Ăngghen Toàn tập, Tập 2 (1844-1846)", link: "https://stbook.vn/store_detail/c-mac-va-ph-angghen-toan-tap-tap-2/1246" },
+            { id: 103, category: "Kinh điển", title: "C. Mác và Ph. Ăngghen Toàn tập, Tập 13 (1859-1860)", link: "https://stbook.vn/store_detail/c-mac-va-ph-angghen-toan-tap-tap-13/1329" },
+            { id: 104, category: "Kinh điển", title: "C. Mác và Ph. Ăngghen Toàn tập, Tập 27", link: "https://stbook.vn/category/kinh-dien/13/0" },
+            { id: 105, category: "Kinh điển", title: "C. Mác và Ph. Ăngghen Toàn tập, Tập 50", link: "https://stbook.vn/store_detail/c-mac-va-ph-angghen-toan-tap-tap-50/1320" },
+            { id: 106, category: "Kinh điển", title: "C. Mác và Ph. Ăngghen Toàn tập, Tập 29", link: "https://stbook.vn/category/kinh-dien/13/0" },
+            { id: 107, category: "Kinh điển", title: "C. Mác và Ph. Ăngghen Toàn tập, Tập 28", link: "https://stbook.vn/category/kinh-dien/13/0" },
+            { id: 108, category: "Kinh điển", title: "C. Mác và Ph. Ăngghen Toàn tập, Tập 26 (Phần II & III)", link: "https://stbook.vn/category/kinh-dien/13/0" },
+            { id: 109, category: "Kinh điển", title: "C. Mác và Ph. Ăngghen Toàn tập, Tập 12", link: "https://stbook.vn/category/kinh-dien/13/0" },
+            { id: 110, category: "Kinh điển", title: "C. Mác và Ph. Ăngghen Toàn tập, Tập 9", link: "https://stbook.vn/category/kinh-dien/13/0" },
+            { id: 111, category: "Kinh điển", title: "C. Mác và Ph. Ăngghen Toàn tập, Tập 8", link: "https://stbook.vn/category/kinh-dien/13/0" },
+            { id: 112, category: "Kinh điển", title: "C. Mác và Ph. Ăngghen Toàn tập, Tập 7", link: "https://stbook.vn/category/kinh-dien/13/0" },
+            { id: 113, category: "Kinh điển", title: "C. Mác và Ph. Ăngghen Toàn tập, Tập 6", link: "https://stbook.vn/category/kinh-dien/13/0" },
+            { id: 114, category: "Kinh điển", title: "C. Mác và Ph. Ăngghen Toàn tập, Tập 4", link: "https://stbook.vn/category/kinh-dien/13/0" },
+            { id: 115, category: "Kinh điển", title: "Tra cứu Toàn tập C. Mác và Ph. Ăngghen 1 (A-M)", link: "https://stbook.vn/category/kinh-dien/13/0" },
+            { id: 116, category: "Kinh điển", title: "Tra cứu Toàn tập C. Mác và Ph. Ăngghen 2 (N-Y)", link: "https://stbook.vn/category/kinh-dien/13/0" },
+            
+            // --- CẬP NHẬT MỚI: SÁCH KINH ĐIỂN ---
+            { id: 117, category: "Kinh điển", title: "Cuộc đấu tranh của C. Mác, Ph. Ăngghen, V.I. Lênin chống chủ nghĩa cơ hội", link: "https://drive.google.com/file/d/1xsdvNUnXHlo_BiSyZANOiivecHdo5ElE/view?usp=drive_link" },
+            { id: 118, category: "Kinh điển", title: "Tư tưởng chính trị của C. Mác, Ph. Ăngghen, V. I. Lênin và Hồ Chí Minh", link: "https://drive.google.com/file/d/1OjlRBQweSHb-CMHWUM1DkWusDfS8L4Cq/view?usp=drive_link" },
+            { id: 119, category: "Kinh điển", title: "Đấu tranh chống các quan điểm luận điệu xuyên tạc chủ nghĩa Mác - Lênin, tư tưởng Hồ Chí Minh", link: "https://drive.google.com/file/d/1tzXbbQkf-uq4GIZtpmflbBh5LKTdJrsY/view?usp=drive_link" },
+
+            { id: 201, category: "Chủ tịch Hồ Chí Minh", title: "Đường cách mệnh (Xuất bản lần thứ năm)", link: "https://stbook.vn/store_detail/duong-cach-menh-xuat-ban-lan-thu-nam-/1180" },
+            { id: 202, category: "Chủ tịch Hồ Chí Minh", title: "Bản án chế độ thực dân Pháp", link: "https://stbook.vn/store_detail/ban-an-che-do-thuc-dan-phap/1179" },
+            { id: 203, category: "Chủ tịch Hồ Chí Minh", title: "Lịch sử nước ta (Thơ lục bát)", link: "https://stbook.vn/store_detail/lich-su-nuoc-ta/588" },
+            { id: 204, category: "Chủ tịch Hồ Chí Minh", title: "Một số tác phẩm chính luận tiêu biểu", link: "https://stbook.vn/store_detail/mot-so-tac-pham-chinh-luan-tieu-bieu/1183" },
+            { id: 205, category: "Chủ tịch Hồ Chí Minh", title: "Theo dấu chân Bác", link: "https://stbook.vn/store_detail/theo-dau-chan-bac/209" },
+            { id: 206, category: "Chủ tịch Hồ Chí Minh", title: "Gặp Bác", link: "https://stbook.vn/store_detail/gap-bac/1174" },
+            { id: 207, category: "Chủ tịch Hồ Chí Minh", title: "Hồ Chí Minh - Tấm gương lớn về sự nêu gương", link: "https://stbook.vn/store_detail/ho-chi-minh-tam-guong-lon-ve-su-neu-guong/1177" },
+            { id: 208, category: "Chủ tịch Hồ Chí Minh", title: "Chủ tịch Hồ Chí Minh và các nhà lãnh đạo tiền bối", link: "https://stbook.vn/store_detail/chu-tich-ho-chi-minh-va-cac-nha-lanh-dao-tien-boi-tieu-bieu-cua-dang-va-cach-mang-viet-nam/212" },
+            { id: 209, category: "Chủ tịch Hồ Chí Minh", title: "Những chuyện kể về tấm gương trung thực của Bác", link: "https://stbook.vn/store_detail/nhung-chuyen-ke-ve-tam-guong-trung-thuc-trach-nhiem-gan-bo-voi-nhan-dan-cua-chu-tich-ho-chi-minh/1171" },
+            { id: 210, category: "Chủ tịch Hồ Chí Minh", title: "Tình cảm nhân dân thế giới với Bác Hồ (Việt-Anh)", link: "https://stbook.vn/store_detail/tinh-cam-cua-nhan-dan-the-gioi-voi-chu-tich-ho-chi-minh-the-world-people-s-affection-for-president-ho-chi-minh-/1131" },
+            { id: 211, category: "Chủ tịch Hồ Chí Minh", title: "Di sản Chủ tịch Hồ Chí Minh với Công an nhân dân", link: "https://stbook.vn/category/chu-tich-ho-chi-minh/14" },
+            { id: 212, category: "Chủ tịch Hồ Chí Minh", title: "Sổ tay triển khai Chỉ thị số 03-CT/TW", link: "https://stbook.vn/category/chu-tich-ho-chi-minh/14" },
+
+            // --- CẬP NHẬT MỚI: 18 SÁCH VỀ CHỦ TỊCH HỒ CHÍ MINH ---
+            { id: 213, category: "Chủ tịch Hồ Chí Minh", title: "Hoạt động đối ngoại của Chủ tịch Hồ Chí Minh với các nước châu Á (1954-1969)", link: "https://drive.google.com/file/d/1-Lom85hbndQCTabtAaqUr_ghvOWiyjv5/view?usp=drive_link" },
+            { id: 214, category: "Chủ tịch Hồ Chí Minh", title: "Hồ Chí Minh về công tác tôn giáo", link: "https://drive.google.com/file/d/1yyNxwA53lVUH2D5Msxw9nXBgHabsM2Sw/view?usp=drive_link" },
+            { id: 215, category: "Chủ tịch Hồ Chí Minh", title: "Nguyễn Ái Quốc", link: "https://drive.google.com/file/d/1eSNNhywX6T54hCVO80Fs7MKRxirTTDsV/view?usp=drive_link" },
+            { id: 216, category: "Chủ tịch Hồ Chí Minh", title: "Đường Bác Hồ đi cứu nước", link: "https://drive.google.com/file/d/1qoUeZKCyprAJ1xBZvhp0mTbQFgjPD17n/view?usp=drive_link" },
+            { id: 217, category: "Chủ tịch Hồ Chí Minh", title: "Giữ yên giấc ngủ của Người", link: "https://drive.google.com/file/d/1Pl4YWColLPWdnrZQ-fND7PRDO2MflK6v/view?usp=drive_link" },
+            { id: 218, category: "Chủ tịch Hồ Chí Minh", title: "Hồ Chí Minh chữa bệnh mất dân chủ", link: "https://drive.google.com/file/d/10BV1yTypyZkQx5GiuqvDe2XMwQwS_CRe/view?usp=drive_link" },
+            { id: 219, category: "Chủ tịch Hồ Chí Minh", title: "Tư tưởng Hồ Chí Minh và con đường cách mạng Việt Nam", link: "https://drive.google.com/file/d/18RvMyk2YtUhxdb1Df_nGsrjjeSVPRCw4/view?usp=drive_link" },
+            { id: 220, category: "Chủ tịch Hồ Chí Minh", title: "Bác Hồ với các Đại hội Đảng", link: "https://drive.google.com/file/d/1Bzicg23WiWZtHW1f_Ugb3oR8zc20HLdO/view?usp=drive_link" },
+            { id: 221, category: "Chủ tịch Hồ Chí Minh", title: "Đường Bác Hồ chúng ta đi", link: "https://drive.google.com/file/d/1RFbEvsfFAtAp68xRmKZp5ED8YOjnDZ6-/view?usp=drive_link" },
+            { id: 222, category: "Chủ tịch Hồ Chí Minh", title: "Hồ Chí Minh Về công tác tư tưởng văn hóa", link: "https://drive.google.com/file/d/1Ep9P0DGIdIfSum5mGxcsa7BoIQnnYcLt/view?usp=drive_link" },
+            { id: 223, category: "Chủ tịch Hồ Chí Minh", title: "Chuyện kể về Bác Hồ những chặng đường kháng chiến", link: "https://drive.google.com/file/d/1zCB5okfsy0K11SGe2hihIzrRgnkIKdX0/view?usp=drive_link" },
+            { id: 224, category: "Chủ tịch Hồ Chí Minh", title: "Bác Hồ với những mùa xuân kháng chiến", link: "https://drive.google.com/file/d/10_JIquIllUtt7r7OS8LCbyyPrJp-_Ytk/view?usp=drive_link" },
+            { id: 225, category: "Chủ tịch Hồ Chí Minh", title: "Tư tưởng Hồ Chí Minh và con đường cách mạng Việt Nam", link: "https://drive.google.com/file/d/17LV9ALZtXYYgVVSzLqYAv6bTapptuAAb/view?usp=drive_link" },
+            { id: 226, category: "Chủ tịch Hồ Chí Minh", title: "Sổ tay học tập và làm theo tư tưởng đạo đức phong cách Hồ Chí Minh", link: "https://drive.google.com/file/d/1BJ_pU3CEf4DXgFDaghP6AmtwIiWLOcr5/view?usp=drive_link" },
+            { id: 227, category: "Chủ tịch Hồ Chí Minh", title: "130 câu nói của Chủ tịch Hồ Chí Minh về xây dựng Đảng Cộng sản Việt Nam", link: "https://drive.google.com/file/d/1INYfhtK2DNvjU8_ArpmXUiMIyjDVLx--/view?usp=drive_link" },
+            { id: 228, category: "Chủ tịch Hồ Chí Minh", title: "Hồ Chí Minh về chống quan liêu tham nhũng tiêu cực", link: "https://drive.google.com/file/d/1A7LgFCSUiTpfNbzFhdTQjJ346ORz0xA9/view?usp=drive_link" },
+            { id: 229, category: "Chủ tịch Hồ Chí Minh", title: "Bác Hồ trong trái tim những người bạn quốc tế", link: "https://drive.google.com/file/d/1-epICjCVTrKyFRc46O_LT9kt8HCUqp7L/view?usp=drive_link" },
+            { id: 230, category: "Chủ tịch Hồ Chí Minh", title: "Một giờ với đồng chí Hồ Chí Minh", link: "https://drive.google.com/file/d/16qf1gfYBeHX61MoaBNevuHXJew131LkW/view?usp=drive_link" },
+
+            { id: 301, category: "Sách tham khảo", group: "Lãnh đạo Đảng, Nhà nước", title: "Võ Nguyên Giáp - Vị tướng của nhân dân (Việt-Trung)", link: "https://stbook.vn/category/lanh-dao-dang-nha-nuoc/15" },
+            { id: 302, category: "Sách tham khảo", group: "Lãnh đạo Đảng, Nhà nước", title: "Võ Nguyên Giáp - Vị tướng của nhân dân (Việt-Pháp)", link: "https://stbook.vn/category/lanh-dao-dang-nha-nuoc/15" },
+            { id: 303, category: "Sách tham khảo", group: "Lãnh đạo Đảng, Nhà nước", title: "Võ Nguyên Giáp - Vị tướng của nhân dân (Việt-Ả rập)", link: "https://stbook.vn/category/lanh-dao-dang-nha-nuoc/15" },
+            { id: 304, category: "Sách tham khảo", group: "Lãnh đạo Đảng, Nhà nước", title: "Đại tướng Võ Nguyên Giáp với Điện Biên Phủ", link: "https://stbook.vn/category/lanh-dao-dang-nha-nuoc/15" },
+            { id: 305, category: "Sách tham khảo", group: "Lãnh đạo Đảng, Nhà nước", title: "Nguyễn Chí Thanh - Về một số vấn đề cơ bản CMVN", link: "https://stbook.vn/category/lanh-dao-dang-nha-nuoc/15" },
+            { id: 306, category: "Sách tham khảo", group: "Lãnh đạo Đảng, Nhà nước", title: "Xây dựng lực lượng CAND trong sạch (Nguyễn Phú Trọng)", link: "https://stbook.vn/category/lanh-dao-dang-nha-nuoc/15" },
+            { id: 307, category: "Sách tham khảo", group: "Lãnh đạo Đảng, Nhà nước", title: "Tư tưởng Hồ Chí Minh về CAND (Tô Lâm)", link: "https://stbook.vn/category/lanh-dao-dang-nha-nuoc/15" },
+            { id: 308, category: "Sách tham khảo", group: "Lãnh đạo Đảng, Nhà nước", title: "Tư tưởng HCM về vai trò nhân dân giữ gìn ANTT (Tô Lâm)", link: "https://stbook.vn/category/lanh-dao-dang-nha-nuoc/15" },
+            { id: 309, category: "Sách tham khảo", group: "Lãnh đạo Đảng, Nhà nước", title: "Tham nhũng và hoạt động của CAND trong PCTN (Tô Lâm)", link: "https://stbook.vn/category/lanh-dao-dang-nha-nuoc/15" },
+            { id: 310, category: "Sách tham khảo", group: "Lãnh đạo Đảng, Nhà nước", title: "Giáo dục tư tưởng chính trị trong CAND (Tô Lâm)", link: "https://stbook.vn/category/lanh-dao-dang-nha-nuoc/15" },
+            { id: 311, category: "Sách tham khảo", group: "Lãnh đạo Đảng, Nhà nước", title: "50 năm CAND thực hiện Di chúc Bác Hồ", link: "https://stbook.vn/category/lanh-dao-dang-nha-nuoc/15" },
+            { id: 312, category: "Sách tham khảo", group: "Lãnh đạo Đảng, Nhà nước", title: "Nguyễn Tấn Dũng tuyển tập, Tập IV, V, VI", link: "https://stbook.vn/category/lanh-dao-dang-nha-nuoc/15" },
+
+            // 4. VĂN KIỆN SỐ (NEW CATEGORY 1)
+            { id: 401, category: "Văn kiện số", title: "Văn kiện Đại hội ĐB toàn quốc lần thứ XIII (Tiếng Việt)", link: "https://stbook.vn/category/van-kien-dang/16" },
+            { id: 402, category: "Văn kiện số", title: "Văn kiện Đại hội XIII (Đa ngôn ngữ)", link: "https://stbook.vn/category/van-kien-dang/16" },
+            { id: 403, category: "Văn kiện số", title: "Cương lĩnh xây dựng đất nước thời kỳ quá độ (2011)", link: "https://stbook.vn/category/van-kien-dang/16" },
+            { id: 404, category: "Văn kiện số", title: "Tài liệu hỏi - đáp văn kiện Hội nghị TW 5 khóa XIII", link: "https://stbook.vn/category/van-kien-dang/16" },
+            { id: 405, category: "Văn kiện số", title: "Phê phán quan điểm sai trái, xuyên tạc", link: "https://stbook.vn/category/van-kien-dang/16" },
+            { id: 505, category: "Văn kiện số", title: "Xây dựng Đảng về chính trị, tư tưởng, đạo đức", link: "https://stbook.vn/category/xay-dung-dang-nha-nuoc/17" },
+            { id: 509, category: "Văn kiện số", title: "Điểm mới về an ninh quốc gia Văn kiện ĐH XIII", link: "https://stbook.vn/category/xay-dung-dang-nha-nuoc/17" },
+            { id: 510, category: "Văn kiện số", title: "Đảng Cộng sản Việt Nam qua các kỳ đại hội", link: "https://stbook.vn/category/xay-dung-dang-nha-nuoc/17" },
+            { id: 511, category: "Văn kiện số", title: "Công tác lý luận của Đảng đến năm 2030 (Tập I & II)", link: "https://stbook.vn/category/xay-dung-dang-nha-nuoc/17" },
+            { id: 512, category: "Văn kiện số", title: "Kỷ nguyên phát triển mới - Vươn mình của dân tộc", link: "https://stbook.vn/category/xay-dung-dang-nha-nuoc/17" },
+            
+            // --- CẬP NHẬT MỚI: VĂN KIỆN ĐẢNG TOÀN TẬP ---
+            { id: 420, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 1 (1924-1930)", link: "https://drive.google.com/file/d/1pszQ7Vq9kgMC3bgvr5VoRpt5tuC32Glw/view?usp=drive_link" },
+            { id: 421, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 2 (1930)", link: "https://drive.google.com/file/d/1HNpfI_sMySHK6xZwDC5OJzldt54uI6Lo/view?usp=drive_link" },
+            { id: 422, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 3 (1931)", link: "https://drive.google.com/file/d/1Ns0GmUmytsHAy-El95F92o9MzvtEoDFk/view?usp=drive_link" },
+            { id: 423, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 4 (1932-1934)", link: "https://drive.google.com/file/d/1-KuyzZEdXenPXOgorrK435pOEC5NwUkQ/view?usp=drive_link" },
+            { id: 424, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 5 (1935)", link: "https://drive.google.com/file/d/1o7CABQFj_FW2LVx09rddcmNGhyIWYoar/view?usp=drive_link" },
+            { id: 425, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 6 (1936-1939)", link: "https://drive.google.com/file/d/1SE9AgcP6V7hVMfOVAID-zjae2B0szJAr/view?usp=drive_link" },
+            { id: 426, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 7 (1940-1945)", link: "https://drive.google.com/file/d/1N0MUjILHVaxC_Q2OgjXMmGE1L-jjEswJ/view?usp=drive_link" },
+            { id: 427, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 8 (1945-1947)", link: "https://drive.google.com/file/d/1SwDgJ7p1FZXgT-5N7bapOMy9RIXO84jI/view?usp=drive_link" },
+            { id: 428, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 9 (1948)", link: "https://drive.google.com/file/d/1-VKOR4jxoWH5APk3CJtnh9NPKBjToBat/view?usp=drive_link" },
+            { id: 429, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 10 (1949)", link: "https://drive.google.com/file/d/1s65cAGK4KQ2H2tacPgf7ucLtQRSK7WhL/view?usp=drive_link" },
+            { id: 430, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 11 (1950)", link: "https://drive.google.com/file/d/1uNTupyp3W8cDfVN-H5TPKlIcwOhZ2Xyd/view?usp=drive_link" },
+            { id: 431, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 12 (1951)", link: "https://drive.google.com/file/d/1hHNY8rkUuNEzHHvzPRIC8rWzF1CkUYEA/view?usp=drive_link" },
+            { id: 432, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 13 (1952)", link: "https://drive.google.com/file/d/1ZMfv4pKnh-vqVuhk_JxWdEMkvsC4m7bp/view?usp=drive_link" },
+            { id: 433, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 14 (1953)", link: "https://drive.google.com/file/d/1KpnJ7hZHazkRvJ-DILvGvL_GPwUL9cjk/view?usp=drive_link" },
+            { id: 434, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 15 (1954)", link: "https://drive.google.com/file/d/1s8KFbQjfnYx3U0CbKNRwC5GeMzP_qKi4/view?usp=drive_link" },
+            { id: 435, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 16 (1955)", link: "https://drive.google.com/file/d/1FlPWBNtLuckgHMbPDrNcO1xxDB--18GX/view?usp=drive_link" },
+            { id: 436, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 19 (1958)", link: "https://drive.google.com/file/d/1B9tzHQT1_zmXYWApjhdFlTLnlJlE2Sc3/view?usp=drive_link" },
+            { id: 437, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 20 (1959)", link: "https://drive.google.com/file/d/11npIEr_Ln3FHvFtVmSm5Y_WHqptQUWan/view?usp=drive_link" },
+            { id: 438, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 21 (1960)", link: "https://drive.google.com/file/d/1w_ejDTBeK9-9oFtx6L6rLfZb0Rh2mqM_/view?usp=drive_link" },
+            { id: 439, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 22 (1961)", link: "https://drive.google.com/file/d/11DcOHIwKiAd4EU7JThhPgKDLnDkiQgKW/view?usp=drive_link" },
+            { id: 440, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 23 (1962)", link: "https://drive.google.com/file/d/1UChYGbQGhSRcbkuIfMK2sdf2tPWoyZQL/view?usp=drive_link" },
+            { id: 441, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 24 (1963)", link: "https://drive.google.com/file/d/1XudzxjKZB-KZGiwiEYV6lrgs-G5myg7c/view?usp=drive_link" },
+            { id: 442, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 25 (1964)", link: "https://drive.google.com/file/d/1Krw7tiRIcRxULmKgZkaH82p9bRPyInzG/view?usp=drive_link" },
+            { id: 443, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 26 (1965)", link: "https://drive.google.com/file/d/1JTO99Bq30QjipHJZZ1QxyH2PfTFcm-A9/view?usp=drive_link" },
+            { id: 444, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 27 (1966)", link: "https://drive.google.com/file/d/1bhVklP-R6zTyrzYiOosx2eZM6STJYaoT/view?usp=drive_link" },
+            { id: 445, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 28 (1967)", link: "https://drive.google.com/file/d/1FVPwSsYZEesB630JmYTUnTlcNAnA31YU/view?usp=drive_link" },
+            { id: 446, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 29 (1968)", link: "https://drive.google.com/file/d/1xOTqu008ueJlJt58Mp1bK4fRq65bcaXP/view?usp=drive_link" },
+            { id: 447, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 30 (1969)", link: "https://drive.google.com/file/d/1GXq2xoqA3qrj7VJngokOfFE6aS6QWgCs/view?usp=drive_link" },
+            { id: 448, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 31 (1970)", link: "https://drive.google.com/file/d/1PvUSGQfBiy6fWQCAWwoE7EHT2GuswzzU/view?usp=drive_link" },
+            { id: 449, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 32 (1971)", link: "https://drive.google.com/file/d/1nF9imGAL3x_njHJBe7X7PJ9gzreyaDqT/view?usp=drive_link" },
+            { id: 450, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 33 (1972)", link: "https://drive.google.com/file/d/1tWHHXzPD4ADflgvKRspdo4Se0L9AYuVA/view?usp=drive_link" },
+            { id: 451, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 34 (1973)", link: "https://drive.google.com/file/d/1K7dnt_QEHDNYdORo6Yt9Coop8LfXHb-D/view?usp=drive_link" },
+            { id: 452, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 35 (1974)", link: "https://drive.google.com/file/d/1LGrKSUibZwYtkctE5fkcSvM8cW2IPDmR/view?usp=drive_link" },
+            { id: 453, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 36 (1975)", link: "https://drive.google.com/file/d/1WnFqLwer13QD6BndkucWtRKhncOKcLzF/view?usp=drive_link" },
+            { id: 454, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 37 (1976)", link: "https://drive.google.com/file/d/1WeVPzxcVUDxn-ERvrAOhSYsAKHzmlb3t/view?usp=drive_link" },
+            { id: 455, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 38 (1977)", link: "https://drive.google.com/file/d/1kwdxUW1E_NtmdFJYXwKM5Rl3ZOCXUDZa/view?usp=drive_link" },
+            { id: 456, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 40 (1979)", link: "https://drive.google.com/file/d/1CRo0oXaKu36Oj99aEgAVWEHE-O-cW6I3/view?usp=drive_link" },
+            { id: 457, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 41 (1980)", link: "https://drive.google.com/file/d/1sQMYQyRaRuU8w_J27kpnGzzld6blGN5M/view?usp=drive_link" },
+            { id: 458, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 42 (1981)", link: "https://drive.google.com/file/d/1QbiWI8ZDQ3Xw3qT5F2R9cRJIFjCtHhfc/view?usp=drive_link" },
+            { id: 459, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 44 (1983)", link: "https://drive.google.com/file/d/1wWxa2G2cbJlThyXCpTBHx3ZFtgXHPR3L/view?usp=drive_link" },
+            { id: 460, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 45 (1984)", link: "https://drive.google.com/file/d/1nQr6nqxEyEs4dmdfNTH56WlPaY6qpGP4/view?usp=drive_link" },
+            { id: 461, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 46 (1985)", link: "https://drive.google.com/file/d/1tze8jbv-BuQxdi6efyoZJF2pitGqBj59/view?usp=drive_link" },
+            { id: 462, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 47 (1986)", link: "https://drive.google.com/file/d/1fUlAd_OlJ-r5RC4D2JsV8zIQHFrb38-i/view?usp=drive_link" },
+            { id: 463, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 48 (1987)", link: "https://drive.google.com/file/d/1QRbpSpAB52Ew54zysQbY5LlAROSW4rDx/view?usp=drive_link" },
+            { id: 464, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 49 (1988-1989)", link: "https://drive.google.com/file/d/1KY8Ag7GlyPRJOv2PDCxya62mZsjWGuxT/view?usp=drive_link" },
+            { id: 465, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 50 (1990-1991)", link: "https://drive.google.com/file/d/12iKdeEWP969psNfHdk0cYj1QtI8bkuDq/view?usp=drive_link" },
+            { id: 466, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 51 (1991)", link: "https://drive.google.com/file/d/1KvladKX_AAmoGks6DrFl07VmZZLxwgmv/view?usp=drive_link" },
+            { id: 467, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 52 (1992-1993)", link: "https://drive.google.com/file/d/1lJgrMiiz1R1MnxS3Obz8w-jU40Zk6gdg/view?usp=drive_link" },
+            { id: 468, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 53 (1993-1994)", link: "https://drive.google.com/file/d/1xrwSM7Mpg0co6NghmpnR0IHfZ3JYi-wt/view?usp=drive_link" },
+            { id: 469, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 54 (1995)", link: "https://drive.google.com/file/d/1ohXvFjmAjLNi-0KxLN6rruw04_B_-JPR/view?usp=drive_link" },
+            { id: 470, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 55 (1996)", link: "https://drive.google.com/file/d/1Q9Ip-xnyB7O6JYWpNqOcdLtUYCLpVpKQ/view?usp=drive_link" },
+            { id: 471, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 56 (1997)", link: "https://drive.google.com/file/d/1u3c4-t7myrigcPT_GEgSWYsqg11ms5VP/view?usp=drive_link" },
+            { id: 472, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 57 (1998)", link: "https://drive.google.com/file/d/1jSBHjI0MDwLEi9rxG48olrgfHiR3SEqB/view?usp=drive_link" },
+            { id: 473, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 58 (1999)", link: "https://drive.google.com/file/d/1CeXxpTv4Ep19g7WkK1eDr9IlaO04cmEG/view?usp=drive_link" },
+            { id: 474, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 59 (2000)", link: "https://drive.google.com/file/d/1oTTS9lTzBjLKfoAJvv3mN5XvTDmBp370/view?usp=drive_link" },
+            { id: 475, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 60 (2001)", link: "https://drive.google.com/file/d/11ZjMrl-iPidU6hrGcLggIVx1Oz6zz-9t/view?usp=drive_link" },
+            { id: 476, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 61 (2002)", link: "https://drive.google.com/file/d/10-u-j3BE3DryVBJ3Rc1GwGAbYt-WQRpK/view?usp=drive_link" },
+            { id: 477, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 62 (2003)", link: "https://drive.google.com/file/d/1EP8VXuJQPq0A0QTVsYc9FX6KbLWvXg6L/view?usp=drive_link" },
+            { id: 478, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 63 (2004)", link: "https://drive.google.com/file/d/1KIEWo43xaHjAXJw7OVYTNLbkR_kVBahq/view?usp=drive_link" },
+            { id: 479, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 64 (2005)", link: "https://drive.google.com/file/d/12g8cNe1s6DsxEQvH_5YtNabXgUT-WpEO/view?usp=drive_link" },
+            { id: 480, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 65 (2006)", link: "https://drive.google.com/file/d/1TkeATIeeEsLYcYNHNPmZHwGYqJ2M62Zg/view?usp=drive_link" },
+            { id: 481, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 66 (2007)", link: "https://drive.google.com/file/d/1YfWwngzksvpAOYDc_P79LqzPhM3XBI4O/view?usp=drive_link" },
+            { id: 482, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 67 (2008)", link: "https://drive.google.com/file/d/1tCjepugSstP6jOfi85C30p5WLHln00cV/view?usp=drive_link" },
+            { id: 483, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 68 (2009)", link: "https://drive.google.com/file/d/1hYjIRCKK8OvdhaHuSKHWLpvimED4Qs9y/view?usp=drive_link" },
+            { id: 484, category: "Văn kiện số", title: "Văn kiện Đảng Toàn tập - Tập 69 (2010)", link: "https://drive.google.com/file/d/1wbtu709Mqc7a-Gi6yDIMZwqmYxnrUCuP/view?usp=drive_link" },
+            { id: 512, category: "Văn kiện số", title: "Kỷ nguyên phát triển mới - Vươn mình của dân tộc", link: "https://stbook.vn/category/xay-dung-dang-nha-nuoc/17" },
+            
+            // VĂN BẢN SỐ 
+
+	    // BÀI GIẢNG SỐ 
+	    { id: 513, category: "Bài giảng số", title: "Triết học", link: "https://drive.google.com/drive/folders/1E53a9TGOv1AFsu4mYOAkj_RmQnMmsEUK?usp=drive_link" },
+            { id: 514, category: "Bài giảng số", title: "Kinh tế chính trị", link: "https://drive.google.com/drive/folders/1-M0ZN9DZfknmjztPIR5OjvQPJjuWMRt0?usp=drive_link" },
+            { id: 515, category: "Bài giảng số", title: "Chủ nghĩa xã hội khoa học", link: "https://drive.google.com/drive/folders/1aQUDoENkxwBuB-XOCPCgery5_G8DT9PH?usp=drive_link" },
+            { id: 516, category: "Bài giảng số", title: "Xây dựng Đảng cộng sản Việt Nam", link: "https://drive.google.com/drive/folders/1C78TuPd1VJgnVMvubtcIPdZ_qgKIz8JN?usp=drive_link" },
+	    { id: 518, category: "Bài giảng số", title: "Lịch sử Đảng cộng sản Việt Nam", link: "https://drive.google.com/drive/folders/1IB9LA06bVIITMM2rQgfkpbO_8sxFdHwg?usp=drive_link" },
+	    { id: 519, category: "Bài giảng số", title: "Tư tưởng Hồ Chí Minh", link: "https://drive.google.com/drive/folders/14qelI7VpFZYWMlJErQC9CYAXlkvProin?usp=drive_link" },
+
+            // TƯ LIỆU VĂN KIỆN ĐẢNG (Menu xổ xuống - 8 MỤC DUY NHẤT)
+            { id: 3001, category: "Tư liệu văn kiện Đảng", title: "Đảng Kỳ", link: "https://tulieuvankien.dangcongsan.vn/tu-lieu-van-kien-dang/dang-ky" },
+            { id: 8008, category: "Sách tham khảo", title: "Bảo vệ, xây dựng và đổi mới đất nước (NXB CTQG - 2006)", link: "https://drive.google.com/file/d/1RkvXEKi18RCUKA4ZIfY2ACF2564bSKyV/view?usp=drive_link" },
+            { id: 8009, category: "Sách tham khảo", title: "Các Cương lĩnh chính trị của Đảng từ năm 1930 đến nay (NXB CTQG - 2010)", link: "https://drive.google.com/file/d/1sFenM1Mzw6LR7ss4gpCcs7MJMAnbdroC/view?usp=drive_link" },
+            { id: 8010, category: "Sách tham khảo", title: "Hồ Chí Minh về công tác tôn giáo (Sách chuyên đề - NXB CTQG, 2003)", link: "https://drive.google.com/file/d/1yyNxwA53lVUH2D5Msxw9nXBgHabsM2Sw/view?usp=drive_link" },
+            { id: 8011, category: "Sách tham khảo", title: "Thực trạng những lệch lạc trong thi hành kỷ luật Đảng từ Đại hội IX đến nay - Phần 2 (NXB CTQGST - 2015)", link: "https://drive.google.com/file/d/1Ms3InnsziYlxge1xJic5fr9pWY1kxxud/view?usp=drive_link" },
+            { id: 8012, category: "Sách tham khảo", title: "Thực trạng những lệch lạc trong thi hành kỷ luật Đảng từ Đại hội IX đến nay (NXB CTQGST - 2015)", link: "https://drive.google.com/file/d/1JdTvstlhR2g_jA5xyRLmPnbNeEsracfi/view?usp=drive_link" },
+            { id: 8013, category: "Sách tham khảo", title: "Võ Nguyên Giáp - Vị tướng của nhân dân (NXB CTQGST - 2023)", link: "https://drive.google.com/file/d/1ib6sUb8Km-DdB5XufgZkHENHl_-X5Ht-/view?usp=drive_link" },
+            { id: 8014, category: "Sách tham khảo", title: "Nguyễn Ái Quốc (Sách lịch sử - NXB CTQG, 2009)", link: "https://drive.google.com/file/d/1eSNNhywX6T54hCVO80Fs7MKRxirTTDsV/view?usp=drive_link" },
+            { id: 8015, category: "Sách tham khảo", title: "Lịch sử 80 năm công tác tuyên giáo của Đảng Cộng sản Việt Nam (NXB CTQG - 2010)", link: "https://drive.google.com/file/d/1RqGXYiGx0kKVdc_0JEXjrV9X5S5hljie/view?usp=drive_link" },
+            { id: 8016, category: "Sách tham khảo", title: "Tổng quan Lịch sử Báo chí Cách mạng Việt Nam 1925-2010 (NXB CTQG - 2010)", link: "https://drive.google.com/file/d/1wlV2CcvDXx8xdwwBqP8Hd9AO06BSAd5g/view?usp=drive_link" },
+            { id: 8017, category: "Sách tham khảo", title: "Đường Bác Hồ đi cứu nước (Sách lịch sử - NXB CTQGST, 2015)", link: "https://drive.google.com/file/d/1qoUeZKCyprAJ1xBZvhp0mTbQFgjPD17n/view?usp=drive_link" },
+            { id: 8018, category: "Sách tham khảo", title: "Cuba - Việt Nam: Hai dân tộc một lịch sử (NXB CTQGST - 2023)", link: "https://drive.google.com/file/d/1-ZrZ3815bzeSYDyXT_4Zc8nR_94nw9Gl/view?usp=drive_link" },
+            { id: 8019, category: "Sách tham khảo", title: "Giữ yên giấc ngủ của Người (NXB QĐND - 2022)", link: "https://drive.google.com/file/d/1Pl4YWColLPWdnrZQ-fND7PRDO2MflK6v/view?usp=drive_link" },
+            { id: 8020, category: "Sách tham khảo", title: "Hồ Chí Minh chữa bệnh mất dân chủ (NXB CTQG - 2000)", link: "https://drive.google.com/file/d/10BV1yTypyZkQx5GiuqvDe2XMwQwS_CRe/view?usp=drive_link" },
+            { id: 8021, category: "Sách tham khảo", title: "Tư tưởng Hồ Chí Minh và con đường cách mạng Việt Nam (NXB CTQG - 2000)", link: "https://drive.google.com/file/d/18RvMyk2YtUhxdb1Df_nGsrjjeSVPRCw4/view?usp=drive_link" },
+            { id: 8022, category: "Sách tham khảo", title: "Xây dựng chỉnh đốn Đảng – Một số vấn đề lý luận và thực tiễn (NXB CTQG - 2005)", link: "https://drive.google.com/file/d/1GgbIpale4qKENpzufllMHtkJ0qeDzqRI/view?usp=drive_link" },
+            { id: 8023, category: "Sách tham khảo", title: "Nhà nước pháp quyền của dân do dân vì dân - Lý luận và thực tiễn (NXB CTQG - 2008)", link: "https://drive.google.com/file/d/1d2Ukwg7bBU_kxRleLUFouMngEUIxqzuM/view?usp=drive_link" },
+            { id: 8024, category: "Sách tham khảo", title: "Giới thiệu tác phẩm Biện chứng của tự nhiên của Ăngghen (NXB CTQG - 2010)", link: "https://drive.google.com/file/d/12dwA9-Q4ANOeN53dDnL8UdTAgH6HdoBw/view?usp=drive_link" },
+            { id: 8025, category: "Sách tham khảo", title: "Công tác tư tưởng trong điều kiện hiện nay (NXB CTQGST - 2015)", link: "https://drive.google.com/file/d/1fwM46UCkCzWZyuk62TGMYtI3H2tT6zGz/view?usp=drive_link" },
+            { id: 8026, category: "Sách tham khảo", title: "Lệch lạc trong thi hành kỷ luật và giải quyết khiếu nại kỷ luật đảng (NXB CTQGST - 2015)", link: "https://drive.google.com/file/d/1_9nP6k9N12k_XCjDP4pNMKgMkomxGoLS/view?usp=drive_link" },
+            { id: 8027, category: "Sách tham khảo", title: "Xây dựng nền quốc phòng bảo vệ Tổ quốc - Lý luận và thực tiễn (NXB CTQGST - 2015)", link: "https://drive.google.com/file/d/1ewBkLV7kimDYyVi42hXdWdgRs8ksb5Ot/view?usp=drive_link" },
+            { id: 8028, category: "Sách tham khảo", title: "Quan điểm của Đảng về giáo dục và đào tạo KHCN trong Văn kiện ĐH XII (NXB CTQGST - 2016)", link: "https://drive.google.com/file/d/1sb6cIuERZteRSpURxoku-5884f0MaaTn/view?usp=drive_link" },
+            { id: 8029, category: "Sách tham khảo", title: "Những điểm mới trong các văn kiện Đại hội XIII của Đảng (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1ASCGQMzmSOg2BKZ8B9q-OkTDW2RS0n-Z/view?usp=drive_link" },
+            { id: 8030, category: "Sách tham khảo", title: "Tăng cường công tác xây dựng Đảng trong CAND theo Nghị quyết ĐH XIII (NXB CTQGST - 2022)", link: "https://drive.google.com/file/d/1Nqq49ba2jzVEAMH5Q4ew7w_VuOxJQK4Z/view?usp=drive_link" },
+            { id: 8031, category: "Sách tham khảo", title: "Những vấn đề lý luận về lệch lạc trong thi hành kỷ luật Đảng (NXB CTQG - 2012)", link: "https://drive.google.com/file/d/1oW7E_NH0ijvv6djmFGldoPocL6e7YAgk/view?usp=drive_link" },
+            { id: 8032, category: "Sách tham khảo", title: "Nghiệp vụ công tác đảng viên và văn bản hướng dẫn (NXB CTQG - 2010)", link: "https://drive.google.com/file/d/1rH5WGidoHSai8itJnpJflH625p644NWu/view?usp=drive_link" },
+            { id: 8033, category: "Sách tham khảo", title: "117 chuyện kể về tấm gương đạo đức Hồ Chí Minh (NXB Ban Tuyên giáo - 2006)", link: "https://drive.google.com/file/d/1j2zihRPUkzlIxePhB0vKfluxxRTytozY/view?usp=drive_link" },
+            { id: 8034, category: "Sách tham khảo", title: "Bác Hồ với các Đại hội Đảng (NXB CTQG - 2006)", link: "https://drive.google.com/file/d/1Bzicg23WiWZtHW1f_Ugb3oR8zc20HLdO/view?usp=drive_link" },
+            { id: 8035, category: "Sách tham khảo", title: "Tổng Tư lệnh Võ Nguyên Giáp (NXB CTQG - 2006)", link: "https://drive.google.com/file/d/1s-dHlLAJHC4UfVa3bg35bFQwsM6z4L0u/view?usp=drive_link" },
+            { id: 8036, category: "Sách tham khảo", title: "Lê Duẩn: Tiểu sử (NXB CTQG - 2007)", link: "https://drive.google.com/file/d/1qqIghTILiHBxgRPE4IsjxZC_jfecEQlw/view?usp=drive_link" },
+            { id: 8037, category: "Sách tham khảo", title: "Lê Hồng Phong: Tiểu sử (NXB CTQG - 2007)", link: "https://drive.google.com/file/d/1WoXW-YUZQD8LLQE_E1tuLRZY2Z_uNSxi/view?usp=drive_link" },
+            { id: 8038, category: "Sách tham khảo", title: "Nguyễn Văn Cừ: Tiểu sử (NXB CTQG - 2007)", link: "https://drive.google.com/file/d/17kxAFDyWCdBgDP900BC-M6Payw6GQkUy/view?usp=drive_link" },
+            { id: 8039, category: "Sách tham khảo", title: "Phạm Hùng: Tiểu sử (NXB CTQG - 2007)", link: "https://drive.google.com/file/d/1a6gVYq5fVZNoe88tpq82fR6mil1b9cNV/view?usp=drive_link" },
+            { id: 8040, category: "Sách tham khảo", title: "Phạm Văn Đồng: Tiểu sử (NXB CTQG - 2007)", link: "https://drive.google.com/file/d/114p-8wVWagNmJ1MZwV0xmiWjyya34vK7/view?usp=drive_link" },
+            { id: 8041, category: "Sách tham khảo", title: "Trần Phú: Tiểu sử (NXB CTQG - 2007)", link: "https://drive.google.com/file/d/1on5WTGSnBPxyJOg1IJlf67o8jAZE17tP/view?usp=drive_link" },
+            { id: 8042, category: "Sách tham khảo", title: "Trường Chinh: Tiểu sử (NXB CTQG - 2007)", link: "https://drive.google.com/file/d/16M4I2lU_X7n0nG49X854fcvnENU9-gYH/view?usp=drive_link" },
+            { id: 8043, category: "Sách tham khảo", title: "Đồng chí Võ Chí Công - Người chiến sĩ cách mạng kiên cường (NXB CTQG - 2008)", link: "https://drive.google.com/file/d/1P-XTinihY3NuSV04W5Shy1K4pzl7Vdfl/view?usp=drive_link" },
+            { id: 8044, category: "Sách tham khảo", title: "Nguyễn Văn Linh: Tiểu sử (NXB CTQG - 2008)", link: "https://drive.google.com/file/d/1A2XYgluqed09Hq8M--55osXoAV6E1o1G/view?usp=drive_link" },
+            { id: 8045, category: "Sách tham khảo", title: "Đường Bác Hồ chúng ta đi (NXB Thanh niên - 2007)", link: "https://drive.google.com/file/d/1RFbEvsfFAtAp68xRmKZp5ED8YOjnDZ6-/view?usp=drive_link" },
+            { id: 8046, category: "Sách tham khảo", title: "Vang vọng lời nước non - Tập 7: Còn sống thì còn phải học (NXB TTTT - 2022)", link: "https://drive.google.com/file/d/1P4oEzLbvPTzr6Hes4aDE4NZ6Hfiw7fpa/view?usp=drive_link" },
+            { id: 8047, category: "Sách tham khảo", title: "Vang vọng lời nước non - Tập 8: Văn hóa soi đường cho quốc dân đi (NXB TTTT - 2022)", link: "https://drive.google.com/file/d/1iZub1zPAy879269sJsfGeSMSqvchQt5H/view?usp=drive_link" },
+            { id: 8048, category: "Sách tham khảo", title: "Vang vọng lời nước non - Tập 9: Đại đoàn kết là một lực lượng tất thắng (NXB TTTT - 2022)", link: "https://drive.google.com/file/d/1Dp9eT0UCsDAUzTvNRrVsdK18yxlRT0vE/view?usp=drive_link" },
+            { id: 8049, category: "Sách tham khảo", title: "Hồ Chí Minh về công tác tư tưởng văn hóa (NXB CTQG - 2000)", link: "https://drive.google.com/file/d/1Ep9P0DGIdIfSum5mGxcsa7BoIQnnYcLt/view?usp=drive_link" },
+            { id: 8050, category: "Sách tham khảo", title: "Lê Duẩn Tuyển tập III (1975-1986) (NXB CTQG - 2009)", link: "https://drive.google.com/file/d/1sHiSkN3DJXPEc0zRG4dzoDrEtcXs3cf4/view?usp=drive_link" },
+            { id: 8051, category: "Sách tham khảo", title: "Lê Duẩn Tuyển tập 1950-1965 Tập 1 (NXB CTQGST - 2007)", link: "https://drive.google.com/file/d/18keQsQqlzpTwQ17ynB0nfxKqNr0s61Ns/view?usp=drive_link" },
+            { id: 8052, category: "Sách tham khảo", title: "Vang vọng lời nước non - Tập 1: Tôi hiến cả đời tôi cho dân tộc tôi (NXB TTTT - 2020)", link: "https://drive.google.com/file/d/1p8IuobukqbIef3ZDbwZPiNTRQUtRotsd/view?usp=drive_link" },
+            { id: 8053, category: "Sách tham khảo", title: "Vang vọng lời nước non - Tập 2: Dân tộc Việt Nam là một (NXB TTTT - 2020)", link: "https://drive.google.com/file/d/1tQnLWoFJdJmINg7qP_f1nXMGRW07RA7h/view?usp=drive_link" },
+            { id: 8054, category: "Sách tham khảo", title: "Vang vọng lời nước non - Tập 3: Đảng cần phải mạnh hơn bao giờ hết (NXB TTTT - 2020)", link: "https://drive.google.com/file/d/1H9x9JfrRHcrbJd-JjXJL6PUpvbQOVeqI/view?usp=drive_link" },
+            { id: 8055, category: "Sách tham khảo", title: "Vang vọng lời nước non - Tập 4: Trong bầu trời không gì quý bằng nhân dân (NXB TTTT - 2020)", link: "https://drive.google.com/file/d/1Eyc5USmddrS8gLnSARh4fPBnGSLCPh7G/view?usp=drive_link" },
+            { id: 8056, category: "Sách tham khảo", title: "Vang vọng lời nước non - Tập 5: Phải xứng đáng là người lãnh đạo (NXB TTTT - 2020)", link: "https://drive.google.com/file/d/1sW17zNBIz5rlRmMsNX6xOCcTL456WLW5/view?usp=drive_link" },
+            { id: 8057, category: "Sách tham khảo", title: "Vang vọng lời nước non - Tập 6: Thang thuốc hay nhất là thiết thực phê bình (NXB TTTT - 2020)", link: "https://drive.google.com/file/d/1mDHbRh2m0uxIFLRSPGZ0A1oysb2bjoQ7/view?usp=drive_link" },
+            { id: 8058, category: "Sách tham khảo", title: "Vang vọng lời nước non - Tập 10: Trung với Đảng hiếu với dân (NXB TTTT - 2020)", link: "https://drive.google.com/file/d/1Xemr8X3m5CqOWbolQLuzIREEQHOb78_P/view?usp=drive_link" },
+            { id: 8059, category: "Sách tham khảo", title: "Vang vọng lời nước non - Tập 11: Ngoại giao hòa bình và hữu nghị (NXB TTTT - 2020)", link: "https://drive.google.com/file/d/1C-17CR7f9NH1z1MsS6g5KYjp5gAiL8l3/view?usp=drive_link" },
+            { id: 8060, category: "Sách tham khảo", title: "Vang vọng lời nước non - Tập 12: Tôi để lại muôn vàn tình thân yêu (NXB TTTT - 2020)", link: "https://drive.google.com/file/d/1RzvCxqSTm5Xw1BiFBFDJO-5MIBFOPcBo/view?usp=drive_link" },
+            { id: 8061, category: "Sách tham khảo", title: "Cuộc đấu tranh chống chủ nghĩa cơ hội và ý nghĩa đối với xây dựng Đảng (NXB CTQGST - 2019)", link: "https://drive.google.com/file/d/1xsdvNUnXHlo_BiSyZANOiivecHdo5ElE/view?usp=drive_link" },
+            { id: 8062, category: "Sách tham khảo", title: "Tư tưởng chính trị của C. Mác, Ph. Ăngghen, V. I. Lênin và Hồ Chí Minh (NXB CTQGST - 2020)", link: "https://drive.google.com/file/d/1OjlRBQweSHb-CMHWUM1DkWusDfS8L4Cq/view?usp=drive_link" },
+            { id: 8063, category: "Sách tham khảo", title: "Ngoại giao chuyên biệt: Hướng đi ưu tiên mới của ngoại giao Việt Nam (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/10E_N7EKCkz8fY8gt8fKqpf9ZVC2au8EF/view?usp=drive_link" },
+            { id: 8064, category: "Sách tham khảo", title: "Bảo vệ lợi ích quốc gia dân tộc của Việt Nam trong thời đại mới (NXB CTQGST - 2022)", link: "https://drive.google.com/file/d/1uavNo7r5mrg69SNRJCYTMKYjGCsuFgvK/view?usp=drive_link" },
+            { id: 8065, category: "Sách tham khảo", title: "Hà Huy Tập: Một số tác phẩm (NXB CTQGST - 2006)", link: "https://drive.google.com/file/d/1Z4AecsaT3DXx339wUM4R2odA-bFtjju_/view?usp=drive_link" },
+            { id: 8066, category: "Sách tham khảo", title: "Tôn Đức Thắng: Tiểu sử (NXB CTQGST - 2007)", link: "https://drive.google.com/file/d/1HaqCrvT-i5A_F3qPGSbPJPA3ubzHZJOP/view?usp=drive_link" },
+            { id: 8067, category: "Sách tham khảo", title: "Lê Duẩn Tuyển tập Tập II (NXB CTQGST - 2008)", link: "https://drive.google.com/file/d/1F-z2By79KlPAOMEWi0kXbOEOD-Ot9-ti/view?usp=drive_link" },
+            { id: 8068, category: "Sách tham khảo", title: "Đảng Cộng sản Việt Nam 80 năm (NXB CTQGST - 2010)", link: "https://drive.google.com/file/d/1eYam3Lw39u7j1DzSFQF7a9T7z9uMe8zJ/view?usp=drive_link" },
+            { id: 8069, category: "Sách tham khảo", title: "Cẩm nang công tác chi bộ ở xã phường thị trấn (NXB CTQGST - 2011)", link: "https://drive.google.com/file/d/1zfkkLLZw1huheC4A6tFzNXiroHdO-N6K/view?usp=drive_link" },
+            { id: 8070, category: "Sách tham khảo", title: "Cẩm nang công tác tổ chức cán bộ xã phường thị trấn (NXB CTQGST - 2011)", link: "https://drive.google.com/file/d/1YHcBEzfyrgC34PeiokmWRo4BsAE1EGyn/view?usp=drive_link" },
+            { id: 8071, category: "Sách tham khảo", title: "Văn kiện Đảng về an sinh xã hội (NXB CTQGST - 2011)", link: "https://drive.google.com/file/d/1qZs89xk3499eWStGM854Qsq-LoT__aX9/view?usp=drive_link" },
+            { id: 8072, category: "Sách tham khảo", title: "Văn kiện Đảng về lao động việc làm (NXB CTQGST - 2011)", link: "https://drive.google.com/file/d/1fy8tIrT5odXAe5CzhTWJT0ilR_D2dPZz/view?usp=drive_link" },
+            { id: 8073, category: "Sách tham khảo", title: "Kỹ năng lãnh đạo điều hành của Chủ tịch UBND cấp xã (NXB CTQGST - 2012)", link: "https://drive.google.com/file/d/1kYwogVuFN3RPE_zrfot_FWSZPigeDt4f/view?usp=drive_link" },
+            { id: 8074, category: "Sách tham khảo", title: "Hỏi Đáp về phòng chống tham nhũng (NXB CTQGST - 2013)", link: "https://drive.google.com/file/d/1hYtnndxNq1kalyQsSBdK9GeBweZRUPfR/view?usp=drive_link" },
+            { id: 8075, category: "Sách tham khảo", title: "Hướng dẫn nghiệp vụ công tác đảng viên (NXB CTQGST - 2014)", link: "https://drive.google.com/file/d/1a52m73iVqHl4xwvFnhkyx-eeYAMY-C8D/view?usp=drive_link" },
+            { id: 8076, category: "Sách tham khảo", title: "Những tấm gương sống tốt đời đẹp đạo (NXB CTQGST - 2014)", link: "https://drive.google.com/file/d/1eOI_JU5B4izT2RD1O5b0Oo-vE--im3Tn/view?usp=drive_link" },
+            { id: 8077, category: "Sách tham khảo", title: "Chuyện kể về Bác Hồ những chặng đường kháng chiến (NXB CTQGST - 2015)", link: "https://drive.google.com/file/d/1zCB5okfsy0K11SGe2hihIzrRgnkIKdX0/view?usp=drive_link" },
+            { id: 8078, category: "Sách tham khảo", title: "Lê Khả Phiêu tuyển tập Tập II (NXB CTQGST - 2015)", link: "https://drive.google.com/file/d/1lA99e8vRyjoHRsE4Oko7u4prRKjZXO-r/view?usp=drive_link" },
+            { id: 8079, category: "Sách tham khảo", title: "Anh hùng người dân tộc thiểu số Tập 3 (NXB CTQGST - 2016)", link: "https://drive.google.com/file/d/1ximX2kfOkrBC5ufr2mdhZoCslRLIUhDC/view?usp=drive_link" },
+            { id: 8080, category: "Sách tham khảo", title: "Kỹ năng tuyên truyền miệng dành cho người có uy tín (NXB CTQGST - 2016)", link: "https://drive.google.com/file/d/15EKBt7B5jruRzZYz9_MWZh7oa2Gdxs5W/view?usp=drive_link" },
+            { id: 8081, category: "Sách tham khảo", title: "Bác Hồ với những mùa xuân kháng chiến (NXB CTQGST - 2017)", link: "https://drive.google.com/file/d/10_JIquIllUtt7r7OS8LCbyyPrJp-_Ytk/view?usp=drive_link" },
+            { id: 8082, category: "Sách tham khảo", title: "Đấu tranh chống các luận điệu xuyên tạc chủ nghĩa Mác - Lênin (NXB CTQGST - 2017)", link: "https://drive.google.com/file/d/1tzXbbQkf-uq4GIZtpmflbBh5LKTdJrsY/view?usp=drive_link" },
+            { id: 8083, category: "Sách tham khảo", title: "Tuyên ngôn của Đảng Cộng sản (NXB CTQGST - 2017)", link: "https://drive.google.com/file/d/15sydgkRLAq4Y6ZEvsQTUCGLIFk1PyNmT/view?usp=drive_link" },
+            { id: 8084, category: "Sách tham khảo", title: "Tư tưởng Hồ Chí Minh và con đường cách mạng Việt Nam (NXB CTQGST - 2017)", link: "https://drive.google.com/file/d/17LV9ALZtXYYgVVSzLqYAv6bTapptuAAb/view?usp=drive_link" },
+            { id: 8085, category: "Sách tham khảo", title: "Vững bước trên con đường đổi mới Tập 1 (NXB CTQGST - 2017)", link: "https://drive.google.com/file/d/1Y_uBQY46-gepNxxS_Bl5stNx3u1JxYgn/view?usp=drive_link" },
+            { id: 8086, category: "Sách tham khảo", title: "Điện Biên Phủ (NXB CTQGST - 2018)", link: "https://drive.google.com/file/d/1qgbgylQ7FssUTZPo9SaiG1zA0AwZFNhv/view?usp=drive_link" },
+            { id: 8087, category: "Sách tham khảo", title: "Những chặng đường lịch sử (NXB CTQGST - 2018)", link: "https://drive.google.com/file/d/1F08aacuT1CrZmNpEic53-2uRhvqZ35u_/view?usp=drive_link" },
+            { id: 8088, category: "Sách tham khảo", title: "Tăng cường sự lãnh đạo của Đảng đối với công tác báo chí (NXB CTQGST - 2018)", link: "https://drive.google.com/file/d/18ue6fFQXdNg3EcG2qKEwucGV1xql738h/view?usp=drive_link" },
+            { id: 8089, category: "Sách tham khảo", title: "Vững bước trên con đường đổi mới Tập 2 (NXB CTQGST - 2018)", link: "https://drive.google.com/file/d/1O3jWb2AA2bDE3CzVD16ifRrcG_rdPBQT/view?usp=drive_link" },
+            { id: 8090, category: "Sách tham khảo", title: "Vững tin vào sự lãnh đạo của Đảng khó khăn nào cũng vượt qua (NXB CTQGST - 2018)", link: "https://drive.google.com/file/d/1UjRHgj-yD_kesJKbtqIkqPcN8qs1IaQZ/view?usp=drive_link" },
+            { id: 8091, category: "Sách tham khảo", title: "Các Đại hội và Hội nghị Trung ương của Đảng 1930-2018 (NXB CTQGST - 2019)", link: "https://drive.google.com/file/d/1O3oywFBQSZwlgf_n6VbosLjliFXLZmZO/view?usp=drive_link" },
+            { id: 8092, category: "Sách tham khảo", title: "Quyết tâm ngăn chặn và đẩy lùi tham nhũng (NXB CTQGST - 2019)", link: "https://drive.google.com/file/d/1YiODlCU9_Admih5Duv7cKKZCvtMZEHX_/view?usp=drive_link" },
+            { id: 8093, category: "Sách tham khảo", title: "Sổ tay học tập và làm theo tư tưởng đạo đức phong cách HCM (NXB CTQGST - 2019)", link: "https://drive.google.com/file/d/1BJ_pU3CEf4DXgFDaghP6AmtwIiWLOcr5/view?usp=drive_link" },
+            { id: 8094, category: "Sách tham khảo", title: "Võ Chí Công: Tiểu sử (NXB CTQGST - 2019)", link: "https://drive.google.com/file/d/1zv0l7jK8KoBxpfCIJqJQe8dDKBdhIHbO/view?usp=drive_link" },
+            { id: 8095, category: "Sách tham khảo", title: "Xây dựng Đảng và hệ thống chính trị trong tình hình mới (NXB CTQGST - 2019)", link: "https://drive.google.com/file/d/1ocdncTPS8Hy6CGl1gjTSRu3xd2b60MTy/view?usp=drive_link" },
+            { id: 8096, category: "Sách tham khảo", title: "130 câu nói của Chủ tịch Hồ Chí Minh về xây dựng Đảng (NXB CTQGST - 2020)", link: "https://drive.google.com/file/d/1INYfhtK2DNvjU8_ArpmXUiMIyjDVLx--/view?usp=drive_link" },
+            { id: 8097, category: "Sách tham khảo", title: "Bảo vệ nền tảng tư tưởng của Đảng trong tình hình mới (NXB CTQGST - 2020)", link: "https://drive.google.com/file/d/10RLtrn8U0qjVub54bv2sW1t0WuwycAkX/view?usp=drive_link" },
+            { id: 8098, category: "Sách tham khảo", title: "Bầu cử trong Đảng (NXB CTQGST - 2020)", link: "https://drive.google.com/file/d/1OXCP49dIqz2i1b6CENVqb9tRc8fOk-DH/view?usp=drive_link" },
+            { id: 8099, category: "Sách tham khảo", title: "Chân lý và sự thật (NXB CTQGST - 2020)", link: "https://drive.google.com/file/d/1-TAYqXCYaPOf94RiajO3rX_qXJnyEGXN/view?usp=drive_link" },
+            { id: 8100, category: "Sách tham khảo", title: "Tuyên ngôn của Đảng Cộng sản: Giá trị lý luận và thực tiễn (NXB CTQGST - 2020)", link: "https://drive.google.com/file/d/1aWzGr3ybEuxD95505Cc-7fi5l4ZB3Zat/view?usp=drive_link" },
+            { id: 8101, category: "Sách tham khảo", title: "Cương lĩnh 2011 - Những vấn đề lý luận và thực tiễn (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1fzZ88au7rNkYqw9z8HYokenNL7HVTe_b/view?usp=drive_link" },
+            { id: 8102, category: "Sách tham khảo", title: "Kiến thức và kỹ năng dành cho cán bộ dân vận cấp cơ sở (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1_20Q5wzrZpO4XYApOASIh8v2rKaHdTSB/view?usp=drive_link" },
+            { id: 8103, category: "Sách tham khảo", title: "Lê Đức Thọ: Tiểu sử (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1Gv7_WLV14dzGGF4GKvl74hzFTznohM1U/view?usp=drive_link" },
+            { id: 8104, category: "Sách tham khảo", title: "Một số vấn đề lý luận và thực tiễn phát triển đất nước (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1ABS3lT3jq8SjrUHjUJO_P-AMJrBCQKbX/view?usp=drive_link" },
+            { id: 8105, category: "Sách tham khảo", title: "Một số vấn đề lý luận và thực tiễn về chủ nghĩa xã hội ở Việt Nam (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1nyhRQcBxKVqWHYQd8BnFtzTTRRUjLjUV/view?usp=drive_link" },
+            { id: 8106, category: "Sách tham khảo", title: "Một số vấn đề về cách mạng và đổi mới (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/10dgtFnGMEZSFg_yMJ8jBEPE69vsWUox1/view?usp=drive_link" },
+            { id: 8107, category: "Sách tham khảo", title: "Nâng cao chất lượng dạy học tác phẩm Hồ Chí Minh (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1Tj30skzVPDjayUh9DDToCw4uSVxvNKJm/view?usp=drive_link" },
+            { id: 8108, category: "Sách tham khảo", title: "Những điểm mới trong công tác dân vận của Đảng (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1gwg4fdauK8lweQrPjeBDEpNLeuDaEKjp/view?usp=drive_link" },
+            { id: 8109, category: "Sách tham khảo", title: "Những nội dung cốt lõi và điểm mới trong Văn kiện ĐH XIII - Phần IX (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1zjGJvqSgJCMJwTT9ALl8Mf7qlBP2aQLe/view?usp=drive_link" },
+            { id: 8110, category: "Sách tham khảo", title: "Những nội dung cốt lõi và điểm mới trong Văn kiện ĐH XIII - Phần VI (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/15O_gjzKUAYMZOpIN3vdI1I_iMqOfyNA0/view?usp=drive_link" },
+            { id: 8111, category: "Sách tham khảo", title: "Những nội dung cốt lõi và điểm mới trong Văn kiện ĐH XIII - Phần VII (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1r4g1cKuqedGEQHuJhd4QWY7OAbflQctJ/view?usp=drive_link" },
+            { id: 8112, category: "Sách tham khảo", title: "Những nội dung cốt lõi và điểm mới trong Văn kiện ĐH XIII - Phần VIII (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1mHqtXIdI-a0Wh-cUf4fTVWCKI8K0w7IZ/view?usp=drive_link" },
+            { id: 8113, category: "Sách tham khảo", title: "Những nội dung cốt lõi và điểm mới trong Văn kiện ĐH XIII - Phần X (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1hndYZFmox2DSe6PAEi4OedJzeA8XxgWp/view?usp=drive_link" },
+            { id: 8114, category: "Sách tham khảo", title: "Những nội dung cốt lõi và điểm mới trong Văn kiện ĐH XIII - Phần XI (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1l8p8DP_n6SQuUnJlJqr2pizQGXE78eEK/view?usp=drive_link" },
+            { id: 8115, category: "Sách tham khảo", title: "Những nội dung cốt lõi và điểm mới trong Văn kiện ĐH XIII - Phần XII (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1yigyCXu7I3rcQq_oILClOm8YP5dMjWMn/view?usp=drive_link" },
+            { id: 8116, category: "Sách tham khảo", title: "Những nội dung cốt lõi và điểm mới trong Văn kiện ĐH XIII - Phần XIII (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1KAbz6fYz7Zx2aSvSCw84Hu890o0iyX0C/view?usp=drive_link" },
+            { id: 8117, category: "Sách tham khảo", title: "Những nội dung cốt lõi và điểm mới trong Văn kiện ĐH XIII - Phần XIV (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/12uF4ePQmydXGsR1i5BQFcDH-DRjFMliE/view?usp=drive_link" },
+            { id: 8118, category: "Sách tham khảo", title: "Những nội dung cốt lõi và điểm mới trong Văn kiện ĐH XIII - Tập thể tác giả (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1MuF8rY97Ing4FU7zbhDL8gQZ8db6NDJS/view?usp=drive_link" },
+            { id: 8119, category: "Sách tham khảo", title: "Toàn Đảng, toàn dân chung sức, đồng lòng xây dựng đất nước (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/11I64PkaE6tPUaZfc4_h3cLUteBVSiPqe/view?usp=drive_link" },
+            { id: 8120, category: "Sách tham khảo", title: "Văn kiện Đại hội đại biểu toàn quốc lần thứ XIII Tập 1 (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1zNhqUmOErJT8psSXAn82EPj8tbyHP_vZ/view?usp=drive_link" },
+            { id: 8121, category: "Sách tham khảo", title: "Văn kiện Đại hội đại biểu toàn quốc lần thứ XIII Tập 2 (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1MtU0Qb6jHKlkZvbg0FVr-vVBFg-33Bc5/view?usp=drive_link" },
+            { id: 8122, category: "Sách tham khảo", title: "Hỏi Đáp về công tác kiểm tra giám sát và kỷ luật của Đảng (NXB CTQGST - 2022)", link: "https://drive.google.com/file/d/11Cnkxw47W7I4ECdInhu7Uh6mOXECt5k0/view?usp=drive_link" },
+            { id: 8123, category: "Sách tham khảo", title: "Hỏi Đáp về quy định và hướng dẫn thi hành Điều lệ Đảng (NXB CTQGST - 2022)", link: "https://drive.google.com/file/d/1RYixKdJeyXRAwpsjyWZQj9U7PE5bhoLx/view?usp=drive_link" },
+            { id: 8124, category: "Sách tham khảo", title: "Phát huy sức mạnh toàn dân tộc bảo vệ an ninh quốc gia (NXB CTQGST - 2022)", link: "https://drive.google.com/file/d/1t78VyfKmMPSNyTRBEOsdQ9g69jqdWp__/view?usp=drive_link" },
+            { id: 8125, category: "Sách tham khảo", title: "Sổ tay Hỏi Đáp dành cho đoàn viên thanh niên (NXB CTQGST - 2022)", link: "https://drive.google.com/file/d/1cApKXOE3lZkMLuWWbi2mlL4etWvUTKFN/view?usp=drive_link" },
+            { id: 8126, category: "Sách tham khảo", title: "Thực trạng thí điểm hợp nhất một số cơ quan Đảng Nhà nước (NXB CTQGST - 2022)", link: "https://drive.google.com/file/d/1BXYUPU7hrBaIqhRgWL4S9YAdIuK2CosW/view?usp=drive_link" },
+            { id: 8127, category: "Sách tham khảo", title: "Văn bản của Đảng Nhà nước về công tác dân vận 1986-2021 (NXB CTQGST - 2022)", link: "https://drive.google.com/file/d/1T7K6tGF3ulf33lfaL4h_5PqhzyBk4pEA/view?usp=drive_link" },
+            { id: 8128, category: "Sách tham khảo", title: "Danh dự là điều thiêng liêng cao quý nhất (NXB CTQGST - 2023)", link: "https://drive.google.com/file/d/1bUORUXUHbrfOxV_1AEjATv8eVhL7wf70/view?usp=drive_link" },
+            { id: 8129, category: "Sách tham khảo", title: "Kiên quyết kiên trì đấu tranh phòng chống tham nhũng tiêu cực (NXB CTQGST - 2023)", link: "https://drive.google.com/file/d/1miilJXlIiZC9S3s4vVf5Wbx6uGm9xXXE/view?usp=drive_link" },
+            { id: 8130, category: "Sách tham khảo", title: "Nâng cao tính lý luận tính chiến đấu làm thất bại âm mưu diễn biến hòa bình (NXB CTQGST - 2023)", link: "https://drive.google.com/file/d/1_Tk0AU0i_sK4eP9DMcO1kOaaaTwA3l_X/view?usp=drive_link" },
+            { id: 8131, category: "Sách tham khảo", title: "Một số vấn đề về đường lối quân sự chiến lược quốc phòng (NXB CTQGST - 2024)", link: "https://drive.google.com/file/d/1yeWr_9WQ6MMIiq70Zzg_E12ndyiIHRdD/view?usp=drive_link" },
+            { id: 8132, category: "Sách tham khảo", title: "Bác Hồ trong trái tim những người bạn quốc tế (NXB CTQGST)", link: "https://drive.google.com/file/d/1-epICjCVTrKyFRc46O_LT9kt8HCUqp7L/view?usp=drive_link" },
+            { id: 8133, category: "Sách tham khảo", title: "Hồ Chí Minh về chống quan liêu tham nhũng tiêu cực (NXB CTQGST)", link: "https://drive.google.com/file/d/1A7LgFCSUiTpfNbzFhdTQjJ346ORz0xA9/view?usp=drive_link" },
+            { id: 8134, category: "Sách tham khảo", title: "Phong cách Bác Hồ đến cơ sở (NXB CTQGST)", link: "https://drive.google.com/file/d/1WyRI8UgNF5BczRUD2iE3DvUdRks10lj0/view?usp=drive_link" },
+            { id: 8135, category: "Sách tham khảo", title: "Tư tưởng lý luận với đổi mới và phát triển đất nước (NXB CTQGST)", link: "https://drive.google.com/file/d/1-xy2KgQ5xlBjh7HhfNm4GFtYQ4IzlL0N/view?usp=drive_link" },
+            { id: 8136, category: "Sách tham khảo", title: "Như mặt trời chói lọi chiếu sáng khắp năm châu (NXB THTPHCM - 2017)", link: "https://drive.google.com/file/d/1J_qjLnnKneko9ske4aCJOn0Xh8dztm6j/view?usp=drive_link" },
+            { id: 8137, category: "Sách tham khảo", title: "Một giờ với đồng chí Hồ Chí Minh (NXB TN - 2007)", link: "https://drive.google.com/file/d/16qf1gfYBeHX61MoaBNevuHXJew131LkW/view?usp=drive_link" },
+            { id: 8138, category: "Sách tham khảo", title: "Cẩm nang phòng chống tin giả (NXB TTTT - 2022)", link: "https://drive.google.com/file/d/1IrLdhxmh1kzCAG1_hZgZ8EJ4L-ppp7pH/view?usp=drive_link" },
+            { id: 8139, category: "Sách tham khảo", title: "Học ở trường, học ở sách vở, học lẫn nhau và học nhân dân (NXB Trẻ - 2021)", link: "https://drive.google.com/file/d/1adX9RiSF0wkshs-OUzqD85a_DgrXku1k/view?usp=drive_link" },
+            { id: 8140, category: "Sách tham khảo", title: "Sổ tay công tác tuyên giáo (2020)", link: "https://drive.google.com/file/d/1uzh0L4GT8gxOlRJx9Per5iKYJyz91li5/view?usp=drive_link" },
+            { id: 8141, category: "Sách tham khảo", title: "Sổ tay nghiệp vụ công tác đảng (2021)", link: "https://drive.google.com/file/d/1TM9dJ9JuoPDvFQLSJe7lCAaWIY_xPN8k/view?usp=drive_link" },
+            { id: 8142, category: "Sách tham khảo", title: "Tài liệu học tập các nghị quyết Hội nghị TW 4 khóa XIII (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1XamELOytIDe1sEpD92sXzOYzr5Pmaa2I/view?usp=drive_link" },
+            { id: 8143, category: "Sách tham khảo", title: "Tài liệu học tập các nghị quyết Hội nghị TW 4 khóa XIII - Bản 2 (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1-uAwBTGjcm1W64LF5DvBe3bbZmeZgpsW/view?usp=drive_link" },
+            { id: 8144, category: "Sách tham khảo", title: "Tài liệu học tập các văn kiện ĐH XIII của Đảng (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1bvSmyUac9MvMTh2hkvma3kfpsMvM0wet/view?usp=drive_link" },
+            { id: 8145, category: "Sách tham khảo", title: "Tài liệu học tập các văn kiện ĐH XIII của Đảng - Bản 2 (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1vhSqCVRddWUgnsVptf-sqFX6gs98A8MF/view?usp=drive_link" },
+            { id: 8146, category: "Sách tham khảo", title: "Tài liệu hỏi - đáp về các văn kiện ĐH XIII của Đảng (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1t_yho528EsP-LK4mb9zyJY5l65W20tVN/view?usp=drive_link" },
+            { id: 8147, category: "Sách tham khảo", title: "Tài liệu học tập các văn kiện Hội nghị TW 5 khóa XIII (NXB CTQGST - 2022)", link: "https://drive.google.com/file/d/1nOFHU673y3wKT5OezAuZBMyQ27vDL4AO/view?usp=drive_link" },
+            { id: 8148, category: "Sách tham khảo", title: "Tài liệu học tập các văn kiện Hội nghị TW 5 khóa XIII - Bản 2 (NXB CTQGST - 2022)", link: "https://drive.google.com/file/d/10bMOnxyEKQj7lNndFGrz5wx3esLBdEW-/view?usp=drive_link" },
+            { id: 8149, category: "Sách tham khảo", title: "Tài liệu học tập các văn kiện Hội nghị TW 6 khóa XIII (NXB CTQGST - 2022)", link: "https://drive.google.com/file/d/176Rap9b29OpnNljPSmRMRtIBV2ILWTm4/view?usp=drive_link" },
+            { id: 8150, category: "Sách tham khảo", title: "Tài liệu học tập các văn kiện Hội nghị TW 4 khóa XIII (NXB CTQGST - 2022)", link: "https://drive.google.com/file/d/1mQLI7yoqk3fPYDrKGwwdhWaKXjYijrex/view?usp=drive_link" },
+            { id: 8151, category: "Sách tham khảo", title: "Tài liệu hỏi - đáp về các văn kiện Hội nghị TW 4 khóa XIII (NXB CTQGST - 2022)", link: "https://drive.google.com/file/d/1ZjHawTSKss9LOqLDgLzH6TdhldfoDCkv/view?usp=drive_link" },
+            { id: 8152, category: "Sách tham khảo", title: "Tài liệu Hỏi Đáp về các văn kiện Hội nghị TW 6 khóa XIII (NXB CTQGST - 2022)", link: "https://drive.google.com/file/d/1ylW4C1d4EA7KZQREPR4QpTounM_2PMga/view?usp=drive_link" },
+            { id: 8153, category: "Sách tham khảo", title: "Quy định và Hướng dẫn thực hiện những điều đảng viên không được làm (NXB CTQGST - 2012)", link: "https://drive.google.com/file/d/1PVSIZwmNC9hpILJCfrbybdeUSJVeDfJG/view?usp=drive_link" },
+            { id: 8154, category: "Sách tham khảo", title: "Những điểm mới trong các văn kiện ĐH XIII của Đảng (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/19vJ2rMqHvBLO0mOdplePFmBBSfwueh5I/view?usp=drive_link" },
+            { id: 8155, category: "Sách tham khảo", title: "Tài liệu nghiên cứu các văn kiện ĐH XIII của Đảng (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1N6Z9Jl6Apf7VCrVIITx1OHS5PheLufuB/view?usp=drive_link" },
+            { id: 8156, category: "Sách tham khảo", title: "Những điểm mới trong các văn kiện ĐH XIII của Đảng (NXB CTQGST - 2021) - Bản tham khảo", link: "https://drive.google.com/file/d/1ytfKXB3za31Tk5rq0cQTk8XA3W4vDhGc/view?usp=drive_link" },
+            { id: 8157, category: "Sách tham khảo", title: "Tư tưởng tấm gương đạo đức Hồ Chí Minh về xây dựng Đảng (NXB CTQG - 2010)", link: "https://drive.google.com/file/d/1a1sVt13u6EsnlYIuypyE_TYC5RET-4g-/view?usp=drive_link" },
+            { id: 8158, category: "Sách tham khảo", title: "Tài liệu 3D - Khám phá lịch sử (2021)", link: "https://drive.google.com/file/d/1-8EeQKvzGyhvSnkvsVbAJLw4X8nDhxHH/view?usp=drive_link" },
+            { id: 8159, category: "Sách tham khảo", title: "Báo cáo tổng kết công tác xây dựng Đảng và thi hành Điều lệ Đảng (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/14pNYM8AHnsl6hFWrXhwLUkLOvhRPQ1o_/view?usp=drive_link" },
+            { id: 8160, category: "Sách tham khảo", title: "Văn kiện Đại hội đại biểu toàn quốc lần thứ XIII - Bản 2 (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1Gk0rltyFtj6I_mfsoyJz9qndRL0_auN5/view?usp=drive_link" },
+            { id: 8161, category: "Sách tham khảo", title: "Văn kiện Đại hội đại biểu toàn quốc lần thứ XIII - Bản 3 (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/13m0BT32c0nCOD1Oqc73v5_kvUDb1uIo9/view?usp=drive_link" },
+            { id: 8162, category: "Sách tham khảo", title: "Chiến lược phát triển kinh tế - xã hội 10 năm 2021 - 2030 (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1Py0q_e0VU7khmBcsnB9NFiiTthMVS6EQ/view?usp=drive_link" },
+            { id: 8163, category: "Sách tham khảo", title: "Văn kiện Đại hội đại biểu toàn quốc lần thứ XIII - Bản 4 (NXB CTQGST - 2021)", link: "https://drive.google.com/file/d/1mHCyFeN3V6uZuPaOj2nq5GgoPI5LzXUG/view?usp=drive_link" },
+            { id: 8164, category: "Sách tham khảo", title: "Văn kiện Đảng toàn tập (NXB CTQG - 2007)", link: "https://drive.google.com/file/d/1LBR-VHYVEI0UmKN6DvmHMp2a1Vk5KAA_/view?usp=drive_link" },
+            { id: 8165, category: "Sách tham khảo", title: "Một số văn kiện của Đảng Cộng sản Việt Nam về công tác khoa giáo (NXB CTQG - 2006)", link: "https://drive.google.com/file/d/163ehYbwjyINyKEwfIBVIYX3TiebAL2ki/view?usp=drive_link" },
+            { id: 8166, category: "Sách tham khảo", title: "Cương lĩnh và Chiến lược của Đảng Cộng sản Việt Nam từ năm 1930 đến nay (NXB CTQG - 2009)", link: "https://drive.google.com/file/d/1OuOYtFCp0xIYvPE8BtTS8_2SWCtypTO3/view?usp=drive_link" },
+            { id: 8167, category: "Sách tham khảo", title: "Cương lĩnh và Chiến lược của Đảng Cộng sản Việt Nam - Bản 2 (NXB CTQG - 2009)", link: "https://drive.google.com/file/d/1ZJctAPONcEDQw8hqNdffitIBNDHLIy8f/view?usp=drive_link" },
+            { id: 8168, category: "Sách tham khảo", title: "Văn kiện Đảng về chống Mỹ cứu nước Tập I 1954-1965 (NXB CTQGST - 2012)", link: "https://drive.google.com/file/d/17Zg4eFMwZ6q3RPJQ0SMstUszLGyMiLM3/view?usp=drive_link" },
+            { id: 8169, category: "Sách tham khảo", title: "Văn kiện Đảng về chống Mỹ cứu nước Tập II 1966-1975 (NXB CTQGST - 2012)", link: "https://drive.google.com/file/d/1NdfSiIvetHWk8uT_G21PkTvEhlkawJnN/view?usp=drive_link" },
+            { id: 8170, category: "Sách tham khảo", title: "Văn kiện Đại hội đại biểu toàn quốc lần thứ XII (NXB CTQGST - 2016)", link: "https://drive.google.com/file/d/1mnI9EZI4w0n5XUyTj8DjvcCEuexWhZqa/view?usp=drive_link" },
+
+            // --- CẬP NHẬT MỚI: 4 TRÒ CHƠI ---
+            { id: 9001, category: "Trò chơi", title: "TRÒ CHƠI TĂNG TỐC", link: "https://sites.google.com/view/trochoilyluan/trang-ch%E1%BB%A7" },
+            { id: 3002, category: "Tư liệu văn kiện Đảng", title: "Lịch sử Đảng", link: "https://tulieuvankien.dangcongsan.vn/tu-lieu-van-kien-dang/lich-su-dang" },
+            { id: 3003, category: "Tư liệu văn kiện Đảng", title: "Điều lệ Đảng", link: "https://tulieuvankien.dangcongsan.vn/tu-lieu-van-kien-dang/dieu-le-dang" },
+            { id: 3004, category: "Tư liệu văn kiện Đảng", title: "Văn kiện Đảng toàn tập", link: "https://tulieuvankien.dangcongsan.vn/tu-lieu-van-kien-dang/van-kien-dang-toan-tap" },
+            { id: 3005, category: "Tư liệu văn kiện Đảng", title: "Văn kiện Đại hội Đảng", link: "https://tulieuvankien.dangcongsan.vn/bo-chinh-tri-ban-bi-thu-ban-chap-hanh-trung-uong/dai-hoi-dang/lan-thu-xiii" },
+            { id: 3006, category: "Tư liệu văn kiện Đảng", title: "Hội nghị Ban Chấp hành Trung ương", link: "https://tulieuvankien.dangcongsan.vn/tu-lieu-van-kien-dang/hoi-nghi-bch-trung-uong/khoa-xiii" },
+            { id: 3007, category: "Tư liệu văn kiện Đảng", title: "Văn bản của Đảng", link: "https://tulieuvankien.dangcongsan.vn/he-thong-van-ban/van-ban-cua-dang" },
+            { id: 3008, category: "Tư liệu văn kiện Đảng", title: "Sách chính trị", link: "https://tulieuvankien.dangcongsan.vn/tu-lieu-van-kien-dang/sach-chinh-tri" },
+
+
+            // 5. Sách tham khảo
+            { id: 601, category: "Sách tham khảo", title: "Lộ trình phát triển kinh tế tuần hoàn đến năm 2030", link: "https://stbook.vn/category/kinh-te/18" },
+            { id: 602, category: "Sách tham khảo", title: "CNH, HĐH đất nước trên nền tảng KHCN", link: "https://stbook.vn/category/kinh-te/18" },
+            { id: 603, category: "Sách tham khảo", title: "Phát triển kinh tế tư nhân trong định hướng mới", link: "https://stbook.vn/category/kinh-te/18" },
+            { id: 604, category: "Sách tham khảo", title: "Vấn đề sở hữu, kinh tế nhiều thành phần", link: "https://stbook.vn/category/kinh-te/18" },
+            { id: 605, category: "Sách tham khảo", title: "Đẩy mạnh hội nhập kinh tế quốc tế", link: "https://stbook.vn/category/kinh-te/18" },
+            { id: 606, category: "Sách tham khảo", title: "Quản trị biến động và khủng hoảng", link: "https://stbook.vn/category/kinh-te/18" },
+            { id: 607, category: "Sách tham khảo", title: "Phát huy giá trị biển, đảo, kinh tế biển xanh", link: "https://stbook.vn/category/kinh-te/18" },
+            { id: 608, category: "Sách tham khảo", title: "Phát triển kinh tế số ở Việt Nam", link: "https://stbook.vn/category/kinh-te/18" },
+            { id: 609, category: "Sách tham khảo", title: "Đột phá chiến lược phát triển đất nước", link: "https://stbook.vn/category/kinh-te/18" },
+            { id: 610, category: "Sách tham khảo", title: "Phát triển kinh tế xanh - Lý luận và thực tiễn", link: "https://stbook.vn/category/kinh-te/18" },
+            { id: 611, category: "Sách tham khảo", title: "Khung tiêu chí kinh tế thị trường định hướng XHCN", link: "https://stbook.vn/category/kinh-te/18" },
+            { id: 612, category: "Sách tham khảo", title: "Chuyển đổi số - Kinh nghiệm quốc tế", link: "https://stbook.vn/category/kinh-te/18" },
+            { id: 701, category: "Sách tham khảo", title: "Ưu tiên trong chính sách xã hội đến năm 2030", link: "https://stbook.vn/category/van-hoa-xa-hoi/19" },
+            { id: 702, category: "Sách tham khảo", title: "Xây dựng và phát huy vai trò đội ngũ trí thức", link: "https://stbook.vn/category/van-hoa-xa-hoi/19" },
+            { id: 703, category: "Sách tham khảo", title: "Chiến thắng Điện Biên Phủ và các chiến trường phối hợp", link: "https://stbook.vn/category/van-hoa-xa-hoi/19" },
+            { id: 704, category: "Sách tham khảo", title: "Quản trị quốc gia hiện đại, hiệu quả", link: "https://stbook.vn/category/van-hoa-xa-hoi/19" },
+            { id: 705, category: "Sách tham khảo", title: "“Đề cương về văn hóa Việt Nam” năm 1943", link: "https://stbook.vn/category/van-hoa-xa-hoi/19" },
+            { id: 706, category: "Sách tham khảo", title: "Bản sắc văn hóa Việt Nam (Trang phục truyền thống)", link: "https://stbook.vn/category/van-hoa-xa-hoi/19" },
+            { id: 707, category: "Sách tham khảo", title: "Quy hoạch tổng thể quốc gia thời kỳ 2021-2030", link: "https://stbook.vn/category/van-hoa-xa-hoi/19" },
+            { id: 708, category: "Sách tham khảo", title: "Đài Tiếng nói Việt Nam - 80 năm đồng hành", link: "https://stbook.vn/category/van-hoa-xa-hoi/19" },
+            { id: 709, category: "Sách tham khảo", title: "Phát triển văn hóa và con người Việt Nam", link: "https://stbook.vn/category/van-hoa-xa-hoi/19" },
+            { id: 710, category: "Sách tham khảo", title: "80 năm Đề cương về văn hóa Việt Nam", link: "https://stbook.vn/category/van-hoa-xa-hoi/19" },
+            { id: 801, category: "Sách tham khảo", title: "Pháp luật tư pháp người chưa thành niên", link: "https://stbook.vn/category/phap-luat/20" },
+            { id: 802, category: "Sách tham khảo", title: "Lịch sử Tòa án nhân dân Việt Nam (Tập I, II, III)", link: "https://stbook.vn/category/phap-luat/20" },
+            { id: 803, category: "Sách tham khảo", title: "Án lệ Việt Nam (Sách chuyên khảo)", link: "https://stbook.vn/category/phap-luat/20" },
+            { id: 804, category: "Sách tham khảo", title: "Tổ chức và thực hiện quyền hành pháp", link: "https://stbook.vn/category/phap-luat/20" },
+            { id: 805, category: "Sách tham khảo", title: "PCTN, tiêu cực trong công tác cán bộ", link: "https://stbook.vn/category/phap-luat/20" },
+            { id: 806, category: "Sách tham khảo", title: "Chiến lược phát triển pháp luật đến năm 2030", link: "https://stbook.vn/category/phap-luat/20" },
+            { id: 807, category: "Sách tham khảo", title: "Pháp luật về quyền lập hội và hội nhập", link: "https://stbook.vn/category/phap-luat/20" },
+            { id: 808, category: "Sách tham khảo", title: "Minh bạch và trách nhiệm giải trình cơ quan hành chính", link: "https://stbook.vn/category/phap-luat/20" },
+            { id: 809, category: "Sách tham khảo", title: "Pháp luật trong bối cảnh CMCN lần thứ tư", link: "https://stbook.vn/category/phap-luat/20" },
+            { id: 810, category: "Sách tham khảo", title: "Chiến lược phòng ngừa tội phạm", link: "https://stbook.vn/category/phap-luat/20" },
+            { id: 811, category: "Sách tham khảo", title: "Bảo vệ quyền con người bằng pháp luật hình sự", link: "https://stbook.vn/category/phap-luat/20" },
+            { id: 901, category: "Sách tham khảo", title: "Lịch sử Sài Gòn - TP.HCM (Tập II, IV, V)", link: "https://stbook.vn/category/cac-an-pham-khac/24" },
+            { id: 902, category: "Sách tham khảo", title: "Biên niên Lịch sử Công Thương 2011-2020", link: "https://stbook.vn/store_detail/bien-nien-lich-su-cong-thuong-viet-nam-2011-2020-tap-2-2016-2020-/826" },
+            { id: 903, category: "Sách tham khảo", title: "Chứng nhân lịch sử", link: "https://stbook.vn/store_detail/chung-nhan-lich-su-/1036" },
+            { id: 1001, category: "Sách tham khảo", title: "Cục diện thế giới đến năm 2045", link: "https://stbook.vn/category/nhung-van-de-quoc-te/21" },
+            { id: 1002, category: "Sách tham khảo", title: "Mặt trận Dân tộc Giải phóng - Chính phủ CMLT tại Hội nghị Paris", link: "https://stbook.vn/category/nhung-van-de-quoc-te/21" },
+            { id: 1003, category: "Sách tham khảo", title: "Mối quan hệ giữa độc lập, tự chủ và hội nhập quốc tế", link: "https://stbook.vn/category/nhung-van-de-quoc-te/21" },
+            { id: 1004, category: "Sách tham khảo", title: "Cơ hội và thách thức đối với vai trò chính trị của ĐCS Pháp", link: "https://stbook.vn/category/nhung-van-de-quoc-te/21" },
+            { id: 1005, category: "Sách tham khảo", title: "Cấu trúc khu vực châu Á - Thái Bình Dương: Lý luận và thực tiễn", link: "https://stbook.vn/category/nhung-van-de-quoc-te/21" },
+            { id: 1006, category: "Sách tham khảo", title: "Việt Nam trước cạnh tranh chiến lược giữa hai nước lớn", link: "https://stbook.vn/category/nhung-van-de-quoc-te/21" },
+            { id: 1007, category: "Sách tham khảo", title: "Về vấn đề biến động chính trị tại Hồng Kông", link: "https://stbook.vn/category/nhung-van-de-quoc-te/21" },
+            { id: 1008, category: "Sách tham khảo", title: "Cạnh tranh Trung - Ấn tại Đông Nam Á", link: "https://stbook.vn/category/nhung-van-de-quoc-te/21" },
+            { id: 1009, category: "Sách tham khảo", title: "Phiêu lưu trong vùng cực tối của thế giới", link: "https://stbook.vn/category/nhung-van-de-quoc-te/21" },
+            { id: 1010, category: "Sách tham khảo", title: "Chiến tranh thương mại hay mâu thuẫn giai cấp", link: "https://stbook.vn/category/nhung-van-de-quoc-te/21" },
+            { id: 1101, category: "Sách tham khảo", title: "Đẩy mạnh công cuộc xây dựng và phát triển đất nước (Nguyễn Minh Triết)", link: "https://stbook.vn/category/quoc-phong-an-ninh-doi-ngoai/22" },
+            { id: 1102, category: "Sách tham khảo", title: "Chủ động phòng ngừa, ứng phó thách thức an ninh phi truyền thống", link: "https://stbook.vn/category/quoc-phong-an-ninh-doi-ngoai/22" },
+            { id: 1103, category: "Sách tham khảo", title: "65 năm vun đắp tình hữu nghị thủy chung Việt Nam - Cuba", link: "https://stbook.vn/category/quoc-phong-an-ninh-doi-ngoai/22" },
+            { id: 1104, category: "Sách tham khảo", title: "Nhiệm vụ bảo vệ Tổ quốc trong bối cảnh toàn cầu hóa", link: "https://stbook.vn/category/quoc-phong-an-ninh-doi-ngoai/22" },
+            { id: 1105, category: "Sách tham khảo", title: "Quyền lực Mỹ trong quan hệ ngoại giao", link: "https://stbook.vn/category/quoc-phong-an-ninh-doi-ngoai/22" },
+            { id: 1106, category: "Sách tham khảo", title: "Công tác thông tin đối ngoại hướng tới 2030, tầm nhìn 2045", link: "https://stbook.vn/category/quoc-phong-an-ninh-doi-ngoai/22" },
+            { id: 1107, category: "Sách tham khảo", title: "Ngoại giao kinh tế và vấn đề hội nhập quốc tế", link: "https://stbook.vn/category/quoc-phong-an-ninh-doi-ngoai/22" },
+            { id: 1108, category: "Sách tham khảo", title: "Hội nghị quân sự Trung Giã và Hiệp định Giơnevơ 1954", link: "https://stbook.vn/category/quoc-phong-an-ninh-doi-ngoai/22" },
+            { id: 1109, category: "Sách tham khảo", title: "Xây dựng “Thế trận lòng dân” bảo vệ Tổ quốc", link: "https://stbook.vn/category/quoc-phong-an-ninh-doi-ngoai/22" },
+            { id: 1110, category: "Sách tham khảo", title: "Hiệp định Paris 1973 qua tài liệu chính quyền Sài Gòn (Tập 1 & 2)", link: "https://stbook.vn/category/quoc-phong-an-ninh-doi-ngoai/22" },
+            { id: 1111, category: "Sách tham khảo", title: "Hội nghị Genève về Đông Dương năm 1954", link: "https://stbook.vn/category/quoc-phong-an-ninh-doi-ngoai/22" },
+            
+            // 7. PHIM - PHÓNG SỰ (Main Category)
+            // Group: PHIM (Documentaries)
+            { id: 2016, category: "Phim - Phóng sự", group: "Phim", title: "30 năm Liên Xô sụp đổ - Bài 1: Mất Đảng tất yếu dẫn đến mất nước", link: "https://media.qdnd.vn/phong-chong-tu-dien-bien-tu-chuyen-hoa/30-nam-lien-xo-sup-do-va-bai-hoc-cua-chung-ta-phan-1-mat-dang-tat-yeu-dan-den-mat-nuoc-53258" },
+            { id: 2017, category: "Phim - Phóng sự", group: "Phim", title: "30 năm Liên Xô sụp đổ - Bài 2: Khi “then chốt của then chốt” bị…gài chốt", link: "https://media.qdnd.vn/long-form/30-nam-lien-xo-sup-do-va-bai-hoc-cho-viet-nam-bai-2-khi-then-chot-cua-then-chot-bigai-chot-53216" },
+            { id: 2018, category: "Phim - Phóng sự", group: "Phim", title: "30 năm Liên Xô sụp đổ - Bài 3: Sai lầm trong cải tổ và tự diễn biến tư tưởng", link: "https://media.qdnd.vn/phong-chong-tu-dien-bien-tu-chuyen-hoa/30-nam-lien-xo-sup-do-va-bai-hoc-cua-chung-ta-phan-3-sai-lam-trong-cai-to-va-tu-dien-bien-ve-tu-tuong-53278" },
+            { id: 2019, category: "Phim - Phóng sự", group: "Phim", title: "30 năm Liên Xô sụp đổ - Bài 4: Truyền thông phương Tây và diễn biến hòa bình", link: "https://media.qdnd.vn/phong-chong-tu-dien-bien-tu-chuyen-hoa/30-nam-lien-xo-sup-do-va-bai-hoc-cua-chung-ta-phan-4-truyen-thong-phuong-tay-va-don-tan-cong-dien-bien-hoa-binh-53290" },
+            { id: 2020, category: "Phim - Phóng sự", group: "Phim", title: "30 năm Liên Xô sụp đổ - Bài 5: “Phi chính trị hóa” Quân đội", link: "https://media.qdnd.vn/phong-chong-tu-dien-bien-tu-chuyen-hoa/30-nam-lien-xo-sup-do-va-bai-hoc-cua-chung-ta-phan-5-phi-chinh-tri-hoa-quan-doi-cai-chet-da-duoc-bao-truoc-53306" },
+            { id: 1201, category: "Phim - Phóng sự", group: "Phim", title: "Văn kiện Đại hội đại biểu toàn quốc lần thứ XIII (Multimedia)", link: "https://stbook.vn/category/sach-da-phuong-tien-multimedia-/30" },
+            { id: 1202, category: "Phim - Phóng sự", group: "Phim", title: "Việt Nam thời đại Hồ Chí Minh - Biên niên sử truyền hình (Phần 1)", link: "https://stbook.vn/category/sach-da-phuong-tien-multimedia-/30" },
+            { id: 1203, category: "Phim - Phóng sự", group: "Phim", title: "Việt Nam thời đại Hồ Chí Minh - Biên niên sử truyền hình (Phần 2)", link: "https://stbook.vn/category/sach-da-phuong-tien-multimedia-/30" },
+            { id: 1204, category: "Phim - Phóng sự", group: "Phim", title: "Việt Nam thời đại Hồ Chí Minh - Biên niên sử truyền hình (Phần 3)", link: "https://stbook.vn/category/sach-da-phuong-tien-multimedia-/30" },
+            { id: 1205, category: "Phim - Phóng sự", group: "Phim", title: "Việt Nam thời đại Hồ Chí Minh - Biên niên sử truyền hình (Phần 4)", link: "https://stbook.vn/category/sach-da-phuong-tien-multimedia-/30" },
+            { id: 1206, category: "Phim - Phóng sự", group: "Phim", title: "Việt Nam thời đại Hồ Chí Minh - Biên niên sử truyền hình (Phần 5)", link: "https://stbook.vn/category/sach-da-phuong-tien-multimedia-/30" },
+
+            // Group: PHÓNG SỰ (Reportages)
+            { id: 2001, category: "Phim - Phóng sự", group: "Phóng sự", title: "Ám ảnh về những cái Tết nơi xứ người", link: "https://antv.gov.vn/video/goc-nhin-su-that-59/am-anh-noi-xu-nguoi-7DFE52147.html" },
+            { id: 2002, category: "Phim - Phóng sự", group: "Phóng sự", title: "Quyền của phạm nhân", link: "https://antv.gov.vn/video/goc-nhin-su-that/quyen-cua-pham-nhan-282482.html" },
+            { id: 2003, category: "Phim - Phóng sự", group: "Phóng sự", title: "Lại là trò bịa đặt, xuyên tạc về tự do, nhân quyền ở Việt Nam", link: "https://antv.gov.vn/video/goc-nhin-su-that/lai-la-tro-bia-dat-xuyen-tac-ve-tu-do-nhan-quyen-o-viet-nam-259737.html" },
+            { id: 2004, category: "Phim - Phóng sự", group: "Phóng sự", title: "Dân chủ trong bầu cử – Tiếng nói người trong cuộc", link: "https://antv.gov.vn/video/goc-nhin-su-that/dan-chu-trong-bau-cu-tieng-noi-nguoi-trong-cuoc-255843.html" },
+            { id: 2005, category: "Phim - Phóng sự", group: "Phóng sự", title: "Nhận diện thủ đoạn lợi dụng góp ý vào văn kiện ĐH XIII để chống phá", link: "https://antv.gov.vn/video/goc-nhin-su-that/nhan-dien-thu-doan-loi-dung-gop-y-vao-cac-van-kien-dai-hoi-xiii-de-chong-pha-246541.html" },
+            { id: 2006, category: "Phim - Phóng sự", group: "Phóng sự", title: "Xin đừng “té nước theo mưa”", link: "https://antv.gov.vn/video/goc-nhin-su-that/xin-dung-te-nuoc-theo-mua-232969.html" },
+            { id: 2007, category: "Phim - Phóng sự", group: "Phóng sự", title: "Chống những luận điệu xuyên tạc về Công đoàn Việt Nam", link: "https://antv.gov.vn/video/goc-nhin-su-that/chong-nhung-luan-dieu-xuyen-tac-ve-cong-doan-viet-nam-213157.html" },
+            { id: 2008, category: "Phim - Phóng sự", group: "Phóng sự", title: "Mù quáng và thức tỉnh (Về các đối tượng tin theo lời xúi giục vượt biên)", link: "https://antv.gov.vn/video/goc-nhin-su-that/mu-quang-va-thuc-tinh-292550.html" },
+            { id: 2009, category: "Phim - Phóng sự", group: "Phóng sự", title: "Đằng sau sự vu cáo Việt Nam đàn áp tôn giáo và sự thật về “Sơn Linh Tự”", link: "https://antv.gov.vn/video/goc-nhin-su-that-59/dang-sau-su-vu-cao-viet-nam-dan-ap-ton-giao-va-su-that-ve-cai-goi-la-son-linh-tu--227FAAE7E.html" },
+            { id: 2010, category: "Phim - Phóng sự", group: "Phóng sự", title: "Bản chất cái gọi là “xã hội dân sự” ở Việt Nam", link: "https://antv.gov.vn/tin-tuc/don-xem/ban-chat-cai-goi-la-xa-hoi-dan-su-o-viet-nam-313738.html" },
+            { id: 2011, category: "Phim - Phóng sự", group: "Phóng sự", title: "Sự thật về cái gọi là “Tù nhân lương tâm”", link: "https://antv.gov.vn/xa-hoi-4/coi-toi-pham-la-tu-nhan-luong-tam-su-danh-trao-nguy-hiem-2A62FC3AA.html" },
+            { id: 2012, category: "Phim - Phóng sự", group: "Phóng sự", title: "Vạch trần bộ mặt thật của tổ chức khủng bố Việt Tân", link: "https://antv.gov.vn/other/nhung-tro-he-cua-viet-tan-C64FF275B.html" },
+            { id: 2013, category: "Phim - Phóng sự", group: "Phóng sự", title: "Cảnh giác với luận điệu “Công đoàn độc lập”", link: "https://antv.gov.vn/xa-hoi-4/canh-giac-truoc-vo-boc-cong-doan-doc-lap--03D5736CD.html" },
+            { id: 2014, category: "Phim - Phóng sự", group: "Phóng sự", title: "Sự thật về tự do tín ngưỡng, tôn giáo tại Việt Nam", link: "https://antv.gov.vn/other/tu-do-ton-giao-tin-nguong-cho-pham-nhan-o-viet-nam--C4D170112.html" },
+            { id: 2015, category: "Phim - Phóng sự", group: "Phóng sự", title: "Sự thật về tổ chức “Chính phủ quốc gia Việt Nam lâm thời”", link: "https://antv.gov.vn/xa-hoi-4/dau-tranh-vach-tran-am-muu-thu-doan-lua-bip-cua-to-chuc-chinh-phu-quoc-gia-viet-nam-lam-thoi--1448B0309.html" },
+            { id: 2101, category: "Phim - Phóng sự", group: "Phóng sự", title: "Nhận diện âm mưu lợi dụng GenZ kích động biểu tình", link: "https://antv.gov.vn/tag/GenZ/articles.html" },
+            { id: 2102, category: "Phim - Phóng sự", group: "Phóng sự", title: "Cảnh giác với luận điệu 'Công đoàn độc lập'", link: "https://antv.gov.vn/xa-hoi-4/canh-giac-truoc-vo-boc-cong-doan-doc-lap--03D5736CD.html" },
+            { id: 2103, category: "Phim - Phóng sự", group: "Phóng sự", title: "Ảo vọng 'Nhà nước Mông' và những hệ lụy", link: "https://antv.gov.vn/tag/dan-toc/articles.html" },
+            { id: 2104, category: "Phim - Phóng sự", group: "Phóng sự", title: "Lợi dụng vấn đề dân tộc để kích động ly khai", link: "https://antv.gov.vn/tag/dan-toc/articles.html" },
+            { id: 2105, category: "Phim - Phóng sự", group: "Phóng sự", title: "Sự thật về tự do tín ngưỡng, tôn giáo tại Việt Nam", link: "https://antv.gov.vn/other/tu-do-ton-giao-tin-nguong-cho-pham-nhan-o-viet-nam--C4D170112.html" },
+            { id: 2106, category: "Phim - Phóng sự", group: "Phóng sự", title: "Bóc trần thủ đoạn lợi dụng từ thiện để trục lợi chính trị", link: "https://antv.gov.vn/tag/tu-thien/articles.html" },
+            { id: 2107, category: "Phim - Phóng sự", group: "Phóng sự", title: "Nhận diện âm mưu 'Diễn biến hòa bình' trên không gian mạng", link: "https://antv.gov.vn/tag/dien-bien-hoa-binh/articles.html" },
+            { id: 2108, category: "Phim - Phóng sự", group: "Phóng sự", title: "Khi những kẻ chống phá khoác áo 'Nhà dân chủ'", link: "https://antv.gov.vn/tag/nha-dan-chu/articles.html" },
+            { id: 2109, category: "Phim - Phóng sự", group: "Phóng sự", title: "Sự thật về các bản báo cáo nhân quyền thiếu khách quan", link: "https://antv.gov.vn/tag/nhan-quyen/articles.html" },
+            { id: 2110, category: "Phim - Phóng sự", group: "Phóng sự", title: "Cảnh giác trước các luồng thông tin xấu độc trên mạng xã hội", link: "https://antv.gov.vn/tag/thong-tin-xau-doc/articles.html" },
+            { id: 2111, category: "Phim - Phóng sự", group: "Phóng sự", title: "Vạch trần âm mưu bôi nhọ lãnh đạo Đảng và Nhà nước", link: "https://antv.gov.vn/tag/boi-nho/articles.html" },
+            { id: 2112, category: "Phim - Phóng sự", group: "Phóng sự", title: "Không thể phủ nhận thành quả quyền con người ở Việt Nam", link: "https://antv.gov.vn/tag/nhan-quyen/articles.html" },
+            { id: 2113, category: "Phim - Phóng sự", group: "Phóng sự", title: "Thủ đoạn lôi kéo giới trẻ của các thế lực thù địch", link: "https://antv.gov.vn/tag/GenZ/articles.html" },
+            { id: 2114, category: "Phim - Phóng sự", group: "Phóng sự", title: "Núp bóng 'Bảo vệ môi trường' để kích động gây rối", link: "https://antv.gov.vn/tag/bao-ve-moi-truong/articles.html" },
+            { id: 2115, category: "Phim - Phóng sự", group: "Phóng sự", title: "Sự thật về tổ chức 'Chính phủ quốc gia Việt Nam lâm thời'", link: "https://antv.gov.vn/xa-hoi-4/dau-tranh-vach-tran-am-muu-thu-doan-lua-bip-cua-to-chuc-chinh-phu-quoc-gia-viet-nam-lam-thoi--1448B0309.html" },
+            { id: 2116, category: "Phim - Phóng sự", group: "Phóng sự", title: "Cảnh giác với bẫy 'Việc nhẹ lương cao' và mua bán người", link: "https://antv.gov.vn/tag/mua-ban-nguoi/articles.html" },
+            { id: 2117, category: "Phim - Phóng sự", group: "Phóng sự", title: "Đấu tranh với tà đạo 'Hội thánh của Đức Chúa Trời Mẹ'", link: "https://antv.gov.vn/tag/ta-dao/articles.html" },
+            { id: 2118, category: "Phim - Phóng sự", group: "Phóng sự", title: "Lật tẩy chiêu trò xuyên tạc công tác phòng chống tham nhũng", link: "https://antv.gov.vn/tag/phong-chong-tham-nhung/articles.html" },
+            { id: 2119, category: "Phim - Phóng sự", group: "Phóng sự", title: "Bản chất của những lời kêu gọi 'Biểu tình ôn hòa'", link: "https://antv.gov.vn/tag/bieu-tinh/articles.html" },
+            { id: 2120, category: "Phim - Phóng sự", group: "Phóng sự", title: "Sự thật về vụ việc gây rối tại Đồng Tâm", link: "https://antv.gov.vn/tag/dong-tam/articles.html" },
+            { id: 2121, category: "Phim - Phóng sự", group: "Phóng sự", title: "Vạch trần luận điệu đòi 'Tam quyền phân lập'", link: "https://antv.gov.vn/tag/tam-quyen-phan-lap/articles.html" },
+            { id: 2122, category: "Phim - Phóng sự", group: "Phóng sự", title: "Cảnh giác với tội phạm công nghệ cao và lừa đảo trực tuyến", link: "https://antv.gov.vn/tag/toi-pham-cong-nghe-cao/articles.html" },
+            { id: 2123, category: "Phim - Phóng sự", group: "Phóng sự", title: "Bảo vệ nền tảng tư tưởng của Đảng trên mặt trận văn hóa", link: "https://antv.gov.vn/tag/nen-tang-tu-tuong/articles.html" },
+            { id: 2124, category: "Phim - Phóng sự", group: "Phóng sự", title: "Ngăn chặn tà đạo xâm nhập vào vùng đồng bào dân tộc thiểu số", link: "https://antv.gov.vn/tag/ta-dao/articles.html" },
+            { id: 2125, category: "Phim - Phóng sự", group: "Phóng sự", title: "Sự thật về các giải thưởng nhân quyền quốc tế trá hình", link: "https://antv.gov.vn/tag/nhan-quyen/articles.html" },
+            { id: 2201, category: "Phim - Phóng sự", group: "Phóng sự", title: "Vạch trần âm mưu lợi dụng sự cố Formosa để kích động", link: "https://antv.gov.vn/tag/formosa/articles.html" },
+            { id: 2202, category: "Phim - Phóng sự", group: "Phóng sự", title: "Chân dung những kẻ “buôn dân chủ, bán nhân quyền”", link: "https://antv.gov.vn/tag/nhan-quyen/articles.html" },
+            { id: 2203, category: "Phim - Phóng sự", group: "Phóng sự", title: "Cảnh giác với các hội nhóm phản động trên Facebook", link: "https://antv.gov.vn/tag/hoi-nhom-phan-dong/articles.html" },
+            { id: 2204, category: "Phim - Phóng sự", group: "Phóng sự", title: "Đấu tranh phản bác quan điểm sai trái về Luật An ninh mạng", link: "https://antv.gov.vn/tag/luat-an-ninh-mang/articles.html" },
+            { id: 2205, category: "Phim - Phóng sự", group: "Phóng sự", title: "Sự thật về “Tự do báo chí” theo tiêu chuẩn phương Tây", link: "https://antv.gov.vn/tag/tu-do-bao-chi/articles.html" },
+            { id: 2206, category: "Phim - Phóng sự", group: "Phóng sự", title: "Xuyên tạc hình ảnh Công an nhân dân", link: "https://antv.gov.vn/tag/xuyen-tac-cong-an/articles.html" },
+            { id: 2207, category: "Phim - Phóng sự", group: "Phóng sự", title: "Cảnh giác trước thủ đoạn rửa tiền của tội phạm xuyên quốc gia", link: "https://antv.gov.vn/tag/rua-tien/articles.html" },
+            { id: 2208, category: "Phim - Phóng sự", group: "Phóng sự", title: "Bóc trần hoạt động của tổ chức “Triều đại Việt”", link: "https://antv.gov.vn/tag/trieu-dai-viet/articles.html" },
+            { id: 2209, category: "Phim - Phóng sự", group: "Phóng sự", title: "An ninh phi truyền thống và những thách thức", link: "https://antv.gov.vn/tag/an-ninh-phi-truyen-thong/articles.html" },
+            { id: 2210, category: "Phim - Phóng sự", group: "Phóng sự", title: "Không để kẻ xấu lợi dụng lòng yêu nước", link: "https://antv.gov.vn/tag/long-yeu-nuoc/articles.html" },
+            { id: 2211, category: "Phim - Phóng sự", group: "Phóng sự", title: "Sự thật về các vụ án oan sai bị xuyên tạc", link: "https://antv.gov.vn/tag/an-sai/articles.html" },
+            { id: 2212, category: "Phim - Phóng sự", group: "Phóng sự", title: "Vai trò quần chúng trong phong trào Toàn dân bảo vệ An ninh Tổ quốc", link: "https://antv.gov.vn/tag/toan-dan-bao-ve-an-ninh/articles.html" },
+            { id: 2213, category: "Phim - Phóng sự", group: "Phóng sự", title: "Đấu tranh với các luận điệu hạ thấp vai trò lãnh đạo của Đảng", link: "https://antv.gov.vn/tag/ha-thap-vai-tro-lanh-dao/articles.html" },
+            { id: 2214, category: "Phim - Phóng sự", group: "Phóng sự", title: "Tổng hợp chuyên mục Video – Góc nhìn sự thật (ANTV)", link: "https://antv.gov.vn/video.html" },
+            { id: 2215, category: "Phim - Phóng sự", group: "Phóng sự", title: "Góc chiếu thẳng: Phản bác luận điệu xuyên tạc quyền tự do báo chí", link: "https://media.qdnd.vn/phong-chong-dien-bien-hoa-binh/goc-chieu-thang-phan-bac-am-muu-thu-doan-xuyen-tac-quyen-tu-do-bao-chi-o-viet-nam-59777" },
+            { id: 2216, category: "Phim - Phóng sự", group: "Phóng sự", title: "Góc chiếu thẳng: Đảng ta là đảng cầm quyền - Sự thật không thể phủ nhận", link: "https://media.qdnd.vn/bao-ve-nen-tang-tu-tuong-cua-dang/goc-chieu-thang-dang-ta-la-dang-cam-quyen-58987" },
+            { id: 2217, category: "Phim - Phóng sự", group: "Phóng sự", title: "Góc chiếu thẳng: Thông tin giả tấn công - Không còn là cảnh báo", link: "https://media.qdnd.vn/bao-ve-nen-tang-tu-tuong-cua-dang/goc-chieu-thangthong-tin-gia-tan-cong-khong-con-la-canh-bao-63155" },
+            { id: 2218, category: "Phim - Phóng sự", group: "Phóng sự", title: "Góc chiếu thẳng: Luật Thực hiện dân chủ ở cơ sở đập tan luận điệu xuyên tạc", link: "https://media.qdnd.vn/bao-ve-nen-tang-tu-tuong-cua-dang/goc-chieu-thang-luat-thuc-hien-dan-chu-o-co-so-ra-doi-dap-tan-moi-luan-dieu-xuyen-tac-cua-cac-the-luc-thu-dich-ve-van-de-dan-chu-o-co-so-57841" },
+            { id: 2219, category: "Phim - Phóng sự", group: "Phóng sự", title: "Góc chiếu thẳng: Niềm tin - vũ khí sắc bén xây dựng thế trận lòng dân", link: "https://media.qdnd.vn/bao-ve-nen-tang-tu-tuong-cua-dang/goc-chieu-thang-niem-tin-vu-khi-sac-ben-de-xay-dung-the-tran-long-dan-o-quan-khu-2-62190" },
+            { id: 2220, category: "Phim - Phóng sự", group: "Phóng sự", title: "Góc chiếu thẳng: Niềm tự hào về Chiến thắng 30-4", link: "https://media.qdnd.vn/bao-ve-nen-tang-tu-tuong-cua-dang/goc-chieu-thang-niem-tu-hao-ve-chien-thang-30-4-61815" },
+            { id: 2221, category: "Phim - Phóng sự", group: "Phóng sự", title: "Góc chiếu thẳng: Xây dựng niềm tin của thế hệ trẻ trong thời kỳ mới", link: "https://media.qdnd.vn/bao-ve-nen-tang-tu-tuong-cua-dang/goc-chieu-thang-xay-dung-niem-tin-cua-the-he-tre-trong-thoi-ky-moi-61627" },
+            { id: 2222, category: "Phim - Phóng sự", group: "Phóng sự", title: "Góc chiếu thẳng: Bảo vệ biển đảo bằng biện pháp hòa bình (Phần 2)", link: "https://media.qdnd.vn/bao-ve-nen-tang-tu-tuong-cua-dang/goc-chieu-thang-bao-ve-bien-dao-bang-bien-phap-hoa-binh-_-phan-2-viet-nam-bao-ve-chu-quyen-bien-dao-bang-chinh-sach-quoc-phong-dung-dan-61346" },
+            { id: 2223, category: "Phim - Phóng sự", group: "Phóng sự", title: "Góc chiếu thẳng: Điều chỉnh địa giới hành chính là khát vọng đổi mới", link: "https://media.qdnd.vn/bao-ve-nen-tang-tu-tuong-cua-dang/goc-chieu-thang-dieu-chinh-dia-gioi-hanh-chinh-la-khat-vong-doi-moi-vi-nhan-dan-62282" },
+            { id: 2224, category: "Phim - Phóng sự", group: "Phóng sự", title: "Góc chiếu thẳng: Quân đội luôn là trường học lớn", link: "https://media.qdnd.vn/bao-ve-nen-tang-tu-tuong-cua-dang/goc-chieu-thang-quan-doi-luon-la-truong-hoc-lon-59374" },
+            { id: 8169, category: "Sách tham khảo", title: "Tài liệu Tham khảo số 169", link: "https://drive.google.com/file/d/1NdfSiIvetHWk8uT_G21PkTvEhlkawJnN/view?usp=drive_link" },
+            { id: 8170, category: "Sách tham khảo", title: "Tài liệu Tham khảo số 170", link: "https://drive.google.com/file/d/1mnI9EZI4w0n5XUyTj8DjvcCEuexWhZqa/view?usp=drive_link" },
+
+            // --- CẬP NHẬT MỚI: DANH SÁCH 3 TRÒ CHƠI ---
+            { id: 9001, category: "Trò chơi", title: "TRÒ CHƠI LỊCH SỬ ĐẢNG", link: "https://sites.google.com/view/trochoilyluan2/trang-ch%E1%BB%A7" },
+            { id: 9002, category: "Trò chơi", title: "TRÒ CHƠI LÝ LUẬN CHÍNH TRỊ", link: "https://sites.google.com/view/trochoilyluan1/trang-ch%E1%BB%A7" },
+            { id: 9003, category: "Trò chơi", title: "TRÒ CHƠI VÒNG QUAY TRI THỨC", link: "https://sites.google.com/view/trochoilyluan3/trang-ch%E1%BB%A7" },
+
+            // 9. ĐỀ TÀI - KỶ YẾU
+            { id: 4001, category: "Đề tài - Kỷ yếu", title: "HỆ THỐNG ĐỀ TÀI NGHIÊN CỨU KHOA HỌC - SỨ MỆNH CỦA GIAI CẤP CÔNG NHÂN", link: "https://drive.google.com/drive/folders/1CCa62O_83EOruCadcuVSbDj4mlcxxaBt?usp=drive_link" },
+            { id: 4002, category: "Đề tài - Kỷ yếu", title: "HỆ THỐNG ĐỀ TÀI NGHIÊN CỨU KHOA HỌC - DÂN TỘC - TÔN GIÁO", link: "https://drive.google.com/drive/folders/1muEJW2R6HBojNsZjXfe0vlQQEDCcMBq0?usp=drive_link" },
+            { id: 4003, category: "Đề tài - Kỷ yếu", title: "KỶ YẾU", link: "https://drive.google.com/drive/folders/1AGAcfEFm7aa5Xtr2j3v_NTYuH2SPAJI2?usp=sharing" },
+            
+            // 10. BẢO TÀNG 3D
+            { id: 5001, category: "Bảo tàng 3D", title: "Bảo tàng Hồ Chí Minh", link: "https://baotang.hochiminh.vn/" },
+            { id: 5002, category: "Bảo tàng 3D", title: "Khu di tích Phủ Chủ tịch", link: "http://phuchutich.egal.vn/" },
+            { id: 5003, category: "Bảo tàng 3D", title: "Khu di tích Làng Sen Kim Liên", link: "https://langsenkimlien.hochiminh.vn/" },
+            { id: 5004, category: "Bảo tàng 3D", title: "Khu di tích Bến Nhà Rồng", link: "https://bennharong.hochiminh.vn/" },
+            { id: 5005, category: "Bảo tàng 3D", title: "Khu di tích Pác Bó", link: "https://pacbo.hochiminh.vn/" },
+            { id: 5006, category: "Bảo tàng 3D", title: "Khu di tích ATK Định Hóa", link: "https://atkdinhhoa.hochiminh.vn/" },
+            { id: 5007, category: "Bảo tàng 3D", title: "Khu di tích Đá Chông (K9)", link: "https://k9dachong.hochiminh.vn/" },
+            { id: 5008, category: "Bảo tàng 3D", title: "Khu di tích Tân Trào – Tuyên Quang", link: "https://tantrao.hochiminh.vn/" },
+            { id: 5009, category: "Bảo tàng 3D", title: "Bảo tàng Hồ Chí Minh – Chi nhánh Quân khu 5", link: "https://baotanghcmqk5.hochiminh.vn/" },
+            { id: 5010, category: "Bảo tàng 3D", title: "Di tích Nhà số 5 Châu Văn Liêm", link: "https://so5chauvanliem.hochiminh.vn/" },
+            { id: 5011, category: "Bảo tàng 3D", title: "Di tích Lịch sử 48 Hàng Ngang", link: "https://48hangngang.hochiminh.vn/" },
+            { id: 5012, category: "Bảo tàng 3D", title: "Di tích Nhà lưu niệm Bác Hồ ở Vạn Phúc", link: "https://vanphuc.hochiminh.vn/" },
+            { id: 5013, category: "Bảo tàng 3D", title: "Bảo tàng Hồ Chí Minh – Thừa Thiên Huế", link: "https://baotanghcmtthue.hochiminh.vn/" },
+            { id: 5014, category: "Bảo tàng 3D", title: "Tượng đài Nguyễn Sinh Sắc – Nguyễn Tất Thành tại Bình Định", link: "https://binhdinh.hochiminh.vn/" },
+            { id: 5015, category: "Bảo tàng 3D", title: "Khu di tích Nguyễn Sinh Sắc – Nơi an nghỉ của Cụ Phó bảng", link: "https://dongthap.hochiminh.vn/" },
+            { id: 5016, category: "Bảo tàng 3D", title: "Bảo tàng Hồ Chí Minh – Chi nhánh ĐBSCL", link: "https://cantho.hochiminh.vn/" },
+            { id: 5017, category: "Bảo tàng 3D", title: "Khu tưởng niệm Chủ tịch Hồ Chí Minh tại TP Cà Mau", link: "https://camau.hochiminh.vn/" },
+            { id: 5018, category: "Bảo tàng 3D", title: "Trung ương Cục miền Nam", link: "https://trunguongcuc.hochiminh.vn/" },
+            { id: 5019, category: "Bảo tàng 3D", title: "Bảo tàng Hồ Chí Minh – Chi nhánh Bình Thuận", link: "https://binhthuan.hochiminh.vn/" },
+            { id: 5020, category: "Bảo tàng 3D", title: "Căn cứ Bộ Chỉ huy Miền", link: "https://bochihuymien.hochiminh.vn/" },
+            { id: 5021, category: "Bảo tàng 3D", title: "Quảng trường Tây Bắc và Tượng đài Bác Hồ", link: "https://taybac.hochiminh.vn/" },
+            { id: 5022, category: "Bảo tàng 3D", title: "Khu ủy miền Đông Nam Bộ", link: "https://khuuymiendong.hochiminh.vn/" },
+            { id: 5023, category: "Bảo tàng 3D", title: "Trung ương Cục miền Nam (1961 – 1962)", link: "https://tucucmiennam.hochiminh.vn/" },
+            { id: 5024, category: "Bảo tàng 3D", title: "Bảo tàng Lịch sử Quốc gia", link: "https://3dbooth.egal.vn/baotanglichsuquocgia/" },
+            { id: 5025, category: "Bảo tàng 3D", title: "Bảo tàng Phụ nữ Nam Bộ", link: "https://smartmuseum3d.baotangphunu.com/" },
+            { id: 5026, category: "Bảo tàng 3D", title: "Bảo tàng Lịch sử TP. Hồ Chí Minh", link: "https://sanpham.starglobal3d.com/smart-museum-3d/bao-tang-lich-su/?startscene=scene_khuon_vien_bao_tang_lich_su&startactions=lookat(-20.08,29.04,134.87,0,0);" },
+            // THÊM MỚI: THƯ VIỆN SỐ (External Links)
+            { id: 6001, category: "Thư viện số", title: "Thư viện Quốc gia", link: "https://nlv.gov.vn", image: "https://placehold.co/600x400/991b1b/ffffff?text=Thu+Vien+Quoc+Gia" },
+            { id: 6002, category: "Thư viện số", title: "Thư viện Khoa học tổng hợp TPHCM", link: "https://phucvu.thuvientphcm.gov.vn/Home", image: "https://placehold.co/600x400/991b1b/ffffff?text=Thu+Vien+KH+Tong+Hop+TPHCM" },
+            { id: 6003, category: "Thư viện số", title: "Thư viện Bộ Giáo dục và Đào tạo", link: "https://luanvan.moet.gov.vn/?page=1.4&lv=24", image: "https://placehold.co/600x400/991b1b/ffffff?text=Thu+Vien+Bo+GD+DT" },
+            { id: 6004, category: "Thư viện số", title: "Thư viện tạp chí khoa học - Bộ KH&CN", link: "https://sti.vista.gov.vn/publication.html", image: "https://placehold.co/600x400/991b1b/ffffff?text=Thu+Vien+Tap+Chi+KH" },
+            { id: 6005, category: "Thư viện số", title: "Thư viện đề tài khoa học - Bộ KH&CN", link: "https://sti.vista.gov.vn/projects.html", image: "https://placehold.co/600x400/991b1b/ffffff?text=Thu+Vien+De+Tai+KH" },
+            { id: 6006, category: "Thư viện số", title: "Tạp chí Khoa học Việt Nam trực tuyến", link: "https://vjol.info.vn/index.php/", image: "https://placehold.co/600x400/991b1b/ffffff?text=Tap+Chi+KH+VN+Truc+Tuyen" },
+            { id: 6007, category: "Thư viện số", title: "Thư viện Trung tâm ĐHQG TPHCM", link: "https://www.vnulib.edu.vn/", image: "https://placehold.co/600x400/991b1b/ffffff?text=Thu+Vien+TT+DHQG+TPHCM" },
+            { id: 6008, category: "Thư viện số", title: "Thư viện pháp luật Việt Nam", link: "http://thuvienphapluat.vn/", image: "https://placehold.co/600x400/991b1b/ffffff?text=Thu+Vien+Phap+Luat+VN" }
+        ];
+
+    // --- 3. QUẢN LÝ TRẠNG THÁI ---
+    const state = {
+        currentCategory: "all",
+        searchQuery: "",
+        categories: [],
+        books: libraryData,
+        currentView: "home",
+        expandedMenus: {}
+    };
+
+    // --- 4. HÀM XỬ LÝ SỐ LƯỢT TRUY CẬP (LOCAL STORAGE) ---
+    function initVisitorCount() {
+        // Lấy số hiện tại từ bộ nhớ trình duyệt
+        let count = localStorage.getItem(STORAGE_KEY);
+        
+        // Nếu chưa có (lần đầu chạy), thiết lập số ban đầu
+        if (!count) {
+            count = BASE_COUNT;
+            localStorage.setItem(STORAGE_KEY, count);
+        }
+        
+        // Hiển thị ra màn hình
+        updateDisplay(count);
+    }
+
+    function incrementVisitorCount() {
+        // Lấy số cũ ra
+        let count = parseInt(localStorage.getItem(STORAGE_KEY));
+        if (!count) count = BASE_COUNT;
+
+        // Cộng thêm 1
+        count = count + 1;
+
+        // Lưu lại vào bộ nhớ
+        localStorage.setItem(STORAGE_KEY, count);
+
+        // Cập nhật hiển thị
+        updateDisplay(count);
+    }
+
+    function updateDisplay(num) {
+        const el = document.getElementById('visitorCount');
+        if (el) {
+            // Định dạng số có dấu chấm (VD: 1.269)
+            el.innerText = parseInt(num).toLocaleString('vi-VN');
+        }
+    }
+
+    // --- 5. KHỞI CHẠY ỨNG DỤNG ---
+    document.addEventListener('DOMContentLoaded', () => {
+        initVisitorCount(); // Hiển thị số lượt ngay lập tức
+        extractCategories();
+        renderNavigation();
+        renderBooks();
+        renderStatsChart();
+        setupEventListeners();
+
+        // Kiểm tra nếu đã đăng nhập trước đó
+        if (sessionStorage.getItem('stbook_auth') === 'true') {
+            const overlay = document.getElementById('loginOverlay');
+            if (overlay) overlay.style.display = 'none';
+        }
+    });
+
+    // --- 6. HÀM ĐĂNG NHẬP & ĐĂNG XUẤT ---
+    window.attemptLogin = function() {
+        const passInput = document.getElementById('passwordInput');
+        const errorMsg = document.getElementById('loginError');
+        const overlay = document.getElementById('loginOverlay');
+
+        if (passInput.value === APP_PASSWORD) {
+            // Đăng nhập thành công
+            sessionStorage.setItem('stbook_auth', 'true');
+            
+            // TĂNG SỐ LƯỢT NGAY KHI ĐĂNG NHẬP THÀNH CÔNG
+            incrementVisitorCount();
+
+            // Ẩn màn hình đăng nhập
+            overlay.classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => { overlay.style.display = 'none'; }, 500);
+        } else {
+            // Sai mật khẩu
+            if (errorMsg) errorMsg.classList.remove('hidden');
+            passInput.classList.add('border-red-500', 'ring-2', 'ring-red-500');
+            setTimeout(() => passInput.classList.remove('border-red-500', 'ring-2', 'ring-red-500'), 1000);
+        }
+    };
+
+    window.logout = function() {
+        sessionStorage.removeItem('stbook_auth');
+        location.reload(); // Tải lại trang để hiện lại bảng đăng nhập
+    };
+
+    window.handleLoginKey = function(e) {
+        if (e.key === 'Enter') window.attemptLogin();
+    };
+
+    // --- 7. CÁC HÀM GIAO DIỆN (GIỮ NGUYÊN LOGIC CŨ) ---
+    
+    // Hàm tạo danh mục
+    function extractCategories() {
+        const preferredOrder = [
+            "Kinh điển", "Chủ tịch Hồ Chí Minh", "Sách tham khảo",
+            "Đề tài - Kỷ yếu", "Văn kiện số", "Văn bản số", "Bài giảng số", 
+            "Tư liệu văn kiện Đảng", "Phim - Phóng sự",
+            "Bảo tàng 3D", "Thư viện số", "Trò chơi"
+        ];
+        const cats = new Set(libraryData.map(b => b.category));
+        ["Bảo tàng 3D", "Thư viện số", "Trò chơi"].forEach(c => cats.delete(c));
+        ["Văn kiện số", "Văn bản số", "Bài giảng số", "Tư liệu văn kiện Đảng", "Sách tham khảo", "Đề tài - Kỷ yếu"].forEach(c => cats.add(c));
+
+        state.categories = Array.from(cats).sort((a, b) => {
+            const indexA = preferredOrder.indexOf(a);
+            const indexB = preferredOrder.indexOf(b);
+            if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+            return indexA !== -1 ? -1 : (indexB !== -1 ? 1 : a.localeCompare(b));
+        });
+    }
+
+    // Hàm điều hướng Toolbar
+    window.handleToolbarClick = function(view) {
+        state.currentView = view;
+        document.querySelectorAll('.toolbar-btn').forEach(btn => btn.classList.remove('active'));
+        
+        ['homeView', 'introView', 'placeholderView', 'sidebarPanel', 'mobileFilterPanel'].forEach(id => {
+            const el = document.getElementById(id); if(el) el.classList.add('hidden');
+        });
+
+        if (view === 'home') {
+            document.getElementById('homeView').classList.remove('hidden');
+            document.getElementById('sidebarPanel').classList.remove('hidden');
+            document.getElementById('mobileFilterPanel').classList.remove('hidden');
+            setActiveCategory('all');
+        } else if (view === 'intro') {
+            document.getElementById('introView').classList.remove('hidden');
+        } else if (view === 'movies' || view === 'movies_news') {
+            document.getElementById('homeView').classList.remove('hidden');
+            setActiveCategory('Phim - Phóng sự');
+            if(view === 'movies_news') {
+                document.getElementById('currentCategoryTitle').textContent = "Phóng sự";
+                state.books = libraryData.filter(b => b.category === 'Phim - Phóng sự' && (b.group === 'Phóng sự' || b.group === 'Bảo vệ Đảng'));
+                renderBooks();
+            }
+        } else if (view === 'museum') {
+            document.getElementById('homeView').classList.remove('hidden');
+            setActiveCategory('Bảo tàng 3D');
+        } else if (view === 'games') {
+            document.getElementById('homeView').classList.remove('hidden');
+            setActiveCategory('Trò chơi');
+        } else if (view === 'ai') {
+            window.open("https://sites.google.com/view/hoclieukhoahocdientu/trang-ch%E1%BB%A7", "_blank");
+            handleToolbarClick('home');
+        }
+    };
+
+    // Hàm vẽ Sidebar
+    window.renderNavigation = function() {
+        const nav = document.getElementById('categoryNav');
+        const mobileSelect = document.getElementById('mobileCatSelect');
+        if(!nav || !mobileSelect) return;
+
+        nav.innerHTML = '';
+        mobileSelect.innerHTML = '<option value="all">Tất cả</option>';
+        nav.appendChild(createNavButton("Tất cả", "all", state.currentCategory === "all"));
+
+        state.categories.forEach(cat => {
+            if (cat === "Phim - Phóng sự" || cat === "Bảo tàng 3D" || cat === "Thư viện số" || cat === "Trò chơi") return;
+            
+            // Xử lý Văn bản số (Link ngoài)
+            if (cat === "Văn bản số") {
+                const btn = createNavButton(cat, cat, false);
+                btn.onclick = () => window.open("https://sites.google.com/view/vanbansok1/trang-ch%E1%BB%A7", "_blank");
+                nav.appendChild(btn);
+                const opt = document.createElement('option');
+                opt.value = "ext_https://sites.google.com/view/vanbansok1/trang-ch%E1%BB%A7"; opt.textContent = cat;
+                mobileSelect.appendChild(opt);
+                return;
+            }
+
+            // Xử lý Tư liệu văn kiện (Dropdown)
+            if (cat === "Tư liệu văn kiện Đảng") {
+                const isExpanded = state.expandedMenus['menu-tulieu'] || false;
+                const btn = document.createElement('button');
+                btn.className = `w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors mb-1 flex justify-between items-center ${isExpanded ? 'bg-stone-100 text-red-900 font-bold' : 'text-stone-600 hover:bg-stone-200'}`;
+                btn.innerHTML = `<span>🔗 ${cat}</span><span>${isExpanded ? '▲' : '▼'}</span>`;
+                btn.onclick = () => { state.expandedMenus['menu-tulieu'] = !isExpanded; renderNavigation(); };
+                nav.appendChild(btn);
+
+                if (isExpanded) {
+                    const sub = document.createElement('div');
+                    sub.className = "pl-6 mb-2 space-y-1 border-l-2 border-stone-200 ml-4";
+                    libraryData.filter(i => i.category === cat).forEach(item => {
+                        const a = document.createElement('a');
+                        a.href = item.link; a.target = "_blank";
+                        a.className = "block px-3 py-2 text-xs text-stone-500 hover:text-red-700";
+                        a.innerHTML = `➥ ${item.title}`;
+                        sub.appendChild(a);
+                    });
+                    nav.appendChild(sub);
+                }
+                const opt = document.createElement('option'); opt.value = cat; opt.textContent = cat;
+                mobileSelect.appendChild(opt);
+                return;
+            }
+
+            nav.appendChild(createNavButton(cat, cat, state.currentCategory === cat));
+            const opt = document.createElement('option'); opt.value = cat; opt.textContent = cat;
+            mobileSelect.appendChild(opt);
+        });
+    };
+
+    function createNavButton(label, value, isActive) {
+        const btn = document.createElement('button');
+        let icon = "";
+        if (label === "Kinh điển") icon = "📕 ";
+        if (label === "Chủ tịch Hồ Chí Minh") icon = "⭐ ";
+        btn.innerHTML = `<span class="flex items-center gap-2">${icon}${label}</span>`;
+        btn.className = `w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors mb-1 ${isActive ? 'bg-red-100 text-red-900 border-l-4 border-red-800' : 'text-stone-600 hover:bg-stone-200'}`;
+        btn.onclick = () => { handleToolbarClick('home'); setActiveCategory(value); };
+        return btn;
+    }
+
+    // Hàm chọn danh mục
+    window.setActiveCategory = function(cat) {
+        state.currentCategory = cat;
+        const ms = document.getElementById('mobileCatSelect');
+        if(ms) ms.value = cat;
+        
+        const titleEl = document.getElementById('currentCategoryTitle');
+        if(titleEl) titleEl.textContent = cat === "all" ? "Tất cả" : cat;
+        
+        const dash = document.getElementById('dashboardSection');
+        if(dash) {
+            if(cat === 'all' && state.searchQuery === '') dash.classList.remove('hidden');
+            else dash.classList.add('hidden');
+        }
+        if(state.currentView !== 'movies_news') filterBooks();
+    };
+
+    // Hàm lọc sách
+    window.filterBooks = function() {
+        let filtered = libraryData;
+        if (state.currentCategory === "Phim - Phóng sự") filtered = filtered.filter(b => b.category === "Phim - Phóng sự");
+        else if (state.currentCategory !== "all") filtered = filtered.filter(b => b.category === state.currentCategory);
+
+        if (state.searchQuery) {
+            const q = state.searchQuery.toLowerCase();
+            filtered = filtered.filter(b => b.title.toLowerCase().includes(q) || b.category.toLowerCase().includes(q));
+        }
+        
+        // Mặc định ẩn các mục đặc biệt ở trang chủ
+        if (!state.searchQuery && state.currentCategory === "all") {
+            filtered = filtered.filter(b => b.category !== "Tư liệu văn kiện Đảng" && b.category !== "Đề tài - Kỷ yếu" && b.category !== "Bảo tàng 3D" && b.category !== "Thư viện số" && b.category !== "Trò chơi");
+        }
+        state.books = filtered;
+        renderBooks();
+    };
+
+    // Hàm hiển thị sách
+    function renderBooks() {
+        const container = document.getElementById('bookGrid');
+        const noResults = document.getElementById('noResults');
+        const countLabel = document.getElementById('resultCount');
+        
+        container.innerHTML = '';
+        countLabel.textContent = `Tìm thấy ${state.books.length} tài liệu`;
+        
+        if (state.books.length === 0) {
+            container.classList.add('hidden'); noResults.classList.remove('hidden'); return;
+        }
+        container.classList.remove('hidden'); noResults.classList.add('hidden');
+
+        container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+        if(state.currentCategory === 'Bảo tàng 3D' || state.currentCategory === 'Trò chơi') {
+             container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6';
+        }
+        state.books.forEach(book => container.appendChild(createCard(book)));
+    }
+
+    // Hàm tạo thẻ sách
+    function createCard(book) {
+        const card = document.createElement('div');
+        card.className = 'book-card bg-white p-6 rounded-lg shadow border border-stone-100 flex flex-col justify-between h-full group';
+        
+        // Thẻ hình ảnh (Bảo tàng/Thư viện)
+        if ((book.category === "Bảo tàng 3D" || book.category === "Thư viện số") && book.image) {
+            card.classList.remove('p-6'); card.classList.add('overflow-hidden');
+            let label = book.category === "Bảo tàng 3D" ? "3D TOUR" : "THƯ VIỆN";
+            card.innerHTML = `
+                <div class="relative h-48 overflow-hidden">
+                    <img src="${book.image}" alt="${book.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                    <div class="absolute bottom-3 left-3 right-3 text-white">
+                        <span class="bg-red-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase">${label}</span>
+                        <h3 class="font-bold text-sm mt-1">${book.title}</h3>
+                    </div>
+                </div>
+                <div class="p-4 bg-white flex-1 flex flex-col justify-end">
+                    <a href="${book.link}" target="_blank" class="block w-full text-center py-2 px-4 border border-red-800 bg-red-50 text-red-900 rounded hover:bg-red-900 hover:text-white transition-all text-sm font-bold">Truy cập ngay ➜</a>
+                </div>
+            `;
+            return card;
+        }
+
+        // Thẻ thường
+        let icon = "📖";
+        if (book.category.includes("Hồ Chí Minh")) icon = "⭐";
+        if (book.category.includes("Phim")) icon = "🎬";
+        if (book.category.includes("Trò chơi")) icon = "🎮";
+        
+        let btnText = "Truy cập &rarr;";
+        if (book.category.includes("Phim") || book.group === "Phim") btnText = "Xem ngay ▶";
+        if (book.category.includes("Trò chơi")) btnText = "Tham gia ngay ▶";
+
+        card.innerHTML = `
+            <div>
+                <div class="flex justify-between items-start mb-3">
+                    <span class="text-xs font-bold uppercase text-red-700 bg-red-50 px-2 py-1 rounded border border-red-100">${book.group || book.category}</span>
+                    <span class="text-2xl">${icon}</span>
+                </div>
+                <h3 class="serif-font text-lg font-bold text-stone-800 mb-2 hover:text-red-800"><a href="${book.link}" target="_blank">${book.title}</a></h3>
+                <div class="w-10 h-1 bg-amber-400 mb-4 rounded"></div>
+            </div>
+            <a href="${book.link}" target="_blank" class="block w-full text-center py-2 px-4 border border-stone-300 rounded hover:bg-stone-800 hover:text-white transition-all text-sm font-medium text-stone-600">${btnText}</a>
+        `;
+        return card;
+    }
+
+    function renderStatsChart() {
+        const ctx = document.getElementById('libraryChart');
+        if(!ctx) return;
+        const counts = {};
+        state.categories.forEach(cat => { counts[cat] = libraryData.filter(b => b.category === cat).length; });
+        const sortedCats = Object.entries(counts).sort((a,b) => b[1] - a[1]);
+        
+        new Chart(ctx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: sortedCats.filter(x => x[1] > 0).map(x => x[0]),
+                datasets: [{
+                    data: sortedCats.filter(x => x[1] > 0).map(x => x[1]),
+                    backgroundColor: ['#7f1d1d', '#991b1b', '#b91c1c', '#d97706', '#b45309', '#78716c', '#57534e', '#44403c', '#292524'],
+                    borderWidth: 0
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, cutout: '65%' } }
+        });
+    }
+
+    function setupEventListeners() {
+        const searchInput = document.getElementById('searchInput');
+        if(searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                state.searchQuery = e.target.value;
+                setActiveCategory(state.currentCategory);
+            });
+        }
+        const ms = document.getElementById('mobileCatSelect');
+        if(ms) {
+            ms.addEventListener('change', (e) => {
+                if(e.target.value.startsWith('ext_')) window.open(e.target.value.substring(4), '_blank');
+                else setActiveCategory(e.target.value);
+            });
+        }
+    }
+</script>
+</body>
+</html>
