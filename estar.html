@@ -272,7 +272,7 @@
                     
                     <select id="theme-select" style="padding:12px; margin-bottom:12px;">
                         <option value="theme-xuan">🌸 Giao diện Mùa Xuân</option>
-                        <option value="theme-ha" selected>☀️ Giao diện Xanh lá xẩm (Mặc định)</option>
+                        <option value="theme-ha" selected>☀️ Giao diện Mùa Hè</option>
                         <option value="theme-thu">🍂 Giao diện Mùa Thu</option>
                         <option value="theme-dong">❄️ Giao diện Mùa Đông</option>
                     </select>
@@ -312,21 +312,21 @@
                 <textarea id="rules-content" class="rules-textarea" readonly>THỂ LỆ TRÒ CHƠI eSTAR V1.0
 
 1. Cách vào phòng thi
-Nhập Mã PIN (3 số từ Giảng viên) và Họ tên thật.
+Nhập Mã PIN (3 số từ Giảng viên) và tên Đội
 Nhấn VÀO THI NGAY và đợi Giảng viên bắt đầu.
 
 2. Luật chơi & Thao tác
 Thời gian: Cài đặt đếm ngược cho mỗi câu hỏi.
 Cách trả lời: Chọn 1 trong 4 ô màu sắc/hình khối tương ứng với đáp án đúng. Chỉ được chọn 1 lần duy nhất.
 
-3. Ngôi Sao May Mắn (Cược Điểm)
+3. Ngôi sao may mắn (Cược Điểm)
 Trước khi bấm trả lời, bạn có thể cược để bứt phá:
 ⭐ 1 Sao: Đúng được x2 điểm câu đó, Sai trừ 500đ.
 ⭐⭐ 2 Sao: Cược toàn bộ điểm (All-in) - Đúng được x2 Tổng điểm hiện tại, Sai bị trừ về 0đ.
 Không cược: Tính điểm bình thường.
 
 4. Xếp hạng và lưu kết quả
-Đua top 15 trực tiếp. Top 3 được vinh danh cuối trò chơi. Điểm số được xuất file Excel ghi nhận thành tích.</textarea>
+Đội thắng cuộc là Đội có điểm số cao hơn. Điểm số được xuất file Excel ghi nhận thành tích.</textarea>
             </div>
         </div>
     </div>
@@ -418,7 +418,7 @@ Không cược: Tính điểm bình thường.
     const audioTimeUp = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
     const audioVictory = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'); 
     audioVictory.volume = 1.0;
-    const audioRules = new Audio('theletrochoi.mp3');
+    const audioRules = new Audio('theleestar.mp3');
     
     let isMuted = false;
     let currentBet = 0; // Trạng thái cược: 0, 1, 2

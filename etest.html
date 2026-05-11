@@ -3,83 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kiểm tra đánh giá (eTest) - TS. Cao Thanh Hùng</title>
+    <title>Hệ thống Thảo luận & Tình huống (eTest) - TS. Cao Thanh Hùng</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #8B0000;
-            --secondary: #DAA520;
-            --bg-color: #fdf6e9;
+            --primary-color: #8B0000;
+            --secondary-color: #DAA520;
+            --bg-card: #ffffff;
+            --text-dark: #333;
         }
 
-        .etest-container {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #ffffff;
-            color: #333;
-            margin: 0;
-            padding: 60px 20px;
+        /* Menu Tab */
+        .tabs-header {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 60vh;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            border-top: 5px solid var(--secondary);
-            text-align: center;
-        }
-
-        .icon-construction {
-            font-size: 80px;
-            color: var(--secondary);
+            gap: 10px;
             margin-bottom: 25px;
-            animation: float 3s ease-in-out infinite;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
         }
 
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-15px); }
-            100% { transform: translateY(0px); }
-        }
-
-        .etest-container h2 {
-            color: var(--primary);
-            font-size: 28px;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            font-weight: 800;
-        }
-
-        .etest-container p {
-            font-size: 16px;
-            color: #555;
-            margin-bottom: 35px;
-            max-width: 600px;
-            line-height: 1.6;
-        }
-
-        .btn-home {
-            background: var(--primary);
-            color: white;
-            border: none;
+        .tab-btn {
             padding: 12px 25px;
-            border-radius: 8px;
-            font-size: 16px;
+            border: none;
+            background: #eee;
+            color: #666;
             font-weight: bold;
             cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 10px rgba(139, 0, 0, 0.2);
+            border-radius: 8px 8px 0 0;
+            transition: all 0.3s;
+            font-size: 15px;
+            text-transform: uppercase;
         }
 
-        .btn-home:hover {
-            background: #600000;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(139, 0, 0, 0.3);
+        .tab-btn.active {
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Khung chứa Slide */
+        .slider-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            min-height: 450px;
+        }
+
+        .question-part {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .question-part.active {
+            display: block;
+        }
+
+        /* Thẻ câu hỏi */
+        .card-container {
+            perspective: 1000px;
+            position: relative;
+            height: 350px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .question-card {
+            background: var(--bg-card);
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+            padding: 40px;
+            box-sizing: border-box;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            border: 1px solid #e2d1b7;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            position: absolute;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            backface-visibility: hidden;
+        }
+
+        .question-card.active {
+            display: flex;
+            animation: slideIn 0.5s forwards;
+        }
+
+        .card-index {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background: var(--secondary-color);
+            color: var(--primary-color);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .card-title {
+            color: var(--primary-color);
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            border-left: 5px solid var(--secondary-color);
+            padding-left: 15px;
+        }
+
+        .card-content {
+            font-size: 20px;
+            line-height: 1.6;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        /* Nút điều khiển */
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .nav-btn {
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(139,0,0,0.3);
+        }
+
+        .nav-btn:hover {
+            transform: scale(1.1);
+            background: #A52A2A;
+        }
+
+        .nav-btn:disabled {
+            background: #ccc;
+            color: #999;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .progress-info {
+            font-weight: bold;
+            color: #666;
+            font-size: 16px;
+        }
+
+        /* Hiệu ứng chuyển động */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(50px) rotateY(-10deg); }
+            to { opacity: 1; transform: translateX(0) rotateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .slider-wrapper { min-height: 500px; }
+            .card-content { font-size: 17px; }
+            .question-card { padding: 30px 20px; }
         }
     </style>
 </head>
@@ -91,20 +191,36 @@
         <aside id="sidebar-area"></aside>
         
         <main id="content-area">
-            <h2 style="color: #8B0000; border-bottom: 2px solid #DAA520; padding-bottom: 10px; margin-top: 0;">
-                📝 KIỂM TRA ĐÁNH GIÁ (eTest)
-            </h2>
-            
-            <div class="etest-container">
-                <div class="icon-construction">
-                    <i class="fas fa-cogs"></i>
-                </div>
-                <h2>Tính năng đang được tiếp tục phát triển</h2>
-                <p>Mô đun Kiểm tra đánh giá (eTest) đang trong quá trình lập trình và hoàn thiện các chức năng.</p>
+            <h2 style="color: var(--primary-color);"><i class="fas fa-edit"></i> Ngân hàng Câu hỏi & Tình huống</h2>
+            <p>Hệ thống hỗ trợ thảo luận, giảng dạy tương tác linh hoạt.</p>
+
+            <div class="tabs-header">
+                <button class="tab-btn active" onclick="switchPart(1)">Phần 1: Câu hỏi thảo luận</button>
+                <button class="tab-btn" onclick="switchPart(2)">Phần 2: Câu hỏi tình huống</button>
+            </div>
+
+            <div class="slider-wrapper">
                 
-                <a href="index.html" class="btn-home">
-                    <i class="fas fa-home"></i> Về Trang Chủ Hệ Thống
-                </a>
+                <div id="part1" class="question-part active">
+                    <div class="card-container" id="container-part1">
+                        </div>
+                    <div class="controls">
+                        <button class="nav-btn" onclick="prevSlide(1)"><i class="fas fa-chevron-left"></i></button>
+                        <span class="progress-info" id="info-part1">1 / 10</span>
+                        <button class="nav-btn" onclick="nextSlide(1)"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+
+                <div id="part2" class="question-part">
+                    <div class="card-container" id="container-part2">
+                        </div>
+                    <div class="controls">
+                        <button class="nav-btn" onclick="prevSlide(2)"><i class="fas fa-chevron-left"></i></button>
+                        <span class="progress-info" id="info-part2">1 / 12</span>
+                        <button class="nav-btn" onclick="nextSlide(2)"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+
             </div>
         </main>
     </div>
@@ -112,5 +228,122 @@
     <footer id="footer-area"></footer>
 
     <script src="js/main.js"></script>
+    <script>
+        // Dữ liệu câu hỏi
+        const dataPart1 = [
+            "Phân biệt “Đảng Cộng sản cầm quyền” với “Đảng cầm quyền” trong hệ thống chính trị dân chủ tư sản.",
+            "Tại sao giữ vững bản chất giai cấp công nhân là vấn đề có tính quy luật trong công tác xây dựng Đảng cầm quyền?",
+            "Trình bày nội dung, phương thức lãnh đạo “thông qua Nhà nước” trong điều kiện Đảng cầm quyền.",
+            "Trình bày vị trí, vai trò lãnh đạo của Đảng cầm quyền.",
+            "Trình bày “nội dung lãnh đạo” của Đảng cầm quyền.",
+            "Trình bày “phương thức lãnh đạo” của Đảng cầm quyền.",
+            "Trình bày nhiệm vụ của Đảng cầm quyền trong giai đoạn hiện nay.",
+            "Trình bày “nội dung lãnh đạo” của Đảng cầm quyền (bổ sung).",
+            "Trình bày “phương thức lãnh đạo” của Đảng cầm quyền (bổ sung).",
+            "Trình bày nhiệm vụ của Đảng cầm quyền trong giai đoạn hiện nay (bổ sung)."
+        ];
+
+        const dataPart2 = [
+            "<strong>Tình huống 1:</strong> Hai vợ chồng đồng chí E và F là công chức nghỉ hưu, sinh hoạt Đảng khác phường. Đảng viên thắc mắc cho là vi phạm kỷ luật.<br><br>Hỏi: Với vai trò Bí thư Chi bộ, đồng chí nhận định và giải quyết thế nào?",
+            "<strong>Tình huống 2:</strong> Đại biểu chính thức bị tai nạn, đại biểu dự khuyết đã sẵn sàng nhưng Ban Thường vụ Đảng ủy phường quyết định không triệu tập thay thế.<br><br>Hỏi: Với vai trò Cấp ủy viên cấp trên, đồng chí xử lý thế nào?",
+            "<strong>Tình huống 3:</strong> Phân bổ đại biểu Đại hội xã Tân Xuân chênh lệch lớn giữa các thôn, dẫn đến khiếu nại thiếu công bằng.<br><br>Hỏi: Ủy ban kiểm tra Đảng ủy xã cần giải quyết như thế nào?",
+            "<strong>Tình huống 4:</strong> Chi bộ bầu Đoàn Chủ tịch 02 người (số chẵn). Có ý kiến cho rằng phải là số lẻ.<br><br>Hỏi: Là Cấp ủy viên cấp trên giám sát, đồng chí có ý kiến kết luận thế nào?",
+            "<strong>Tình huống 5:</strong> Các ứng viên Cấp ủy xã có hành vi vận động bầu cử công khai và cho rằng đó là 'sáng kiến' dân chủ.<br><br>Hỏi: Là Cấp ủy viên cấp trên giám sát, đồng chí có ý kiến thế nào?",
+            "<strong>Tình huống 6:</strong> Bầu Bí thư chi bộ, 56% phiếu gạch tên ứng viên duy nhất và ghi tên người khác vừa trúng Cấp ủy.<br><br>Hỏi: Là Cấp ủy viên cấp trên giám sát, đồng chí chỉ đạo xử lý thế nào?",
+            "<strong>Tình huống 7:</strong> Tổng số phiếu thu vào nhiều hơn phát ra. Đoàn chủ tịch cho rút thăm ngẫu nhiên phiếu thừa để hủy.<br><br>Hỏi: Là Cấp ủy viên cấp trên giám sát, đồng chí chỉ đạo thế nào?",
+            "<strong>Tình huống 8:</strong> Đảng viên vắng mặt có lý do lúc đầu, nhưng sau đó xuất hiện đòi bầu Bí thư khi danh sách dự Đại hội đã chốt.<br><br>Hỏi: Là Cấp ủy viên cấp trên giám sát, đồng chí có ý kiến thế nào?",
+            "<strong>Tình huống 9:</strong> Phát hiện lưu hành 2 danh sách bầu cử: Một danh sách chuẩn và một danh sách kèm chức danh dự kiến sau khi trúng cử.<br><br>Hỏi: Là Cấp ủy viên cấp trên giám sát, đồng chí có ý kiến thế nào?",
+            "<strong>Tình huống 10:</strong> Đại biểu chất vấn việc giới thiệu nhân sự Lê Văn T vào Cấp ủy mới khi đồng chí này đã chuyển đi nơi khác sống nhiều năm.<br><br>Hỏi: Việc giới thiệu này có trái quy định Điều lệ Đảng không?",
+            "<strong>Phản bác nội dung:</strong> “Có ý kiến cho rằng: Đường lối quá độ lên Chủ nghĩa xã hội của Việt Nam là sai lầm, không phù hợp với thời cuộc nên từ bỏ!”",
+            "<strong>Tình huống 12:</strong> Phát hiện đối tượng thường xuyên livestream nói xấu đường lối, chủ trương, chính sách của Đảng, hãy đưa ra biện pháp xử lý?"
+        ];
+
+        let currentPart1 = 0;
+        let currentPart2 = 0;
+
+        // Khởi tạo thẻ câu hỏi
+        function initCards() {
+            const container1 = document.getElementById('container-part1');
+            dataPart1.forEach((q, i) => {
+                container1.innerHTML += `
+                    <div class="question-card ${i===0?'active':''}" id="p1-card-${i}">
+                        <div class="card-index">Câu hỏi ${i+1}</div>
+                        <div class="card-title">Câu hỏi thảo luận</div>
+                        <div class="card-content">${q}</div>
+                    </div>
+                `;
+            });
+
+            const container2 = document.getElementById('container-part2');
+            dataPart2.forEach((q, i) => {
+                container2.innerHTML += `
+                    <div class="question-card ${i===0?'active':''}" id="p2-card-${i}">
+                        <div class="card-index">Tình huống ${i+1}</div>
+                        <div class="card-title">Giải quyết tình huống</div>
+                        <div class="card-content">${q}</div>
+                    </div>
+                `;
+            });
+            updateProgress();
+        }
+
+        // Chuyển Slide
+        window.nextSlide = function(part) {
+            if(part === 1) {
+                if(currentPart1 < dataPart1.length - 1) {
+                    document.getElementById(`p1-card-${currentPart1}`).classList.remove('active');
+                    currentPart1++;
+                    document.getElementById(`p1-card-${currentPart1}`).classList.add('active');
+                }
+            } else {
+                if(currentPart2 < dataPart2.length - 1) {
+                    document.getElementById(`p2-card-${currentPart2}`).classList.remove('active');
+                    currentPart2++;
+                    document.getElementById(`p2-card-${currentPart2}`).classList.add('active');
+                }
+            }
+            updateProgress();
+        }
+
+        window.prevSlide = function(part) {
+            if(part === 1) {
+                if(currentPart1 > 0) {
+                    document.getElementById(`p1-card-${currentPart1}`).classList.remove('active');
+                    currentPart1--;
+                    document.getElementById(`p1-card-${currentPart1}`).classList.add('active');
+                }
+            } else {
+                if(currentPart2 > 0) {
+                    document.getElementById(`p2-card-${currentPart2}`).classList.remove('active');
+                    currentPart2--;
+                    document.getElementById(`p2-card-${currentPart2}`).classList.add('active');
+                }
+            }
+            updateProgress();
+        }
+
+        // Cập nhật số thứ tự
+        function updateProgress() {
+            document.getElementById('info-part1').innerText = `${currentPart1 + 1} / ${dataPart1.length}`;
+            document.getElementById('info-part2').innerText = `${currentPart2 + 1} / ${dataPart2.length}`;
+        }
+
+        // Chuyển đổi giữa 2 phần
+        window.switchPart = function(part) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.question-part').forEach(p => p.classList.remove('active'));
+
+            if(part === 1) {
+                document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+                document.getElementById('part1').classList.add('active');
+            } else {
+                document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+                document.getElementById('part2').classList.add('active');
+            }
+        }
+
+        // Chạy khi trang sẵn sàng
+        window.onload = initCards;
+    </script>
 </body>
 </html>

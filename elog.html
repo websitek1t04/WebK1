@@ -8,6 +8,52 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        /* --- CSS MÀN HÌNH ĐĂNG NHẬP eLOG --- */
+        #elog-login-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #8B0000, #4a0000);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999999;
+        }
+
+        .login-card {
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+            border: 3px solid #DAA520;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .login-card h2 {
+            color: #8B0000;
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+        
+        .login-card .form-group input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+        }
+        
+        .login-card .form-group input:focus {
+            border-color: #DAA520;
+        }
+        /* ----------------------------------- */
+
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -83,6 +129,22 @@
 </head>
 <body>
 
+    <div id="elog-login-overlay">
+        <div class="login-card">
+            <h2><i class="fas fa-book"></i> SỔ ĐẦU BÀI (eLOG)</h2>
+            <div class="form-group" style="text-align: left; margin-bottom: 15px;">
+                <label>Tài khoản:</label>
+                <input type="text" id="login-user" value="CaoHung" readonly style="background-color: #f1f1f1; cursor: not-allowed; color: #666; font-weight: bold;">
+            </div>
+            <div class="form-group" style="text-align: left; margin-bottom: 20px;">
+                <label>Mật khẩu:</label>
+                <input type="password" id="login-pass" placeholder="Nhập mật khẩu...">
+            </div>
+            <button class="btn-submit" onclick="verifyLogin()" style="width: 100%; padding: 12px 20px; font-size: 15px; border-radius: 6px;">
+                <i class="fas fa-sign-in-alt"></i> ĐĂNG NHẬP
+            </button>
+        </div>
+    </div>
     <div id="banner-area"></div>
 
     <div id="main-layout">
@@ -182,6 +244,41 @@
     <footer id="footer-area"></footer>
 
     <script src="js/main.js"></script>
+
+    <script>
+        // Xử lý Giao diện đăng nhập đầu vào eLog
+        window.verifyLogin = function() {
+            const pass = document.getElementById('login-pass').value;
+            if (pass === '250289') {
+                // Lưu trạng thái đăng nhập
+                sessionStorage.setItem('elog_user_auth', 'true');
+                // Tắt màn hình overlay
+                document.getElementById('elog-login-overlay').style.display = 'none';
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Sai mật khẩu',
+                    text: 'Mật khẩu không chính xác. Vui lòng thử lại!',
+                    confirmButtonColor: '#8B0000'
+                });
+            }
+        };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // Kiểm tra xem đã đăng nhập trong phiên làm việc chưa
+            if (sessionStorage.getItem('elog_user_auth') === 'true') {
+                document.getElementById('elog-login-overlay').style.display = 'none';
+            }
+            
+            // Xử lý nút Enter ở ô mật khẩu
+            document.getElementById('login-pass').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    window.verifyLogin();
+                }
+            });
+        });
+    </script>
+
     <script type="module">
         import { supabase } from './js/supabase-client.js';
 

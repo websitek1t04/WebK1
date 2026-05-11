@@ -15,6 +15,37 @@
             --border-color: #DAA520;
         }
 
+        /* --- CSS MÀN HÌNH ĐĂNG NHẬP eDOC --- */
+        #edoc-login-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, var(--primary-color), #4a0000);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999999;
+        }
+
+        .login-card {
+            background: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+            border: 3px solid var(--secondary-color);
+            box-sizing: border-box;
+        }
+
+        .login-card h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+        /* ----------------------------------- */
+
         .header-action {
             display: flex;
             justify-content: space-between;
@@ -169,10 +200,64 @@
             border-radius: 8px;
             border: 1px dashed #ccc;
         }
+
+        /* Form styling bổ sung cho khung login */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        .form-group input:focus {
+            border-color: var(--secondary-color);
+        }
+        .btn-submit {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 15px;
+            transition: background 0.3s;
+        }
+        .btn-submit:hover {
+            background-color: #A52A2A;
+        }
     </style>
 </head>
 <body>
 
+    <div id="edoc-login-overlay">
+        <div class="login-card">
+            <h2><i class="fas fa-folder-open"></i> KHO DỮ LIỆU eDOC</h2>
+            <div class="form-group" style="text-align: left; margin-bottom: 15px;">
+                <label>Tài khoản:</label>
+                <input type="text" id="login-user" value="CaoHung" readonly style="background-color: #f1f1f1; cursor: not-allowed; color: #666; font-weight: bold;">
+            </div>
+            <div class="form-group" style="text-align: left; margin-bottom: 20px;">
+                <label>Mật khẩu:</label>
+                <input type="password" id="login-pass" placeholder="Nhập mật khẩu...">
+            </div>
+            <button class="btn-submit" onclick="verifyLogin()" style="width: 100%;">
+                <i class="fas fa-sign-in-alt"></i> ĐĂNG NHẬP
+            </button>
+        </div>
+    </div>
     <div id="banner-area"></div>
 
     <div id="main-layout">
@@ -205,6 +290,40 @@
     <footer id="footer-area"></footer>
 
     <script src="js/main.js"></script>
+    <script>
+        // Xử lý Giao diện đăng nhập đầu vào
+        window.verifyLogin = function() {
+            const pass = document.getElementById('login-pass').value;
+            if (pass === '250289') {
+                // Lưu trạng thái đăng nhập
+                sessionStorage.setItem('edoc_user_auth', 'true');
+                // Tắt màn hình overlay
+                document.getElementById('edoc-login-overlay').style.display = 'none';
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Sai mật khẩu',
+                    text: 'Mật khẩu không chính xác. Vui lòng thử lại!',
+                    confirmButtonColor: '#8B0000'
+                });
+            }
+        };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // Kiểm tra xem đã đăng nhập trong phiên làm việc chưa
+            if (sessionStorage.getItem('edoc_user_auth') === 'true') {
+                document.getElementById('edoc-login-overlay').style.display = 'none';
+            }
+            
+            // Xử lý nút Enter ở ô mật khẩu
+            document.getElementById('login-pass').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    window.verifyLogin();
+                }
+            });
+        });
+    </script>
+
     <script type="module">
         import { supabase } from './js/supabase-client.js';
 
@@ -343,7 +462,7 @@
                 (row.ten_ho_so_bai && row.ten_ho_so_bai.toLowerCase().includes(keyword)) ||
                 (row.ghi_chu && row.ghi_chu.toLowerCase().includes(keyword))
             );
-            renderDashboard(filtered); // Gọi lại hàm render để nó tự động sắp xếp và hiển thị kết quả lọc
+            renderDashboard(filtered); 
         });
 
         // Khởi tạo tải dữ liệu
