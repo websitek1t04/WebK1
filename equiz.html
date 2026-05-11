@@ -33,7 +33,7 @@
 
         h1, h2, h3, .pin-number { font-family: 'Times New Roman', serif; text-transform: uppercase; }
 
-        .container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 20px 85px 20px; z-index: 1; overflow-y: auto; }
+        .container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 20px 20px 85px 20px; z-index: 1; overflow-y: auto; }
         .main-layout { display: flex; width: 98%; max-width: 1600px; gap: 25px; height: 100%; min-height: 70vh; }
         
         .glass-panel {
@@ -76,7 +76,7 @@
 
         .sidebar { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; }
         .screen { display: none; width: 100%; text-align: center; }
-        .active { display: flex; flex-direction: column; align-items: center; animation: fadeIn 0.5s ease-out; }
+        .active { display: flex; flex-direction: column; align-items: center; animation: fadeIn 0.5s ease-out; margin-top: auto; margin-bottom: auto; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         .giant-pin-card { padding: 40px; border-radius: 20px; width: 80%; max-width: 700px; text-align: center; }
@@ -128,7 +128,7 @@
         select:focus, input[type="text"]:focus { outline: none; box-shadow: 0 0 15px var(--ka-blue); background: rgba(0,0,0,0.8); }
         
         .btn-3d {
-            background: linear-gradient(145deg, var(--ka-blue), #0088cc); color: #000; border: none; padding: 18px; border-radius: 12px; font-weight: bold; font-size: 1.3rem; cursor: pointer; text-transform: uppercase; font-family: 'Times New Roman', serif; box-shadow: 0 8px 0 #005580, 0 15px 20px rgba(0,0,0,0.4); transition: 0.15s; letter-spacing: 1px; width: 100%; box-sizing: border-box;
+            background: linear-gradient(145deg, var(--ka-blue), #0088cc); color: #000; border: none; padding: 15px; border-radius: 12px; font-weight: bold; font-size: 1.3rem; cursor: pointer; text-transform: uppercase; font-family: 'Times New Roman', serif; box-shadow: 0 8px 0 #005580, 0 15px 20px rgba(0,0,0,0.4); transition: 0.15s; letter-spacing: 1px; width: 100%; box-sizing: border-box;
         }
         .btn-3d:active { transform: translateY(8px); box-shadow: 0 0px 0 #005580, 0 5px 10px rgba(0,0,0,0.4); }
 
@@ -183,22 +183,23 @@
         .step-2 { height: 150px; background: linear-gradient(180deg, #e0e0e0, #808080); }
         .step-3 { height: 100px; background: linear-gradient(180deg, #cd7f32, #8b5a2b); }
 
-        /* CSS BỔ SUNG CHO TÍNH NĂNG MỚI */
+        /* ĐÃ FIX: Margin auto để tự động căn giữa khung mà không bị tràn màn hình */
         .setup-wrapper { 
             display: flex; gap: 30px; justify-content: center; align-items: stretch; 
-            width: 95%; max-width: 1400px; flex-wrap: wrap; margin-top: 220px; 
+            width: 95%; max-width: 1200px; flex-wrap: wrap; margin: auto 0;
         }
-        /* Cố định chiều rộng của Khung Đăng nhập và Khung Thể lệ bằng nhau (450px) */
+        
+        /* Giảm padding để khung gọn gàng hơn */
         .login-panel, .rules-panel {
-            width: 550px; flex-shrink: 0; padding: 40px; box-sizing: border-box;
+            width: 500px; flex-shrink: 0; padding: 30px; box-sizing: border-box;
             display: flex; flex-direction: column; position: relative;
         }
         .rules-panel { text-align: left; }
 
         .rules-textarea { 
-            flex: 1; width: 100%; min-height: 400px; background: rgba(0,0,0,0.3); color: #fff; 
+            flex: 1; width: 100%; min-height: 280px; height: 100%; background: rgba(0,0,0,0.3); color: #fff; 
             border: 1px solid var(--ka-blue); border-radius: 10px; padding: 15px; box-sizing: border-box;
-            font-size: 1.1rem; line-height: 1.6; resize: none; outline: none; 
+            font-size: 1.05rem; line-height: 1.6; resize: none; outline: none; 
             font-family: 'Segoe UI', Arial, sans-serif; margin-bottom: 15px; 
         }
         .ai-btn { 
@@ -215,7 +216,7 @@
             display: inline-block; margin: 5px; text-shadow: 0 0 5px var(--ka-green); 
             animation: fadeIn 0.3s ease-in;
         }
-        .joined-players-container { margin-top: 20px; max-height: 250px; overflow-y: auto; width: 100%; }
+        .joined-players-container { margin-top: 20px; max-height: 200px; overflow-y: auto; width: 100%; }
 
         .btn-home-return {
             background: transparent; color: #fff; border: 2px solid rgba(255,255,255,0.3);
@@ -268,44 +269,40 @@
             <div class="glass-panel login-panel">
                 <h1 style="color:var(--ka-blue); margin-top:0; text-shadow: var(--text-glow); font-size: 2.8rem; letter-spacing: 2px;">eQUIZ V1.0</h1>
                 
-                <div id="host-part" style="text-align: left; background: rgba(0,0,0,0.4); padding: 25px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); margin-top: 20px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
-                    <p style="margin-top:0; color: var(--ka-green); font-size: 1.3rem; border-bottom: 1px solid rgba(0,255,102,0.3); padding-bottom: 10px;"><b>GIẢNG VIÊN</b></p>
-                    <input type="text" id="class-name" placeholder="Nhập tên lớp học..." style="padding:14px; margin-bottom:15px;">
+                <div id="host-part" style="text-align: left; background: rgba(0,0,0,0.4); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); margin-top: 15px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+                    <p style="margin-top:0; color: var(--ka-green); font-size: 1.1rem; border-bottom: 1px solid rgba(0,255,102,0.3); padding-bottom: 8px;"><b>GIẢNG VIÊN</b></p>
+                    <input type="text" id="class-name" placeholder="Nhập tên lớp học..." style="padding:12px; margin-bottom:12px;">
                     
-                    <select id="theme-select" style="padding:14px; margin-bottom:15px;">
+                    <select id="theme-select" style="padding:12px; margin-bottom:12px;">
                         <option value="theme-xuan">🌸 Giao diện Mùa Xuân</option>
                         <option value="theme-ha" selected>☀️ Giao diện Mùa Hạ (Mặc định)</option>
                         <option value="theme-thu">🍂 Giao diện Mùa Thu</option>
                         <option value="theme-dong">❄️ Giao diện Mùa Đông</option>
                     </select>
 
-                    <select id="timer-select" style="padding:14px; margin-bottom:15px;">
+                    <select id="timer-select" style="padding:12px; margin-bottom:12px;">
                         <option value="20">⏱ Thời gian: 20 giây / câu</option>
                         <option value="30" selected>⏱ Thời gian: 30 giây / câu</option>
                         <option value="45">⏱ Thời gian: 45 giây / câu</option>
                         <option value="60">⏱ Thời gian: 60 giây / câu</option>
                     </select>
 
-                    <input type="file" id="upload-excel" accept=".xlsx" style="margin-bottom:20px; padding: 12px;">
+                    <input type="file" id="upload-excel" accept=".xlsx" style="margin-bottom:15px; padding: 10px;">
                     <button class="btn-3d" onclick="window.createRoom()">TẠO PHÒNG VÀ MÃ PIN</button>
                 </div>
 
-                <hr style="margin: 10px 0; border-color: rgba(255,255,255,0.1);">
+                <hr style="margin: 20px 0; border-color: rgba(255,255,255,0.1);">
 
-                <div id="player-part" style="text-align: left; background: rgba(0,0,0,0.4); padding: 25px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
-                    <p style="margin-top:0; color: var(--ka-yellow); font-size: 1.3rem; border-bottom: 1px solid rgba(255,222,0,0.3); padding-bottom: 10px;"><b>NGƯỜI CHƠI ĐĂNG NHẬP</b></p>
-                    <input type="text" id="input-pin" placeholder="Nhập Mã PIN..." style="padding:14px; margin-bottom:15px; font-size: 1.5rem; text-align: center; letter-spacing: 5px;">
-                    <input type="text" id="user-name" placeholder="Họ và tên học viên..." style="padding:14px; margin-bottom:20px;">
+                <div id="player-part" style="text-align: left; background: rgba(0,0,0,0.4); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 0 20px rgba(0,0,0,0.5);">
+                    <p style="margin-top:0; color: var(--ka-yellow); font-size: 1.1rem; border-bottom: 1px solid rgba(255,222,0,0.3); padding-bottom: 8px;"><b>NGƯỜI CHƠI ĐĂNG NHẬP</b></p>
+                    <input type="text" id="input-pin" placeholder="Nhập Mã PIN..." style="padding:12px; margin-bottom:12px; font-size: 1.3rem; text-align: center; letter-spacing: 5px;">
+                    <input type="text" id="user-name" placeholder="Họ và tên học viên..." style="padding:12px; margin-bottom:15px;">
                     <button id="join-btn" class="btn-3d" onclick="window.joinGame()" style="background: linear-gradient(145deg, #33ff85, #00cc44); box-shadow: 0 8px 0 #009933, 0 15px 20px rgba(0,0,0,0.4);">VÀO THI NGAY</button>
                 </div>
 
                 <button class="btn-home-return" onclick="location.href='index.html'">
                     <i class="fas fa-home"></i> QUAY VỀ TRANG CHỦ HỆ THỐNG
                 </button>
-                
-                <div style="margin-top: 20px; font-size: 1rem; color: #aaa; font-weight: bold; letter-spacing: 1.5px;">
-                    Thiết kế: Cao Thanh Hùng
-                </div>
             </div>
 
             <div class="glass-panel rules-panel">
@@ -315,19 +312,22 @@
                         🤖 Đọc thể lệ
                     </button>
                 </div>
-                <textarea id="rules-content" class="rules-textarea">THỂ LỆ TRÒ CHƠI eQUIZ V1.0
+                <textarea id="rules-content" class="rules-textarea" readonly>THỂ LỆ TRÒ CHƠI eQUIZ V1.0
 
 1. Cách vào phòng thi
 Nhập Mã PIN (3 số từ Giảng viên) và Họ tên thật.
 Nhấn VÀO THI NGAY và đợi Giảng viên bắt đầu.
+
 2. Luật chơi & Thao tác
 Thời gian: 30 giây/câu.
 Cách trả lời: Bấm chọn 1 trong 4 ô màu sắc/hình khối tương ứng với đáp án đúng.
 Lưu ý: Chỉ được chọn 1 lần duy nhất, đã bấm là không thể thay đổi.
+
 3. Bí quyết đạt điểm cao
 Tốc độ và chính xác: Tối đa 1000 điểm/câu.
 Cách tính: 500 điểm cơ bản (cho câu đúng) và cộng điểm cho mỗi giây còn dư.
 Trả lời sai: 0 điểm.
+
 4. Xếp hạng và lưu kết quả
 Theo dõi sự thăng/tụt hạng trực tiếp trên Top 15.
 Top 3 người cao điểm nhất sẽ được vinh danh cuối trò chơi.
@@ -414,80 +414,101 @@ Toàn bộ điểm số sẽ được xuất file Excel để Giảng viên ghi 
     const audioTimeUp = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
     const audioVictory = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'); 
     audioVictory.volume = 1.0;
+
+    // KHỞI TẠO FILE AUDIO ĐỌC THỂ LỆ TỪ BÊN NGOÀI
+    const audioRules = new Audio('theletrochoi.mp3');
     
     let isMuted = false;
+    
+    // Đã fix lỗi Nút Loa: Mute đồng thời gọi hàm Pause để chắc chắn dừng hẳn âm thanh
     window.toggleAudio = function() {
         isMuted = !isMuted;
         document.getElementById('audio-toggle-btn').innerText = isMuted ? '🔇' : '🔊';
+        
         audioBGM.muted = isMuted;
         audioTimeUp.muted = isMuted;
         audioVictory.muted = isMuted;
+        audioRules.muted = isMuted; 
+        
+        if (isMuted) {
+            audioBGM.pause();
+            audioRules.pause();
+        } else {
+            // Chỉ phát lại BGM nếu đang trong màn hình thi
+            if (document.getElementById('main-layout').classList.contains('active')) {
+                audioBGM.play().catch(e=>{});
+            }
+            if (isReadingRules) {
+                audioRules.play().catch(e=>{});
+            }
+        }
     };
 
-    // Tính năng AI đọc thể lệ và hiển thị Video Robot AI
+    // Tính năng AI đọc thể lệ bằng file MP3 cố định và hiển thị Video Robot AI
     let isReadingRules = false;
     let lipSyncInterval;
     const robotContainer = document.getElementById('ai-robot-container');
     const robotVideo = document.getElementById('ai-robot-video');
 
     window.readRules = function() {
-        if ('speechSynthesis' in window) {
-            if (isReadingRules) {
-                window.speechSynthesis.cancel();
+        if (isReadingRules) {
+            // Nếu đang đọc thì Dừng lại
+            audioRules.pause();
+            audioRules.currentTime = 0;
+            isReadingRules = false;
+            clearInterval(lipSyncInterval);
+            document.getElementById('ai-reader-btn').innerHTML = '🤖 Đọc thể lệ';
+            
+            // Tắt Video Robot
+            robotContainer.style.display = 'none';
+            robotVideo.pause();
+        } else {
+            // Nếu chưa đọc thì bắt đầu Phát MP3
+            audioRules.play().catch(e => {
+                console.log("Lỗi phát audio thể lệ: ", e);
+                alert("Vui lòng click tương tác với trang web một lần trước khi yêu cầu phát âm thanh.");
+            });
+            isReadingRules = true;
+            
+            // Mở Video Robot
+            robotContainer.style.display = 'block';
+            robotVideo.play().catch(e => console.log("Lỗi chạy video Robot: ", e));
+
+            // Hiệu ứng nhép miệng trên nút bấm
+            const faces = ['🤖', '😲', '😐', '😮'];
+            let faceIdx = 0;
+            lipSyncInterval = setInterval(() => {
+                faceIdx = (faceIdx + 1) % faces.length;
+                document.getElementById('ai-reader-btn').innerHTML = faces[faceIdx] + ' Đang đọc...';
+            }, 200);
+
+            // Bắt sự kiện khi audio đọc xong tự động tắt
+            audioRules.onended = function() {
                 isReadingRules = false;
                 clearInterval(lipSyncInterval);
-                document.getElementById('ai-reader-btn').innerHTML = '🤖 Trợ lý AI: Đọc thể lệ';
+                document.getElementById('ai-reader-btn').innerHTML = '🤖 Đọc thể lệ';
                 
-                // Tắt Video Robot
+                // Tắt Video Robot khi đọc xong
                 robotContainer.style.display = 'none';
                 robotVideo.pause();
-            } else {
-                const text = document.getElementById('rules-content').value;
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'vi-VN';
-                utterance.rate = 1.0;
-                
-                utterance.onend = function() {
-                    isReadingRules = false;
-                    clearInterval(lipSyncInterval);
-                    document.getElementById('ai-reader-btn').innerHTML = '🤖 Trợ lý AI: Đọc thể lệ';
-                    
-                    // Tắt Video Robot khi đọc xong
-                    robotContainer.style.display = 'none';
-                    robotVideo.pause();
-                };
-                
-                window.speechSynthesis.speak(utterance);
-                isReadingRules = true;
-                
-                // Mở Video Robot
-                robotContainer.style.display = 'block';
-                robotVideo.play().catch(e => console.log("Lỗi chạy video Robot: ", e));
-
-                // Hiệu ứng nhép miệng trên nút bấm
-                const faces = ['🤖', '😲', '😐', '😮'];
-                let faceIdx = 0;
-                lipSyncInterval = setInterval(() => {
-                    faceIdx = (faceIdx + 1) % faces.length;
-                    document.getElementById('ai-reader-btn').innerHTML = faces[faceIdx] + ' Đang đọc... (Nhấn để dừng)';
-                }, 200);
-            }
-        } else {
-            alert("Rất tiếc, trình duyệt của bạn không hỗ trợ tính năng đọc giọng nói AI.");
+            };
         }
     };
 
     function stopAIReader() {
-        window.speechSynthesis.cancel();
+        audioRules.pause();
+        audioRules.currentTime = 0;
         clearInterval(lipSyncInterval);
         robotContainer.style.display = 'none';
         robotVideo.pause();
+        isReadingRules = false;
+        document.getElementById('ai-reader-btn').innerHTML = '🤖 Đọc thể lệ';
     }
 
     let isHost = false, myName = "", roomPin = "", quizData = [], channel;
     let currentIdx = -1, correctIdx = -1, timerVal = 30, timerInt, totalScore = 0, correctCount = 0, hasAnswered = false;
     let currentTheme = 'theme-ha'; 
-    let globalTimerConfig = 30; // Mặc định 30s
+    let globalTimerConfig = 30; 
     
     let liveScores = {}; 
     let liveCorrects = {}; 
@@ -608,7 +629,8 @@ Toàn bộ điểm số sẽ được xuất file Excel để Giảng viên ghi 
         channel.send({ type: 'broadcast', event: 'game_start', payload: { theme: currentTheme } });
         showScreen('main-layout');
         if(isHost) document.getElementById('host-next-btn').style.display = 'flex';
-        audioBGM.play().catch(e => console.log("Trình duyệt chặn Autoplay"));
+        
+        if(!isMuted) audioBGM.play().catch(e => console.log("Trình duyệt chặn Autoplay"));
         window.nextQuestion();
     };
 
@@ -650,7 +672,7 @@ Toàn bộ điểm số sẽ được xuất file Excel để Giảng viên ghi 
         }
 
         audioTimeUp.pause(); audioTimeUp.currentTime = 0;
-        if(isHost || myName !== "") audioBGM.play().catch(e=>{});
+        if(!isMuted && (isHost || myName !== "")) audioBGM.play().catch(e=>{});
 
         // Set giá trị đếm ngược theo cấu hình được Host truyền qua
         timerVal = data.time || 30;
@@ -685,7 +707,7 @@ Toàn bộ điểm số sẽ được xuất file Excel để Giảng viên ghi 
                 });
 
                 audioBGM.pause(); 
-                if(isHost || myName !== "") audioTimeUp.play().catch(e=>{});
+                if(!isMuted && (isHost || myName !== "")) audioTimeUp.play().catch(e=>{});
             }
         }, 1000);
     }
