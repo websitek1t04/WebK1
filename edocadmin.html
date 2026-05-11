@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản trị Hồ sơ bài giảng (eDoc) - TS. Cao Thanh Hùng</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary-color: #8B0000;
+            --secondary-color: #DAA520;
+            --bg-light: #fdf6e9;
+            --border-color: #DAA520;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .form-group input, .form-group select {
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--secondary-color);
+        }
+
+        .btn-submit {
+            background-color: var(--primary-color);
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .btn-submit:hover {
+            background-color: #A52A2A;
+        }
+
+        /* Dashboard layout */
+        .dashboard-section {
+            background: #fff;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid #e2d1b7;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+
+        .card-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 12px;
+        }
+
+        .doc-card {
+            background: #fdfdfd;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            width: 220px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 auto 12px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 0 0 8px;
+            height: 38px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .card-link {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--secondary-color);
+            font-weight: 600;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .card-note {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 12px;
+            height: 32px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            border-top: 1px solid #eee;
+            padding-top: 8px;
+        }
+
+        .btn-action-edit, .btn-action-delete {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            transition: color 0.2s;
+        }
+        .btn-action-edit { color: var(--secondary-color); }
+        .btn-action-edit:hover { color: #A52A2A; }
+        .btn-action-delete { color: var(--primary-color); }
+        .btn-action-delete:hover { color: #A52A2A; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-guard" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fdf6e9; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <h2 style="color: #8B0000; font-family: Arial, sans-serif;"><i class="fas fa-lock"></i> KÊNH QUẢN TRỊ BẢO MẬT</h2>
+        <p style="color: #555; font-family: Arial, sans-serif;">Đang kiểm tra quyền truy cập...</p>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Kiểm tra mật khẩu (hỗ trợ cả SessionStorage từ trang cũ và LocalStorage)
+            if (sessionStorage.getItem('edoc_admin_auth') === '250289' || localStorage.getItem('edoc_admin_auth') === '250289') {
+                document.getElementById('auth-guard').style.display = 'none';
+                window.dispatchEvent(new Event('AdminAuthenticated'));
+            } else {
+                Swal.fire({
+                    title: 'Bảo mật Quản trị',
+                    text: 'Truy cập trực tiếp! Vui lòng nhập mật khẩu Quản trị để tiếp tục.',
+                    input: 'password',
+                    inputPlaceholder: 'Nhập mật khẩu...',
+                    icon: 'lock',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showCancelButton: true,
+                    cancelButtonText: 'Về trang người dùng',
+                    confirmButtonText: 'Đăng nhập',
+                    confirmButtonColor: '#8B0000'
+                }).then((result) => {
+                    if (result.isConfirmed && result.value === '250289') {
+                        sessionStorage.setItem('edoc_admin_auth', '250289');
+                        localStorage.setItem('edoc_admin_auth', '250289');
+                        document.getElementById('auth-guard').style.display = 'none';
+                        window.dispatchEvent(new Event('AdminAuthenticated'));
+                    } else {
+                        // Đuổi về trang edoc nếu nhập sai hoặc ấn Hủy
+                        window.location.href = 'edoc.html';
+                    }
+                });
+            }
+        });
+    </script>
+    <div id="banner-area"></div>
+
+    <div id="main-layout">
+        <aside id="sidebar-area"></aside>
+        
+        <main id="content-area">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div>
+                    <h2 style="margin: 0;">Quản trị Hồ sơ bài giảng (eDoc)</h2>
+                    <p style="margin: 5px 0 0 0; color: #666;">Khu vực quản lý độc quyền. Cập nhật, chỉnh sửa và thêm mới tài liệu.</p>
+                </div>
+                <button onclick="logoutAdmin()" class="btn-submit" style="background: #6c757d;"><i class="fas fa-sign-out-alt"></i> Thoát Quản trị</button>
+            </div>
+
+            <form id="edoc-form" style="background: var(--bg-light); padding: 20px; margin-bottom: 25px; border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: 15px;">
+                <h3 style="margin-top: 0; color: var(--primary-color); border-bottom: 2px solid var(--secondary-color); padding-bottom: 8px;">Thêm Hồ sơ bài giảng mới</h3>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Tên hồ sơ bài (Cấp 1):</label>
+                        <input type="text" id="ten_ho_so_bai" placeholder="Ví dụ: Giáo án môn Xây dựng Đảng" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Tên văn bản hoặc hồ sơ (Cấp 2):</label>
+                        <input type="text" id="ten_van_ban" placeholder="Ví dụ: Bài giảng 1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Đường dẫn hồ sơ (Google Drive URL):</label>
+                        <input type="url" id="duong_dan" placeholder="https://drive.google.com/..." required>
+                    </div>
+                    <div class="form-group">
+                        <label>Ghi chú:</label>
+                        <input type="text" id="ghi_chu" placeholder="Nhập ghi chú (nếu có)">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    + Thêm hồ sơ
+                </button>
+            </form>
+
+            <div style="background: #fcf8e3; padding: 16px; margin-bottom: 20px; border: 1px solid #faebcc; border-radius: 8px;">
+                <h4 style="margin-top: 0; color: var(--primary-color); margin-bottom: 10px;"><i class="fas fa-search"></i> Tìm kiếm hồ sơ</h4>
+                <div class="form-grid" style="margin-bottom: 0;">
+                    <div class="form-group">
+                        <input type="text" id="search-input" placeholder="Nhập tên hồ sơ hoặc tên văn bản cần tìm..." style="background: #fff;">
+                    </div>
+                </div>
+            </div>
+
+            <div id="edoc-dashboard">
+                </div>
+        </main>
+    </div>
+
+    <footer id="footer-area"></footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        // Hàm thoát quản trị
+        function logoutAdmin() {
+            sessionStorage.removeItem('edoc_admin_auth');
+            localStorage.removeItem('edoc_admin_auth');
+            window.location.href = 'edoc.html';
+        }
+    </script>
+    <script type="module">
+        import { supabase } from './js/supabase-client.js';
+
+        let allDocuments = [];
+
+        // Tải dữ liệu từ Supabase
+        async function loadData() {
+            const { data, error } = await supabase.from('edoc').select('*').order('id', { ascending: false });
+
+            if (error) {
+                console.error('Lỗi tải dữ liệu: ', error.message);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi hệ thống',
+                    text: 'Không thể tải dữ liệu eDoc!'
+                });
+                return;
+            }
+
+            allDocuments = data || [];
+            renderDashboard(allDocuments);
+        }
+
+        // Render giao diện Dashboard
+        function renderDashboard(dataArray) {
+            const dashboard = document.getElementById('edoc-dashboard');
+            dashboard.innerHTML = '';
+
+            if (dataArray.length === 0) {
+                dashboard.innerHTML = '<p style="text-align:center; padding: 20px; color: #666;">Chưa có dữ liệu hồ sơ. Hãy thêm mới để bắt đầu.</p>';
+                return;
+            }
+
+            // Gom nhóm theo Cấp 1 (Tên hồ sơ bài)
+            const grouped = {};
+            dataArray.forEach(row => {
+                const folder = row.ten_ho_so_bai || 'Chưa phân loại';
+                if (!grouped[folder]) {
+                    grouped[folder] = [];
+                }
+                grouped[folder].push(row);
+            });
+
+            let html = '';
+            for (const folder in grouped) {
+                html += `
+                    <div class="dashboard-section">
+                        <div class="section-header">
+                            <h3 style="color: var(--primary-color); margin: 0;"><i class="fas fa-folder-open" style="margin-right: 8px;"></i>${folder}</h3>
+                            <button class="btn-submit" onclick="addIntoFolder('${folder}')" style="padding: 6px 12px; font-size: 12px;">
+                                <i class="fas fa-plus"></i> Thêm văn bản
+                            </button>
+                        </div>
+                        <div class="card-container">
+                `;
+
+                grouped[folder].forEach(row => {
+                    // Lấy ký tự đầu để làm Avatar/Icon
+                    const firstChar = (row.ten_van_ban || 'V').charAt(0).toUpperCase();
+
+                    html += `
+                        <div class="doc-card">
+                            <div>
+                                <div class="card-avatar">${firstChar}</div>
+                                <div class="card-title" title="${row.ten_van_ban}">${row.ten_van_ban}</div>
+                                <a class="card-link" href="${row.duong_dan || '#'}" target="_blank" title="Xem hồ sơ">Click vào đây để xem</a>
+                                <div class="card-note" title="${row.ghi_chu || ''}">${row.ghi_chu || 'Không có ghi chú'}</div>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn-action-edit" onclick="editData(${row.id})" title="Chỉnh sửa">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-action-delete" onclick="deleteData(${row.id})" title="Xóa">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div></div>`; // Đóng card-container & dashboard-section
+            }
+
+            dashboard.innerHTML = html;
+        }
+
+        // Chức năng thêm nhanh vào thư mục
+        window.addIntoFolder = function(folderName) {
+            document.getElementById('ten_ho_so_bai').value = folderName;
+            document.getElementById('ten_van_ban').focus();
+            
+            // Cuộn màn hình lên trên
+            window.scrollTo({ top: 150, behavior: 'smooth' });
+        };
+
+        // Lọc dữ liệu theo Tên văn bản hoặc Tên hồ sơ bài
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const keyword = e.target.value.toLowerCase();
+            const filtered = allDocuments.filter(row => 
+                row.ten_van_ban.toLowerCase().includes(keyword) || 
+                row.ten_ho_so_bai.toLowerCase().includes(keyword)
+            );
+            renderDashboard(filtered);
+        });
+
+        // Xử lý submit form thêm mới
+        document.getElementById('edoc-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const newData = {
+                ten_ho_so_bai: document.getElementById('ten_ho_so_bai').value,
+                ten_van_ban: document.getElementById('ten_van_ban').value,
+                duong_dan: document.getElementById('duong_dan').value,
+                ghi_chu: document.getElementById('ghi_chu').value
+            };
+
+            const { error } = await supabase.from('edoc').insert([newData]);
+
+            if (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Thêm thất bại',
+                    text: error.message
+                });
+            } else {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công!',
+                    text: 'Đã thêm hồ sơ thành công!',
+                    confirmButtonColor: '#8B0000'
+                });
+                document.getElementById('edoc-form').reset();
+                loadData();
+            }
+        });
+
+        // Chỉnh sửa dữ liệu
+        window.editData = async function(id) {
+            const { data, error } = await supabase.from('edoc').select('*').eq('id', id);
+            if (error || !data.length) return;
+            const row = data[0];
+
+            const { value: formValues } = await Swal.fire({
+                title: '<span style="color: var(--primary-color); font-weight: 600;">Chỉnh sửa Hồ sơ</span>',
+                html: `
+                    <div style="text-align: left; font-family: inherit; padding: 0 10px;">
+                        <div style="margin-bottom: 12px;">
+                            <label style="font-size: 13px; font-weight:600; color: var(--primary-color); display:block; margin-bottom: 4px;">Tên hồ sơ bài (Cấp 1)</label>
+                            <input id="swal-ten_ho_so_bai" type="text" value="${row.ten_ho_so_bai || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; outline: none;">
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="font-size: 13px; font-weight:600; color: var(--primary-color); display:block; margin-bottom: 4px;">Tên văn bản hoặc hồ sơ (Cấp 2)</label>
+                            <input id="swal-ten_van_ban" type="text" value="${row.ten_van_ban || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; outline: none;">
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="font-size: 13px; font-weight:600; color: var(--primary-color); display:block; margin-bottom: 4px;">Đường dẫn (URL)</label>
+                            <input id="swal-duong_dan" type="url" value="${row.duong_dan || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; outline: none;">
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="font-size: 13px; font-weight:600; color: var(--primary-color); display:block; margin-bottom: 4px;">Ghi chú</label>
+                            <input id="swal-ghi_chu" type="text" value="${row.ghi_chu || ''}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; outline: none;">
+                        </div>
+                    </div>
+                `,
+                focusConfirm: false,
+                confirmButtonColor: '#8B0000',
+                confirmButtonText: 'Cập nhật',
+                showCancelButton: true,
+                cancelButtonText: 'Hủy',
+                width: 500,
+                preConfirm: () => {
+                    return {
+                        ten_ho_so_bai: document.getElementById('swal-ten_ho_so_bai').value,
+                        ten_van_ban: document.getElementById('swal-ten_van_ban').value,
+                        duong_dan: document.getElementById('swal-duong_dan').value,
+                        ghi_chu: document.getElementById('swal-ghi_chu').value
+                    }
+                }
+            });
+
+            if (formValues) {
+                const { error } = await supabase.from('edoc').update(formValues).eq('id', id);
+                if (error) {
+                    Swal.fire('Lỗi', error.message, 'error');
+                } else {
+                    Swal.fire('Thành công!', 'Đã cập nhật dữ liệu thành công!', 'success');
+                    loadData();
+                }
+            }
+        };
+
+        // Xóa dữ liệu
+        window.deleteData = async function(id) {
+            Swal.fire({
+                title: 'Xác nhận xóa?',
+                text: "Thao tác này sẽ xóa vĩnh viễn hồ sơ này!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#8B0000',
+                cancelButtonColor: '#ccc',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const { error } = await supabase.from('edoc').delete().eq('id', id);
+                    if (error) {
+                        Swal.fire('Lỗi', error.message, 'error');
+                    } else {
+                        Swal.fire('Đã xóa!', 'Dữ liệu đã được xóa khỏi hệ thống.', 'success');
+                        loadData();
+                    }
+                }
+            });
+        };
+
+        // Khởi tạo tải dữ liệu (Chỉ chạy khi đã qua kiểm tra bảo mật)
+        if (sessionStorage.getItem('edoc_admin_auth') === '250289' || localStorage.getItem('edoc_admin_auth') === '250289') {
+            loadData();
+        } else {
+            // Lắng nghe tín hiệu khi user đăng nhập thành công
+            window.addEventListener('AdminAuthenticated', () => {
+                loadData();
+            });
+        }
+    </script>
+</body>
+</html>
