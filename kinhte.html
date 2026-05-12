@@ -255,7 +255,6 @@
 
         // --- KHỞI TẠO KÊNH REALTIME ---
         function initChannel(pin) {
-            // Dùng tên kênh khác so với Đối ngoại để tránh xung đột dữ liệu nếu nhập trùng PIN
             channel = supabase.channel('room_kinhte_' + pin);
             
             channel
@@ -263,7 +262,8 @@
                 handleStartGame(p.payload.startTime);
             })
             .on('broadcast', { event: 'submit_team' }, (p) => {
-                handleTeamSubmit(p.payload.teamId, p.payload.score, p.payload.timeMs);
+                // NHẬN DỮ LIỆU CẢ ĐÁP ÁN (answers) VÀ ĐIỂM SỐ, THỜI GIAN
+                handleTeamSubmit(p.payload.teamId, p.payload.score, p.payload.timeMs, p.payload.answers);
             })
             .subscribe();
         }
@@ -318,11 +318,11 @@
 
         // --- ĐỘI CHƠI BẤM NỘP BÀI ---
         window.submitMyTeam = function(teamId) {
-            // Tính toán trên máy của Đội đó
             let timeMs = Date.now() - startTimestamp;
             let area = document.getElementById('areaTeam' + teamId);
             let inputs = area.querySelectorAll('.blank-input');
             let correctCount = 0;
+            let answersArr = [];
 
             inputs.forEach(input => {
                 const studentAnswer = input.value.trim().toLowerCase();
@@ -330,6 +330,7 @@
                 
                 input.type = "text";
                 input.disabled = true; 
+                answersArr.push(input.value); // LƯU LẠI ĐÁP ÁN ĐÃ GÕ
 
                 if (correctAnswers.includes(studentAnswer)) {
                     input.classList.add('correct');
@@ -342,18 +343,38 @@
             document.getElementById('btnSubmit' + teamId).disabled = true;
             document.getElementById('btnSubmit' + teamId).innerText = "ĐÃ NỘP BÀI";
 
-            // Phát tín hiệu cho mọi người biết
-            channel.send({ type: 'broadcast', event: 'submit_team', payload: { teamId: teamId, score: correctCount, timeMs: timeMs } });
+            // GỬI KÈM MẢNG answersArr LÊN KÊNH BROADCAST
+            channel.send({ type: 'broadcast', event: 'submit_team', payload: { teamId: teamId, score: correctCount, timeMs: timeMs, answers: answersArr } });
             
             // Tự cập nhật lên máy mình
-            handleTeamSubmit(teamId, correctCount, timeMs);
+            handleTeamSubmit(teamId, correctCount, timeMs, answersArr);
         };
 
         // --- TẤT CẢ MÁY NHẬN LỆNH NỘP BÀI CỦA 1 ĐỘI ---
-        function handleTeamSubmit(teamId, score, timeMs) {
+        function handleTeamSubmit(teamId, score, timeMs, answersArr) {
             teamData[teamId].score = score;
             teamData[teamId].timeMs = timeMs;
             teamData[teamId].finished = true;
+
+            // XỬ LÝ ĐIỀN ĐÁP ÁN BÊN MÁY GIẢNG VIÊN HOẶC MÁY KHÁC (NẾU NHẬN ĐƯỢC)
+            if(myRole === 'host' && answersArr) {
+                let area = document.getElementById('areaTeam' + teamId);
+                let inputs = area.querySelectorAll('.blank-input');
+                inputs.forEach((input, idx) => {
+                    if (answersArr[idx] !== undefined) {
+                        input.value = answersArr[idx];
+                        input.type = "text";
+                        const studentAnswer = input.value.trim().toLowerCase();
+                        const correctAnswers = input.getAttribute('data-answer').toLowerCase().split('|');
+                        
+                        if (correctAnswers.includes(studentAnswer)) {
+                            input.classList.add('correct');
+                        } else {
+                            input.classList.add('incorrect');
+                        }
+                    }
+                });
+            }
 
             let totalQuestions = document.getElementById('areaTeam' + teamId).querySelectorAll('.blank-input').length;
             
@@ -361,12 +382,10 @@
             document.getElementById('time' + teamId).innerText = formatTime(timeMs);
             document.getElementById('resultTeam' + teamId).style.display = 'block';
 
-            // Nếu không phải là đội đó, làm mờ đi để biết họ đã xong
             if(myRole !== teamId.toString()) {
                 document.getElementById('btnSubmit' + teamId).innerText = "ĐỐI THỦ ĐÃ NỘP BÀI";
             }
 
-            // Kiểm tra kết thúc trò chơi
             if (teamData[1].finished && teamData[2].finished) {
                 clearInterval(timerInterval);
                 declareWinner();
@@ -389,7 +408,6 @@
             } else if (score2 > score1) {
                 message = `🏆 CHÚC MỪNG ĐỘI ${name2} CHIẾN THẮNG!`;
             } else {
-                // Bằng điểm thì xét thời gian
                 if (time1 < time2) {
                     message = `🏆 ĐỘI ${name1} THẮNG NHỜ TỐC ĐỘ! (BẰNG ĐIỂM)`;
                 } else if (time2 < time1) {

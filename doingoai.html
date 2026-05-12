@@ -156,7 +156,8 @@
 
         <div class="split-screen">
             <div class="team-column" id="team1">
-                <div class="team-name-display">BÚA LIỀM</div>
+                <div class="team-name-display" id="nameTeam1Display">BÚA LIỀM</div>
+                <input type="hidden" id="nameTeam1" value="BÚA LIỀM">
                 
                 <div class="quiz-content" id="areaTeam1">
                     <div class="station-title">Trạm 1: Phát triển tư duy về đối ngoại – quốc phòng – an ninh</div>
@@ -167,7 +168,7 @@
                     <p><span class="milestone">Đại hội XIV:</span> kiên định và nhất quán đường lối đối ngoại độc lập, tự chủ, hoà bình, hữu nghị, hợp tác và phát triển; là bạn, là <input type="text" class="blank-input" data-answer="đối tác" style="width: 80px;" disabled> tin cậy, là thành viên tích cực, có <input type="text" class="blank-input" data-answer="trách nhiệm" disabled> của cộng đồng quốc tế.</p>
                     
                     <div class="station-title">Trạm 2</div>
-                    <p>Hiện nay, Việt Nam có <input type="text" class="blank-input" data-answer="194" style="width: 50px;" disabled> quan hệ ngoại giao cấp nhà nước, <input type="text" class="blank-input" data-answer="14" style="width: 40px;" disabled> quốc gia là đối tác chiến lược <input type="text" class="blank-input" data-answer="toàn diện" disabled>, trong đó có <input type="text" class="blank-input" data-answer="4/5|4" style="width: 50px;" disabled> quốc gia trong Hội đồng <input type="text" class="blank-input" data-answer="bảo an" style="width: 80px;" disabled> Liên Hiệp quốc.</p>
+                    <p>Hiện nay, Việt Nam có <input type="text" class="blank-input" data-answer="194" style="width: 50px;" disabled> quan hệ ngoại giao cấp nhà nước, <input type="text" class="blank-input" data-answer="15" style="width: 40px;" disabled> quốc gia là đối tác chiến lược <input type="text" class="blank-input" data-answer="toàn diện" disabled>, trong đó có <input type="text" class="blank-input" data-answer="5" style="width: 50px;" disabled> quốc gia trong Hội đồng <input type="text" class="blank-input" data-answer="bảo an" style="width: 80px;" disabled> Liên Hiệp quốc.</p>
                 </div>
 
                 <button class="btn-submit" id="btnSubmit1" onclick="submitMyTeam(1)" disabled>NỘP BÀI (ĐỘI 1)</button>
@@ -258,7 +259,7 @@
                 handleStartGame(p.payload.startTime);
             })
             .on('broadcast', { event: 'submit_team' }, (p) => {
-                handleTeamSubmit(p.payload.teamId, p.payload.score, p.payload.timeMs);
+                handleTeamSubmit(p.payload.teamId, p.payload.score, p.payload.timeMs, p.payload.answers);
             })
             .subscribe();
         }
@@ -313,11 +314,11 @@
 
         // --- ĐỘI CHƠI BẤM NỘP BÀI ---
         window.submitMyTeam = function(teamId) {
-            // Tính toán trên máy của Đội đó
             let timeMs = Date.now() - startTimestamp;
             let area = document.getElementById('areaTeam' + teamId);
             let inputs = area.querySelectorAll('.blank-input');
             let correctCount = 0;
+            let answersArr = [];
 
             inputs.forEach(input => {
                 const studentAnswer = input.value.trim().toLowerCase();
@@ -325,6 +326,7 @@
                 
                 input.type = "text";
                 input.disabled = true; 
+                answersArr.push(input.value);
 
                 if (correctAnswers.includes(studentAnswer)) {
                     input.classList.add('correct');
@@ -337,18 +339,35 @@
             document.getElementById('btnSubmit' + teamId).disabled = true;
             document.getElementById('btnSubmit' + teamId).innerText = "ĐÃ NỘP BÀI";
 
-            // Phát tín hiệu cho mọi người biết
-            channel.send({ type: 'broadcast', event: 'submit_team', payload: { teamId: teamId, score: correctCount, timeMs: timeMs } });
+            channel.send({ type: 'broadcast', event: 'submit_team', payload: { teamId: teamId, score: correctCount, timeMs: timeMs, answers: answersArr } });
             
-            // Tự cập nhật lên máy mình
-            handleTeamSubmit(teamId, correctCount, timeMs);
+            handleTeamSubmit(teamId, correctCount, timeMs, answersArr);
         };
 
         // --- TẤT CẢ MÁY NHẬN LỆNH NỘP BÀI CỦA 1 ĐỘI ---
-        function handleTeamSubmit(teamId, score, timeMs) {
+        function handleTeamSubmit(teamId, score, timeMs, answersArr) {
             teamData[teamId].score = score;
             teamData[teamId].timeMs = timeMs;
             teamData[teamId].finished = true;
+
+            if(myRole === 'host' && answersArr) {
+                let area = document.getElementById('areaTeam' + teamId);
+                let inputs = area.querySelectorAll('.blank-input');
+                inputs.forEach((input, idx) => {
+                    if (answersArr[idx] !== undefined) {
+                        input.value = answersArr[idx];
+                        input.type = "text";
+                        const studentAnswer = input.value.trim().toLowerCase();
+                        const correctAnswers = input.getAttribute('data-answer').toLowerCase().split('|');
+                        
+                        if (correctAnswers.includes(studentAnswer)) {
+                            input.classList.add('correct');
+                        } else {
+                            input.classList.add('incorrect');
+                        }
+                    }
+                });
+            }
 
             let totalQuestions = document.getElementById('areaTeam' + teamId).querySelectorAll('.blank-input').length;
             
@@ -356,12 +375,10 @@
             document.getElementById('time' + teamId).innerText = formatTime(timeMs);
             document.getElementById('resultTeam' + teamId).style.display = 'block';
 
-            // Nếu không phải là đội đó, làm mờ đi để biết họ đã xong
             if(myRole !== teamId.toString()) {
                 document.getElementById('btnSubmit' + teamId).innerText = "ĐỐI THỦ ĐÃ NỘP BÀI";
             }
 
-            // Kiểm tra kết thúc trò chơi
             if (teamData[1].finished && teamData[2].finished) {
                 clearInterval(timerInterval);
                 declareWinner();
@@ -381,7 +398,6 @@
             } else if (score2 > score1) {
                 message = `🏆 CHÚC MỪNG ĐỘI SAO VÀNG CHIẾN THẮNG!`;
             } else {
-                // Bằng điểm thì xét thời gian
                 if (time1 < time2) {
                     message = `🏆 ĐỘI BÚA LIỀM THẮNG NHỜ TỐC ĐỘ! (BẰNG ĐIỂM)`;
                 } else if (time2 < time1) {
